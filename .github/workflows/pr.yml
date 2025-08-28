@@ -26,10 +26,7 @@ jobs:
   canary_release:
     name: 🐥 Canary release
     needs:
-      - lint
-      - package_tests
-      - examples_playwright_tests
-      - examples_cypress_tests
+      - build_and_test
     runs-on: ubuntu-latest
     permissions:
       contents: write

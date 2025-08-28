@@ -14,10 +14,7 @@ jobs:
     name: 🚀 Release packages
     runs-on: ubuntu-latest
     needs:
-      - lint
-      - package_tests
-      - examples_playwright_tests
-      - examples_cypress_tests
+      - build_and_test
     permissions:
       contents: write
     steps:
