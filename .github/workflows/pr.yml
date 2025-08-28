@@ -19,6 +19,7 @@ jobs:
   lint:
     name: 💅 Lint
     runs-on: ubuntu-latest
+    needs: validate_commits
     permissions:
       contents: read
     steps:
@@ -34,6 +35,7 @@ jobs:
   package_tests:
     name: 🧪 Run package tests
     runs-on: ubuntu-latest
+    needs: validate_commits
     permissions:
       contents: read
     steps:
@@ -51,6 +53,7 @@ jobs:
 
   find_examples:
     name: 🔎 Find examples
+    needs: validate_commits
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -164,7 +167,11 @@ jobs:
 
   canary_release:
     name: 🐥 Canary release
-    needs: build-and-test
+    needs:
+      - lint
+      - package_tests
+      - examples_playwright_tests
+      - examples_cypress_tests
     runs-on: ubuntu-latest
     permissions:
       contents: write
