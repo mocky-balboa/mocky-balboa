@@ -67,6 +67,7 @@ jobs:
   examples_playwright_tests:
     name: 🎭 Run Playwright tests for examples
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[skip-tests]') == false
     needs: find_examples
     strategy:
       fail-fast: true
