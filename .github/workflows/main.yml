@@ -205,7 +205,7 @@ jobs:
         if: steps.changed-packages.outputs.lockfile_any_changed == 'false' && steps.changed-packages.outputs.packages_any_changed == 'true'
         env:
           CHANGED_FILES: ${{ steps.changed-packages.outputs.packages_all_changed_files }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           PACKAGES=$(echo "$CHANGED_FILES" | grep -oE "packages/[^/]+" | sed "s|packages/||" | sort -u)
