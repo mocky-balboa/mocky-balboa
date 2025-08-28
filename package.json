@@ -13,6 +13,7 @@
     "lint": "oxlint",
     "test:packages": "pnpm --filter \"./packages/*\" test",
     "prepare": "husky",
+    "prepare-release": "pnpm changeset",
     "package-post-cjs-build": "node ./scripts/package-post-cjs-build.cjs"
   },
   "keywords": [],
