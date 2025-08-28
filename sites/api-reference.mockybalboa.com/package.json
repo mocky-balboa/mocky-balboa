@@ -4,6 +4,7 @@
   "description": "API reference for Mocky Balboa.",
   "type": "module",
   "homepage": "https://api-reference.mockybalboa.com",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mocky-balboa/mocky-balboa.git",
