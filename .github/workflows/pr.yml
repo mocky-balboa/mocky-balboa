@@ -21,6 +21,7 @@ jobs:
 
   build_and_test:
     name: 🛠️ Build and test
+    needs: validate_commits
     uses: ./.github/workflows/build-and-test.yml
 
   canary_release:
@@ -41,15 +42,14 @@ jobs:
         id: release_status
         run: |
           pnpm changeset status --output release.json 2> /dev/null
-          HAS_RELEASE=$(test -f release.json)
-
-          if [ "$HAS_RELEASE" = true ]; then
+          HAS_RELEASE=false
+          if test -f release.json; then
             cat release.json
-          else
-            echo "No changesets found"
+            HAS_RELEASE=true
           fi
 
-          echo "has-changeset=$($HAS_RELEASE && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "has release $HAS_RELEASE"
+          echo "has-changeset=$HAS_RELEASE" >> $GITHUB_OUTPUT
 
       - name: Build packages
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
