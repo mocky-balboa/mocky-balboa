@@ -61,7 +61,7 @@ export const createClient = async (
   await client.connect(options);
 
   // When the cypress test is finished disconnect the client
-  cy.on("test:after:run", function onAfterRun(this: any, a, b) {
+  cy.on("test:after:run", () => {
     client.disconnect();
   });
 
