@@ -195,10 +195,10 @@ jobs:
         # Release all packages if the lockfile has changed
         if: steps.changed-packages.outputs.lockfile_any_changed == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          pnpm --filter "./packages/*" run release --dry-run
+          pnpm --filter "./packages/*" run release
 
       - name: Release packages (changed)
         # Only release changed packages if the lockfile has not changed, but packages have changed
@@ -220,5 +220,5 @@ jobs:
             done
 
             # Run the release command with the correctly formatted filters
-            pnpm $FILTERS run release --dry-run
+            pnpm $FILTERS run release
           fi
