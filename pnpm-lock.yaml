@@ -69,7 +69,7 @@ importers:
         specifier: ^19.8.1
         version: 19.8.1(@types/node@24.3.0)(typescript@5.9.2)
       '@commitlint/config-conventional':
-        specifier: ^19.8.1
+        specifier: ^19.8.0
         version: 19.8.1
       '@semantic-release/changelog':
         specifier: ^6.0.3
