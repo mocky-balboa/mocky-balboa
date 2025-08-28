@@ -1,16 +1,14 @@
-name: Main workflow
+name: Pull request workflow
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
 
 jobs:
   build-and-test:
     uses: ./.github/workflows/validate-build-and-test.yml
 
-  release:
-    name: 🚀 Release packages
+  canary_release:
+    name: 🐥 Canary release
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
@@ -41,19 +39,15 @@ jobs:
       - name: Release packages
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
         run: |
-          pnpm changeset version
-          pnpm changeset publish
+          pnpm changeset version --snapshot canary
+          pnpm changeset publish --tag canary --no-git-tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Commit changes
+      - name: Update PR
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
         env:
-          CI_COMMIT_MESSAGE: "chore: release packages [skip ci]"
-          CI_COMMIT_AUTHOR: 🤖 Mocky Balboa CI bot
-        run: |
-          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
-          git config --global user.email "ci-bot@noreply.mockybalboa.com"
-          git commit -a -m "${{ env.CI_COMMIT_MESSAGE }}"
-          git push --follow-tags
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: node scripts/update-canary-release-pr-body.cjs
