@@ -5,6 +5,8 @@ on:
 
 jobs:
   build-and-test:
+    permissions:
+      contents: read
     uses: ./.github/workflows/validate-build-and-test.yml
 
   canary_release:
