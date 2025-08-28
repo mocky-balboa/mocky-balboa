@@ -159,6 +159,9 @@ jobs:
   deploy:
     name: 🚀 Release packages
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
     needs:
       - lint
       - package_tests
@@ -193,7 +196,7 @@ jobs:
 
       - name: Release packages (all)
         # Release all packages if the lockfile has changed
-        if: steps.changed-packages.outputs.lockfile_any_changed == 'true'
+        if: steps.changed-packages.outputs.lockfile_any_changed == 'true' || contains(github.event.head_commit.message, '[force-release]')
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -202,7 +205,7 @@ jobs:
 
       - name: Release packages (changed)
         # Only release changed packages if the lockfile has not changed, but packages have changed
-        if: steps.changed-packages.outputs.lockfile_any_changed == 'false' && steps.changed-packages.outputs.packages_any_changed == 'true'
+        if: steps.changed-packages.outputs.lockfile_any_changed == 'false' && !contains(github.event.head_commit.message, '[force-release]' && steps.changed-packages.outputs.packages_any_changed == 'true'
         env:
           CHANGED_FILES: ${{ steps.changed-packages.outputs.packages_all_changed_files }}
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
