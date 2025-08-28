@@ -169,6 +169,12 @@ jobs:
       - package_tests
       - examples_playwright_tests
       - examples_cypress_tests
+    if: |
+      always() &&
+      success() || (
+        (needs.examples_playwright_tests.result == 'skipped' || needs.examples_playwright_tests.result == 'success') &&
+        (needs.examples_cypress_tests.result == 'skipped' || needs.examples_cypress_tests.result == 'success')
+      )
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
