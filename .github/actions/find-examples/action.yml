@@ -1,0 +1,19 @@
+name: Find all examples packages
+description: Discovers all directories in the examples directory and formats them as JSON
+
+outputs:
+  examples:
+    description: List of example directories
+    value: ${{ steps.get-examples.outputs.directories }}
+
+runs:
+  using: composite
+  steps:
+    - name: Get example directories
+      shell: bash
+      id: get-examples
+      run: |
+        DIRECTORIES=$(find ./examples -mindepth 1 -maxdepth 1 -type d -print | sed "s|./examples/||" | jq -R . | jq -s . | tr -d '\n')
+        echo "directories<<EOF" >> $GITHUB_OUTPUT
+        echo "$DIRECTORIES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT

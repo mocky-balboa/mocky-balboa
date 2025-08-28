@@ -1,0 +1,135 @@
+---
+sidebar_position: 100
+title: Custom integration
+---
+<head>
+    <title>Custom client integrations | Mocky Balboa</title>
+</head>
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Custom Mocky Balboa client integration
+
+If you need a custom integration for Mocky Balboa, you can use the `@mocky-balboa/client` package to integrate with your browser automation framework. There are a few things to keep in mind when setting up the integration:
+
+1. Ensure you connect the client to the Mocky Balboa server before executing any tests.
+1. Listen for error messages on the client and handle them appropriately.
+1. When you close the browser, make sure to disconnect the client from the Mocky Balboa server.
+
+## Installation
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm add -D @mocky-balboa/client
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm install -D @mocky-balboa/client
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add -D @mocky-balboa/client
+    ```
+  </TabItem>
+</Tabs>
+
+## Creating and connecting the client
+
+The following example demonstrates how to create and connect a client to the Mocky Balboa server:
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import {
+          Client,
+          MessageType,
+          type MessageTypes,
+          type ParsedMessageType,
+        } from '@mocky-balboa/client';
+
+        const client = new Client();
+
+        client.on(
+          MessageType.ERROR,
+          (message: ParsedMessageType<MessageTypes["ERROR"]>) => {
+            // Handle the error here.
+            // Suggestion: Log the error and close the browser
+          },
+        );
+
+        await client.connect();
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import {
+        Client,
+        MessageType,
+      } from '@mocky-balboa/client';
+
+      const client = new Client();
+
+      client.on(
+        MessageType.ERROR,
+        (message) => {
+          // Handle the error here.
+          // Suggestion: Log the error and close the browser
+        },
+      );
+
+      await client.connect();
+      ```
+  </TabItem>
+</Tabs>
+
+## Passing the client ID to the server
+
+You need to make sure you pass the client ID on every request to the server via a custom header.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      import { ClientIdentityStorageHeader } from "@mocky-balboa/client";
+
+      // This is specific to the integration you are creating
+      // Here's how the headers are set in Playwright on the browser context
+      context.setExtraHTTPHeaders({
+        [ClientIdentityStorageHeader]: client.id,
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { ClientIdentityStorageHeader } from "@mocky-balboa/client";
+
+      // This is specific to the integration you are creating
+      // Here's how the headers are set in Playwright on the browser context
+      context.setExtraHTTPHeaders({
+        [ClientIdentityStorageHeader]: client.id,
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+## Disconnecting the client
+
+Make sure to disconnect the client from the Mocky Balboa server when you are done with it, i.e. when the test finished (either fails or passes).
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.disconnect();
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      client.disconnect();
+      ```
+  </TabItem>
+</Tabs>
+
+[API reference](https://api-reference.mockybalboa.com/modules/_mocky-balboa_client.Client)

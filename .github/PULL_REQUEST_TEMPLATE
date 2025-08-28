@@ -1,0 +1,50 @@
+---
+name: Pull Request
+about: Create a pull request to merge a change into the main branch.
+title: "<type>: <a brief, descriptive title>"
+labels: ''
+assignees: ''
+
+---
+
+### Description
+
+Please describe the changes you made and the reason for them.
+
+### Related Issue
+
+This pull request resolves/closes the following issue: #`[issue number]`
+
+### Type of change
+
+* [ ] Bug fix (non-breaking change which fixes an issue)
+* [ ] New feature (non-breaking change which adds functionality)
+* [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+* [ ] This change requires a documentation update
+
+### Checklist
+
+Please check all that apply.
+
+* [ ] I have read the [CONTRIBUTING.md](https://github.com/mocky-balboa/mocky-balboa/blob/main/CONTRIBUTING.md) file.
+* [ ] I have added tests that prove my fix is effective or that my feature works.
+* [ ] I have added/updated documentation as required.
+* [ ] All new and existing tests pass locally.
+* [ ] I have rebased my branch on the latest `main`.
+* [ ] My code follows the project's style guidelines.
+
+### Examples
+
+**Correct Title Examples:**
+* `feat: add network mocking for SSR`
+* `fix: resolve issue with invalid headers`
+* `chore: update dependencies`
+* `docs: add new guide for browser automation`
+
+**Correct "Related Issue" Examples:**
+* `Closes #123`
+* `Resolves #456`
+
+### Additional Context
+
+Add any other relevant information here.

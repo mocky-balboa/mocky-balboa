@@ -1,0 +1,110 @@
+---
+sidebar_position: 1
+title: Playwright
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Mocky Balboa and Playwright
+
+How to use Mocky Balboa with [Playwright](https://playwright.dev/).
+
+:::info[Supported versions]
+
+__≥ 1.x.x__
+
+:::
+
+## Installation
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm add -D @mocky-balboa/playwright
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm install -D @mocky-balboa/playwright
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add -D @mocky-balboa/playwright
+    ```
+  </TabItem>
+</Tabs>
+
+## Usage
+
+Below is a basic example of how to use Mocky Balboa to mock a server-side network request from directly within your Playwright tests.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import { test, expect } from "@playwright/test";
+        import { createClient } from "@mocky-balboa/playwright";
+
+        test("my page loads", async ({ page, context }) => {
+          // Create our Mocky Balboa client and establish a connection with the server
+          const client = await createClient();
+
+          // Register our fixture on routes matching '**/api/users'
+          client.route("**/api/users", (route) => {
+            return route.fulfill({
+              status: 200,
+              body: JSON.stringify([
+                { id: "user-1", name: "John Doe" },
+                { id: "user-2", name: "Jane Doe" }
+              ]),
+              headers: {
+                "Content-Type": "application/json"
+              },
+            });
+          });
+
+          // Visit the page of our application in the browser
+          await page.goto("http://localhost:3000");
+
+          // Our mock above should have been returned on our server
+          await expect(page.getByText("John Doe")).toBeVisible();
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { test, expect } from "@playwright/test";
+      import { createClient } from "@mocky-balboa/playwright";
+
+      test("my page loads", async ({ page, context }) => {
+        // Create our Mocky Balboa client and establish a connection with the server
+        const client = await createClient();
+
+        // Register our fixture on routes matching '**/api/users'
+        client.route("**/api/users", (route) => {
+          return route.fulfill({
+            status: 200,
+            body: JSON.stringify([
+              { id: "user-1", name: "John Doe" },
+              { id: "user-2", name: "Jane Doe" }
+            ]),
+            headers: {
+              "Content-Type": "application/json"
+            },
+          });
+        });
+
+        // Visit the page of our application in the browser
+        await page.goto("http://localhost:3000");
+
+        // Our mock above should have been returned on our server
+        await expect(page.getByText("John Doe")).toBeVisible();
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+## Further usage
+
+1. See [the client guide](../client-guide) for more information on how you can mock server-side network requests from directly within your Playwright tests.
+1. See [the advanced page](../advanced) for more information on advanced usage and how the framework works under the hood.

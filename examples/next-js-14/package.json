@@ -1,0 +1,35 @@
+{
+  "name": "@mocky-balboa/example-next-js-14",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:tests": "pnpm build",
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "test:cypress": "pnpm cypress run",
+    "test:playwright": "pnpm playwright test",
+    "start:tests": "mocky-balboa-next-js -h 0.0.0.0",
+    "start:tests-dev": "pnpm start:tests --dev"
+  },
+  "dependencies": {
+    "react": "^18",
+    "react-dom": "^18",
+    "next": "14.2.32"
+  },
+  "devDependencies": {
+    "@mocky-balboa/cypress": "workspace:*",
+    "@mocky-balboa/playwright": "workspace:*",
+    "@mocky-balboa/next-js": "workspace:*",
+    "@playwright/test": "^1.54.2",
+    "cypress": "^14.5.4",
+    "playwright": "^1.54.2",
+    "detect-port": "^2.1.0",
+    "get-port": "^7.1.0",
+    "typescript": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "^18",
+    "@types/react-dom": "^18"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "@mocky-balboa/example-nuxt-3",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "build:tests": "ENABLE_MOCKY_BALBOA=true pnpm build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "serve": "node ./.output/server/index.mjs",
+    "test:cypress": "pnpm cypress run",
+    "test:playwright": "pnpm playwright test",
+    "start:tests": "pnpm serve",
+    "start:tests-dev": "ENABLE_MOCKY_BALBOA=true pnpm dev --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@primeuix/themes": "^1.2.3",
+    "nuxt": "^3.18.1",
+    "primevue": "^4.3.7",
+    "tailwindcss-primeui": "^0.6.1",
+    "vue": "^3.5.20",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@mocky-balboa/cypress": "workspace:*",
+    "@mocky-balboa/nuxt": "workspace:*",
+    "@mocky-balboa/playwright": "workspace:*",
+    "@playwright/test": "^1.54.2",
+    "@primevue/nuxt-module": "^4.3.7",
+    "cypress": "^15.0.0",
+    "playwright": "^1.54.2"
+  }
+}

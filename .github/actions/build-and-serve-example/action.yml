@@ -1,0 +1,34 @@
+name: Find all examples packages
+description: Discovers all directories in the examples directory and formats them as JSON
+
+inputs:
+  example:
+    description: Name of the example directory
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # Need to run "pnpm install" after build to link the CLI to .bin
+    - name: pnpm install
+      uses: ./.github/actions/pnpm-install
+
+    - name: Build example
+      shell: bash
+      run: pnpm --filter "./examples/${{ inputs.example }}" build:tests
+
+    - name: Serve example
+      shell: bash
+      run: pnpm --filter "./examples/${{ inputs.example }}" start:tests &
+
+    - name: Wait for server to be ready
+      shell: bash
+      run: |
+        for i in $(seq 1 20); do
+          curl -f http://localhost:3000 > /dev/null && break
+          echo "Waiting for server to be available..."
+          sleep 1
+        done
+
+        # Check if the loop finished without success
+        curl -f http://localhost:3000 > /dev/null || (echo "Server is not available after 20 seconds" && exit 1)

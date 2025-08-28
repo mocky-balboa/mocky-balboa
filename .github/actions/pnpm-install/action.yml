@@ -1,0 +1,29 @@
+name: pnpm install
+description: Install pnpm dependencies with caching.
+
+inputs:
+  lockfile-path:
+    description: "Path to the pnpm-lock.yaml file relative to the repository root."
+    required: true
+    default: "pnpm-lock.yaml"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get pnpm store path
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: Cache pnpm modules
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles(inputs.lockfile-path) }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install Dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile

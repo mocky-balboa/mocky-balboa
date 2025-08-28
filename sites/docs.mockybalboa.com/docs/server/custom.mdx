@@ -1,0 +1,125 @@
+---
+sidebar_position: 100
+title: Custom integration
+---
+<head>
+    <title>Custom server integrations | Mocky Balboa</title>
+</head>
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Custom Mocky Balboa server integration
+
+If you need a custom integration for Mocky Balboa, you can use the `@mocky-balboa/server` package to create a custom wrapper for your application server. There are two main points to consider:
+
+1. Starting the Mocky Balboa server on the same process as your application server. This is how [Mock Service Worker](https://mswjs.io/) can intercept network requests on your application server.
+1. Ensuring you run your servers request handler within the AsyncLocalStorage context provided by the `@mocky-balboa/server` package.
+
+## Installation
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm add -D @mocky-balboa/server
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm install -D @mocky-balboa/server
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add -D @mocky-balboa/server
+    ```
+  </TabItem>
+</Tabs>
+
+## Starting the server
+
+Ensure you start the Mocky Balboa server on the same process as your application server.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import {
+          startServer,
+        } from "@mocky-balboa/server";
+
+        await startServer();
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import {
+        startServer,
+      } from "@mocky-balboa/server";
+
+      await startServer();
+      ```
+  </TabItem>
+</Tabs>
+
+## Running your handler in the AsyncLocalStorage context
+
+To ensure the server can identify the client who initiated the request to your server, you need to run your server's HTTP handler within the AsyncLocalStorage context provided by the `@mocky-balboa/server` package.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import {
+          clientIdentityStorage,
+          ClientIdentityStorageHeader,
+          UnsetClientIdentity,
+        } from "@mocky-balboa/server";
+        import {
+          createServer
+        } from "node:http";
+
+        createServer((req, res) => {
+          // Get the client identity from the incoming request headers
+          let clientIdentity = req.headers[ClientIdentityStorageHeader];
+
+          if (typeof clientIdentity !== "string") {
+            // Fallback value when the client identity is not provided, you won't be able to identify the client
+            // and mock network requests
+            clientIdentity = UnsetClientIdentity;
+          }
+
+          return clientIdentityStorage.run(clientIdentity, () => {
+            // Call application handler here
+          });
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import {
+        clientIdentityStorage,
+        ClientIdentityStorageHeader,
+        UnsetClientIdentity,
+      } from "@mocky-balboa/server";
+      import {
+        createServer
+      } from "node:http";
+
+      createServer((req, res) => {
+        // Get the client identity from the incoming request headers
+        let clientIdentity = req.headers[ClientIdentityStorageHeader];
+
+        if (typeof clientIdentity !== "string") {
+          // Fallback value when the client identity is not provided, you won't be able to identify the client
+          // and mock network requests
+          clientIdentity = UnsetClientIdentity;
+        }
+
+        return clientIdentityStorage.run(clientIdentity, () => {
+          // Call application handler here
+        });
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+[API reference](https://api-reference.mockybalboa.com/modules/_mocky-balboa_server)

@@ -1,0 +1,11 @@
+name: Setup dependencies
+description: Installs all tools and dependencies
+
+runs:
+  using: composite
+  steps:
+    - name: 🔧 Install tools
+      uses: jdx/mise-action@v3.1.0
+
+    - name: 📦 Install pnpm dependencies
+      uses: ./.github/actions/pnpm-install

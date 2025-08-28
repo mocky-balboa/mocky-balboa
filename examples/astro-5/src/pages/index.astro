@@ -1,0 +1,135 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getTrainingRegime, getNextFight, type CareerRecord } from "../lib/data";
+
+const [trainingRegimeResult, nextFightResult] = await Promise.allSettled([
+    getTrainingRegime(),
+    getNextFight(),
+]);
+
+const [trainingRegime, trainingRegimeError] =
+    trainingRegimeResult.status === "fulfilled"
+        ? trainingRegimeResult.value
+        : [null, trainingRegimeResult.reason as Error];
+
+const [nextFight, nextFightError] =
+    nextFightResult.status === "fulfilled"
+        ? nextFightResult.value
+        : [null, nextFightResult.reason as Error];
+
+const trainingStats = {
+    running: "10 Miles",
+    heavyBag: "3 x 2 minute rounds",
+    situps: "200 Reps",
+    intensity: "HIGH",
+};
+
+const getDataCardClasses = (error: boolean) => {
+    const classes = ["p-6", "rounded-xl", "border", "flex", "flex-col"];
+
+    if (error) {
+        classes.push("bg-red-50", "border-red-200");
+    } else {
+        classes.push("bg-gray-50", "border-gray-200");
+    }
+
+    return classes.join(" ");
+};
+
+const getRecordString = (record: CareerRecord) => {
+  return `${record.wins.total} wins (${record.wins.ko} KO), ${record.losses.total} losses (${record.losses.ko} KO), ${record.draws} draws`;
+};
+---
+
+<Layout>
+    <div class="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+        <div
+            class="bg-white p-8 rounded-2xl shadow-xl max-w-7xl w-full text-center"
+        >
+            <h1 class="text-3xl font-bold text-gray-800 mb-4 tracking-tight">
+                Mocky Balboa: The Italian Stallion's Training Log
+            </h1>
+            <p class="text-gray-600 mb-10 text-sm md:text-base">
+                Welcome to Mocky's corner! This page simulates data fetched from
+                a remote API on the server, ready for Mock-Balboa's network
+                request interception.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Left Card: Current Opponent -->
+                <div class:list={getDataCardClasses(!!nextFightError)}>
+                    <h2
+                        class="text-lg font-semibold mb-6"
+                        class:list={nextFightError
+                            ? ["text-red-700"]
+                            : ["text-gray-800"]}
+                    >
+                        Current opponent
+                    </h2>
+                    {
+                        nextFightError || !nextFight ? (
+                            <div class="flex flex-col justify-center text-red-700 flex-1">
+                                <p class="m-0">Failed to load next fight data</p>
+                            </div>
+                        ) : (
+                            <div class="grid grid-cols-2 gap-y-4 text-left text-gray-700">
+                                <div class="font-medium">Name</div>
+                                <div class="text-right">
+                                    {nextFight.opponent.name}
+                                </div>
+
+                                <div class="font-medium">Record</div>
+                                <div class="text-right">
+                                    {getRecordString(nextFight.opponent.record)}
+                                </div>
+
+                                <div class="font-medium">Next Fight</div>
+                                <div class="text-right">
+                                    {new Date(
+                                        nextFight.date,
+                                    ).toLocaleDateString()}
+                                </div>
+
+                                <div class="font-medium">Status</div>
+                                <div class="text-right text-blue-600 font-semibold">
+                                    {nextFight.status}
+                                </div>
+                            </div>
+                        )
+                    }
+                </div>
+
+                <!-- Right Card: Daily Training Stats -->
+                <div class:list={getDataCardClasses(!!trainingRegimeError)}>
+                    <h2
+                        class="text-lg font-semibold mb-6"
+                        class:list={trainingRegimeError
+                            ? ["text-red-700"]
+                            : ["text-gray-800"]}
+                    >
+                        Daily Training Stats
+                    </h2>
+                    {
+                        trainingRegimeError || !trainingRegime ? (
+                            <div class="flex flex-col justify-center text-red-700 flex-1">
+                                <p class="m-0">Failed to load training log data</p>
+                            </div>
+                        ) : (
+                            <div class="grid grid-cols-2 gap-y-4 text-left text-gray-700">
+                                {Object.entries(trainingRegime.routine).map(([label, value]) => (
+                                    <div class="font-medium">{label}</div>
+                                    <div class="text-right">{value}</div>
+                                ))}
+
+                                <div class="font-medium">Intensity</div>
+                                <div class="text-right text-purple-600 font-semibold">
+                                    {trainingRegime.intensity}
+                                </div>
+                            </div>
+                        )
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</Layout>

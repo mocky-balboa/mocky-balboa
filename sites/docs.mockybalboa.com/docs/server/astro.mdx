@@ -1,0 +1,157 @@
+---
+sidebar_position: 4
+title: Astro
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Mocky Balboa and Astro
+
+How to use Mocky Balboa with [Astro](https://astro.build/).
+
+:::info[Supported versions]
+
+__≥ 4.0.0__
+
+:::
+
+## Installation
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm add -D @mocky-balboa/astro
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm install -D @mocky-balboa/astro
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add -D @mocky-balboa/astro
+    ```
+  </TabItem>
+</Tabs>
+
+## Usage
+
+### Dev mode
+
+Everything needed to setup the integration is included in the `@mocky-balboa/astro` integration which can be used in your __Astro configuration file__.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import { defineConfig } from "astro/config";
+        import mockyBalboa from "@mocky-balboa/astro";
+
+        // https://astro.build/config
+        export default defineConfig({
+          integrations: [mockyBalboa()],
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { defineConfig } from "astro/config";
+      import mockyBalboa from "@mocky-balboa/astro";
+
+      // https://astro.build/config
+      export default defineConfig({
+        integrations: [mockyBalboa()],
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+You can disable the module by setting `enabled` to `false` or just by simply removing the integration from your Astro configuration.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import { defineConfig } from "astro/config";
+        import mockyBalboa from "@mocky-balboa/astro";
+
+        // https://astro.build/config
+        export default defineConfig({
+          integrations: [mockyBalboa({ enabled: false })],
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { defineConfig } from "astro/config";
+      import mockyBalboa from "@mocky-balboa/astro";
+
+      // https://astro.build/config
+      export default defineConfig({
+        integrations: [mockyBalboa({ enabled: false })],
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+### Build and serve
+
+Build your Astro application ensuring the `@mocky-balboa/astro` integration is enabled in your Astro configuration.
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm astro build
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm astro build
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn astro build
+    ```
+  </TabItem>
+</Tabs>
+
+Now serve your Astro application using the `mocky-balboa-astro` command.
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm mocky-balboa-astro
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm mocky-balboa-astro
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn mocky-balboa-astro
+    ```
+  </TabItem>
+</Tabs>
+
+Run `mocky-balboa-astro --help` for usage options or see below for all options.
+
+```bash
+Starts a Node.js http server powered by Express for your Astro application as well as the necessary mocky-balboa servers
+
+Arguments:
+  dist-dir                          Path to the directory where your Astro application is built (default: "dist")
+
+Options:
+  -p, --port [port]                 Port to run the server on (default: "3000")
+  --websocket-port [websocketPort]  Port to run the WebSocket server on (default: "58152")
+  -h, --hostname [hostname]         Hostname to bind the server to (default: "0.0.0.0")
+  -b, --base [base]                 Change this based on your astro.config.mjs, `base` option. They should match. (default: "/")
+  -t, --timeout [timeout]           Timeout in milliseconds for the mock server to receive a response from the client (default: "5000")
+  --help                            display help for command
+```
+
+## API reference
+
+[API reference](https://api-reference.mockybalboa.com/modules/_mocky-balboa_astro)

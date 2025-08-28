@@ -1,0 +1,30 @@
+{
+  "name": "@mocky-balboa/example-astro-5",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "build:tests": "ENABLE_MOCKY_BALBOA=true pnpm build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "test:cypress": "pnpm cypress run",
+    "test:playwright": "pnpm playwright test",
+    "start:tests": "mocky-balboa-astro",
+    "start:tests-dev": "ENABLE_MOCKY_BALBOA=true pnpm dev --port 3000 --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@astrojs/node": "^9.4.3",
+    "@tailwindcss/vite": "^4.1.12",
+    "astro": "^5.13.3",
+    "tailwindcss": "^4.1.12"
+  },
+  "devDependencies": {
+    "@mocky-balboa/astro": "workspace:*",
+    "@mocky-balboa/cypress": "workspace:*",
+    "@mocky-balboa/playwright": "workspace:*",
+    "@playwright/test": "^1.54.2",
+    "cypress": "^15.0.0",
+    "playwright": "^1.54.2"
+  }
+}

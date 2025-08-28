@@ -1,0 +1,181 @@
+---
+sidebar_position: 5
+title: Cypress
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Mocky Balboa and Cypress
+
+How to use Mocky Balboa with [Cypress](https://www.cypress.io/).
+
+:::info[Supported versions]
+
+__≥ 14.x.x__
+
+:::
+
+## Installation
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm add -D @mocky-balboa/cypress
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm install -D @mocky-balboa/cypress
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add -D @mocky-balboa/cypress
+    ```
+  </TabItem>
+</Tabs>
+
+## Usage
+
+Below is a basic example of how to use Mocky Balboa to mock a server-side network request from directly within your Cypress tests.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import { createClient } from "@mocky-balboa/cypress";
+
+        it("my page loads", async () => {
+          cy
+            .then(() => {
+              // Create our Mocky Balboa client and establish a connection with the server
+              return createClient();
+            }).then((client) => {
+              // Register our fixture on routes matching '**/api/users'
+              client.route("**/api/users", (route) => {
+                return route.fulfill({
+                  status: 200,
+                  body: JSON.stringify([
+                    { id: "user-1", name: "John Doe" },
+                    { id: "user-2", name: "Jane Doe" }
+                  ]),
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                });
+              });
+            });
+
+          // Visit the page of our application in the browser
+          cy.visit("/");
+
+          // Our mock above should have been returned on our server
+          cy.contains("John Doe");
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { createClient } from "@mocky-balboa/cypress";
+
+      it("my page loads", async () => {
+        cy
+          .then(() => {
+            // Create our Mocky Balboa client and establish a connection with the server
+            return createClient();
+          }).then((client) => {
+            // Register our fixture on routes matching '**/api/users'
+            client.route("**/api/users", (route) => {
+              return route.fulfill({
+                status: 200,
+                body: JSON.stringify([
+                  { id: "user-1", name: "John Doe" },
+                  { id: "user-2", name: "Jane Doe" }
+                ]),
+                headers: {
+                  "Content-Type": "application/json"
+                },
+              });
+            });
+          });
+
+        // Visit the page of our application in the browser
+        cy.visit("/");
+
+        // Our mock above should have been returned on our server
+        cy.contains("John Doe");
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+### Asserting on a request
+
+If you want to assert on a request made on the server you can use [client.waitForRequest](../client-guide#waiting-for-a-request).
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import { createClient } from "@mocky-balboa/cypress";
+
+        it("my page loads", async () => {
+          let usersRequestPromise: Promise<Request>;
+          cy
+            .then(() => {
+              // Create our Mocky Balboa client and establish a connection with the server
+              return createClient();
+            }).then((client) => {
+              // Listen for a request to the /api/users endpoint
+              usersRequestPromise = client.waitForRequest("**/api/users");
+            });
+
+          // Visit the page of our application in the browser
+          cy.visit("/");
+
+          cy.then(() => {
+            // Wait for the request to /api/users to be fulfilled
+            return requestPromise;
+          }).then((request) => {
+            // Assert on the request
+            expect(request.headers.get("X-Public-Api-Key")).to.equal(
+              "public-api-key",
+            );
+          });
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { createClient } from "@mocky-balboa/cypress";
+
+      it("my page loads", async () => {
+        let usersRequestPromise;
+        cy
+          .then(() => {
+            // Create our Mocky Balboa client and establish a connection with the server
+            return createClient();
+          }).then((client) => {
+            // Listen for a request to the /api/users endpoint
+            usersRequestPromise = client.waitForRequest("**/api/users");
+          });
+
+        // Visit the page of our application in the browser
+        cy.visit("/");
+
+        cy.then(() => {
+          // Wait for the request to /api/users to be fulfilled
+          return requestPromise;
+        }).then((request) => {
+          // Assert on the request
+          expect(request.headers.get("X-Public-Api-Key")).to.equal(
+            "public-api-key",
+          );
+        });
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+## Further usage
+
+1. See [the client guide](../client-guide) for more information on how you can mock server-side network requests from directly within your Cypress tests.
+1. See [the advanced page](../advanced) for more information on advanced usage and how the framework works under the hood.

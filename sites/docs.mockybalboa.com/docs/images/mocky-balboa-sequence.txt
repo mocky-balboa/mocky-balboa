@@ -1,0 +1,65 @@
+participant Test
+participant Browser
+participant Mocky Balboa Client
+participant Mocky Balboa server
+participant Application server
+participant MSW
+participant External API
+
+
+entryspacing 1.0
+group Establish client connection
+Test->Mocky Balboa Client:    Create client
+
+note over Mocky Balboa Client:Generate client id
+
+Mocky Balboa Client->Mocky Balboa server:<align:center>Establish connection\nwith client id</align>
+
+note over Mocky Balboa server:Store connection\nagainst client id
+
+Mocky Balboa server->Mocky Balboa Client:    Ack client identification
+
+Mocky Balboa Client->Test:<align:center>Client created\nand connection\nestablished</align>
+end
+
+group Setup route handler
+
+Test->Test:Setup callback for handling requests to\nhttp://localhost:3000/api/users
+
+end
+
+group load page
+note over Test:<align:center>Visit page in application\nresulting in outbound http\nrequest on the application server</align>
+
+parallel
+Test->Browser:<align:center>Open browser\n(send client ID in\ncustom request header\nwith all requests)</align>
+Browser->Application server:<align:center>Visit page\ne.g. http://localhost:8080</align>
+parallel off
+
+group External http request
+note over Application server:<align:center>Makes call to external API\nto load data for rendering the page</align>
+parallel
+Application server->MSW:<align:center>Outbound http request\nhttp://localhost:3000/api/users</align>
+MSW-[#888888;1]->>External API:<color:#888888>    Intercepted by MSW    </color>
+parallel off
+
+MSW->Mocky Balboa server:Send request
+
+Mocky Balboa server->Mocky Balboa Client:<align:center>Send request to\ncorrect client</align>
+
+Mocky Balboa Client->Test:<align:center>Resolve response via\ncallback registered earlier</align>
+
+Test->Mocky Balboa Client:Return response
+
+Mocky Balboa Client->Mocky Balboa server:<align:center>Respond to request\nvia client</align>
+
+Mocky Balboa server->MSW:HTTP response
+
+MSW->Application server:HTTP response
+end
+
+Application server->Browser:<align:center>Respond with HTML for\npage</align>
+
+end
+
+note over Test:Rest of test body ...

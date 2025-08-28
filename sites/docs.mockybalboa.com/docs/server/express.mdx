@@ -1,0 +1,85 @@
+---
+sidebar_position: 7
+title: Express
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Mocky Balboa and Express
+
+How to use Mocky Balboa with your [Express](https://expressjs.com/) server.
+
+:::info[Supported versions]
+
+__≥ 4.0.0__
+
+:::
+
+## Installation
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm add -D @mocky-balboa/server
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm install -D @mocky-balboa/server
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add -D @mocky-balboa/server
+    ```
+  </TabItem>
+</Tabs>
+
+## Usage
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import express from "express";
+        import { mockyBalboaMiddleware, startServer } from "@mocky-balboa/server";
+
+        void (async () => {
+          const app = express();
+
+          // Register the Mocky Balboa middleware
+          app.use(mockyBalboaMiddleware());
+
+          // Start the Mocky Balboa server.
+          // Pass optional server options here:
+          // https://api-reference.mockybalboa.com/functions/_mocky-balboa_server.startServer
+          await startServer();
+
+          // Your app goes here
+
+          app.listen(3000);
+        })();
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import express from "express";
+      import { mockyBalboaMiddleware, startServer } from "@mocky-balboa/server";
+
+      (async () => {
+        const app = express();
+
+        // Register the Mocky Balboa middleware
+        app.use(mockyBalboaMiddleware());
+
+        // Start the Mocky Balboa server.
+        // Pass optional server options here:
+        // https://api-reference.mockybalboa.com/functions/_mocky-balboa_server.startServer
+        await startServer();
+
+        // Your app goes here
+
+        app.listen(3000);
+      })();
+      ```
+  </TabItem>
+</Tabs>
