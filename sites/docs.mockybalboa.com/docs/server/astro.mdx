@@ -35,6 +35,32 @@ __≥ 4.0.0__
   </TabItem>
 </Tabs>
 
+If you're not already using it, you'll need to install the `@astrojs/node` adapter as well.
+
+:::warning[Additional dependency]
+
+You can skip installing `@astrojs/node` if you are only running tests against dev mode (__not recommended outside of local development__).
+
+:::
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm add -D @astrojs/node
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm install -D @astrojs/node
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add -D @astrojs/node
+    ```
+  </TabItem>
+</Tabs>
+
 ## Usage
 
 ### Dev mode
@@ -45,22 +71,38 @@ Everything needed to setup the integration is included in the `@mocky-balboa/ast
   <TabItem value="typescript" label="TypeScript" default>
         ```TypeScript
         import { defineConfig } from "astro/config";
+        import node from "@astrojs/node";
         import mockyBalboa from "@mocky-balboa/astro";
 
         // https://astro.build/config
         export default defineConfig({
           integrations: [mockyBalboa()],
+          // You need to use the node adapter to build the server for running tests against
+          // If you are only running tests in dev mode (not recommended outside of local development),
+          // then you don't need to use the node adapter
+          adapter: node({
+            // Make sure to build the server as middleware
+            mode: "middleware",
+          }),
         });
         ```
   </TabItem>
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
       import { defineConfig } from "astro/config";
+      import node from "@astrojs/node";
       import mockyBalboa from "@mocky-balboa/astro";
 
       // https://astro.build/config
       export default defineConfig({
         integrations: [mockyBalboa()],
+        // You need to use the node adapter to build the server for running tests against
+        // If you are only running tests in dev mode (not recommended outside of local development),
+        // then you don't need to use the node adapter
+        adapter: node({
+          // Make sure to build the server as middleware
+          mode: "middleware",
+        }),
       });
       ```
   </TabItem>

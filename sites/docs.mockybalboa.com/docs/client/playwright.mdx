@@ -47,7 +47,7 @@ Below is a basic example of how to use Mocky Balboa to mock a server-side networ
 
         test("my page loads", async ({ page, context }) => {
           // Create our Mocky Balboa client and establish a connection with the server
-          const client = await createClient();
+          const client = await createClient(context);
 
           // Register our fixture on routes matching '**/api/users'
           client.route("**/api/users", (route) => {
@@ -78,7 +78,7 @@ Below is a basic example of how to use Mocky Balboa to mock a server-side networ
 
       test("my page loads", async ({ page, context }) => {
         // Create our Mocky Balboa client and establish a connection with the server
-        const client = await createClient();
+        const client = await createClient(context);
 
         // Register our fixture on routes matching '**/api/users'
         client.route("**/api/users", (route) => {

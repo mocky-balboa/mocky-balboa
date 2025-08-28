@@ -48,7 +48,7 @@ Below is a basic example of how to use Mocky Balboa to mock a server-side networ
           cy
             .then(() => {
               // Create our Mocky Balboa client and establish a connection with the server
-              return createClient();
+              return createClient(cy);
             }).then((client) => {
               // Register our fixture on routes matching '**/api/users'
               client.route("**/api/users", (route) => {
@@ -81,7 +81,7 @@ Below is a basic example of how to use Mocky Balboa to mock a server-side networ
         cy
           .then(() => {
             // Create our Mocky Balboa client and establish a connection with the server
-            return createClient();
+            return createClient(cy);
           }).then((client) => {
             // Register our fixture on routes matching '**/api/users'
             client.route("**/api/users", (route) => {
