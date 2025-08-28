@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Conventional commit lint
         uses: ahmadnassri/action-commit-lint@v2.1.17
