@@ -1,26 +1,11 @@
-name: Validate, build and test
+name: Build and test
 
 on:
   workflow_call:
 
 jobs:
-  validate_commits:
-    name: 📖 Validate commit messages
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Conventional commit lint
-        uses: ahmadnassri/action-commit-lint@v2.1.17
-
   lint:
     name: 💅 Lint
-    needs: validate_commits
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,7 +21,6 @@ jobs:
 
   package_tests:
     name: 🧪 Run package tests
-    needs: validate_commits
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -55,7 +39,6 @@ jobs:
 
   find_examples:
     name: 🔎 Find examples
-    needs: validate_commits
     runs-on: ubuntu-latest
     permissions:
       contents: read

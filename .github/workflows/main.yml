@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-test:
-    uses: ./.github/workflows/validate-build-and-test.yml
+    uses: ./.github/workflows/build-and-test.yml
 
   release:
     name: 🚀 Release packages

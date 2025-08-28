@@ -4,10 +4,22 @@ on:
   pull_request:
 
 jobs:
+  validate_commits:
+    name: 📖 Validate commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Conventional commit lint
+        uses: ahmadnassri/action-commit-lint@v2.1.17
+
   build-and-test:
     permissions:
       contents: read
-    uses: ./.github/workflows/validate-build-and-test.yml
+    uses: ./.github/workflows/build-and-test.yml
 
   canary_release:
     name: 🐥 Canary release
