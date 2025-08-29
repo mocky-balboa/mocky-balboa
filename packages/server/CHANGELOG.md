@@ -1,5 +1,12 @@
 # @mocky-balboa/server
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [1d9392b]
+  - @mocky-balboa/websocket-messages@1.0.4
+
 ## 1.0.2
 
 ### Patch Changes

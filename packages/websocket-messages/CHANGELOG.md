@@ -1,5 +1,11 @@
 # @mocky-balboa/websocket-messages
 
+## 1.0.4
+
+### Patch Changes
+
+- 1d9392b: Dependency bump on zod from ^4.0.17 to ^4.1.5
+
 ## 1.0.3
 
 ### Patch Changes

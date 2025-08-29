@@ -1,5 +1,11 @@
 # @mocky-balboa/astro
 
+## 1.0.3
+
+### Patch Changes
+
+- @mocky-balboa/server@1.0.3
+
 ## 1.0.2
 
 ### Patch Changes
