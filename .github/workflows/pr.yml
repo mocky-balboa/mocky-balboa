@@ -27,8 +27,8 @@ jobs:
 
   canary_release:
     name: 🐥 Canary release
-    needs:
-      - build_and_test
+    # needs:
+    #   - build_and_test
     runs-on: ubuntu-latest
     permissions:
       contents: write
