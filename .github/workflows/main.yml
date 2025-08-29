@@ -9,6 +9,8 @@ jobs:
   build_and_test:
     name: 🛠️ Build and test
     uses: ./.github/workflows/build-and-test.yml
+    permissions:
+      contents: read
 
   release:
     name: 🚀 Release packages
