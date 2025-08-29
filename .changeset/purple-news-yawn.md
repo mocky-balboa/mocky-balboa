@@ -1,10 +1,10 @@
 ---
-"@mocky-balboa/playwright": major
-"@mocky-balboa/cypress": major
-"@mocky-balboa/next-js": major
-"@mocky-balboa/server": major
-"@mocky-balboa/astro": major
-"@mocky-balboa/nuxt": major
+"@mocky-balboa/playwright": patch
+"@mocky-balboa/cypress": patch
+"@mocky-balboa/next-js": patch
+"@mocky-balboa/server": patch
+"@mocky-balboa/astro": patch
+"@mocky-balboa/nuxt": patch
 "@mocky-balboa/client": patch
 "@mocky-balboa/logger": patch
 "@mocky-balboa/shared-config": patch

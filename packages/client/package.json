@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Client library for Mocky Balboa to interact with the WebSocket server for real-time network mocking in your test suites.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

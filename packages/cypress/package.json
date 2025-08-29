@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/cypress",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Cypress integration for Mocky Balboa. Mock your server-side network requests directly inside your Cypress tests.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",
