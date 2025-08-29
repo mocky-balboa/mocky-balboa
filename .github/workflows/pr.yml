@@ -43,11 +43,12 @@ jobs:
         run: |
           pnpm changeset status --output release.json 2> /dev/null
           HAS_RELEASE=false
-          if test -f release.json; then
+          if [ test -f release.json ]; then
             cat release.json
             HAS_RELEASE=true
           fi
 
+          echo ""
           echo "has release $HAS_RELEASE"
           echo "has-changeset=$HAS_RELEASE" >> $GITHUB_OUTPUT
 
