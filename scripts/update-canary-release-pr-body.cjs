@@ -118,7 +118,7 @@ const main = async () => {
 
   if (prBody.match(new RegExp(start))) {
     prBody = prBody.replace(
-      new RegExp(`${start}.*?${end}`),
+      new RegExp(`${start}.*?${end}`, "s"),
       releaseDescription,
     );
   } else {
