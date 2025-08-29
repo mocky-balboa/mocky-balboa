@@ -24,19 +24,6 @@ jobs:
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
 
-      - name: Write release status
-        id: release_status
-        run: |
-          pnpm changeset status --output release.json 2> /dev/null || true
-          HAS_RELEASE=false
-          if [ test -f release.json ]; then
-            cat release.json
-            HAS_RELEASE=true
-          fi
-
-          echo "has release $HAS_RELEASE"
-          echo "has-changeset=$HAS_RELEASE" >> $GITHUB_OUTPUT
-
       - name: Build packages
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
         run: pnpm build:packages
@@ -45,9 +32,10 @@ jobs:
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
         run: |
           pnpm changeset version
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
           pnpm changeset publish
+          rm .npmrc
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Commit changes
