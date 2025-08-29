@@ -19,25 +19,9 @@ jobs:
       - name: Oxlint
         run: pnpm lint
 
-  check_skip_flags:
-    name: Check skip flags
-    runs-on: ubuntu-latest
-    outputs:
-      head-commit-message: ${{ steps.get_head_commit_message.outputs.headCommitMsg }}
-    steps:
-      - name: Get repo
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: Print head git commit message
-        id: get_head_commit_message
-        run: echo "::set-output name=headCommitMsg::$(git show -s --format=%s)"
-
   package_tests:
     name: 🧪 Run package tests
     runs-on: ubuntu-latest
-    needs: check_skip_flags
-    if: ${{ !contains(needs.check_skip_flags.outputs.head-commit-message, '[skip-tests]') }}
     permissions:
       contents: read
     steps:
@@ -56,8 +40,6 @@ jobs:
   find_examples:
     name: 🔎 Find examples
     runs-on: ubuntu-latest
-    needs: check_skip_flags
-    if: ${{ !contains(needs.check_skip_flags.outputs.head-commit-message, '[skip-tests]') }}
     permissions:
       contents: read
     outputs:
@@ -73,10 +55,7 @@ jobs:
   examples_playwright_tests:
     name: 🎭 Run Playwright tests for examples
     runs-on: ubuntu-latest
-    if: ${{ !contains(needs.check_skip_flags.outputs.head-commit-message, '[skip-tests]') }}
-    needs:
-      - find_examples
-      - check_skip_flags
+    needs: find_examples
     permissions:
       contents: read
     strategy:
@@ -124,10 +103,7 @@ jobs:
   examples_cypress_tests:
     name: 🌴 Run Cypress tests for examples
     runs-on: ubuntu-latest
-    if: ${{ !contains(needs.check_skip_flags.outputs.head-commit-message, '[skip-tests]') }}
-    needs:
-      - find_examples
-      - check_skip_flags
+    needs: find_examples
     permissions:
       contents: read
     strategy:
