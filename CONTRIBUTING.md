@@ -70,7 +70,14 @@ Utilise vitest for unit testing the packages and the examples to cover end-to-en
 
 ## Release Process
 
-Releases are automatically handled by CI using [Semantic Release](https://github.com/semantic-release/semantic-release). Conventional commits are used to determine the release version as well as used to generate the changelog. Only changed packages are deployed, and all packages are deployed when the pnpm lockfile is updated. All packages are published to npm.
+Releases are managed via [Changesets](https://github.com/changesets/changesets). When you need to create a release:
+
+- Run `pnpm prepare-release` and follow the prompts to setup the release
+- Commit the generated changeset file
+- Push the changes to your branch
+- CI will automatically create a canary release for all packages that need to be published
+   - The canary release versions will be written back to the PR description for convenience
+- Once merged to main, CI will automatically create publish the release
 
 ---
 

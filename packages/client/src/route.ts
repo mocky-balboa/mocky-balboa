@@ -1,4 +1,5 @@
 import { logger } from "./logger.js";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Client } from "./client.js";
 
 /** Options when fetching a route using [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) */

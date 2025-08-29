@@ -13,6 +13,7 @@
     "lint": "oxlint",
     "test:packages": "pnpm --filter \"./packages/*\" test",
     "prepare": "husky",
+    "prepare-release": "pnpm changeset",
     "package-post-cjs-build": "node ./scripts/package-post-cjs-build.cjs"
   },
   "keywords": [],
@@ -24,6 +25,7 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@types/recursive-readdir": "^2.2.4",
     "husky": "^9.1.7",
+    "octokit": "^5.0.3",
     "oxlint": "^1.11.2",
     "recursive-readdir": "^2.2.3"
   }

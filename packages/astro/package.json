@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/astro",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Astro integration for Mocky Balboa. Mock your server-side network requests in your test suites.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

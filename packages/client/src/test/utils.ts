@@ -1,6 +1,6 @@
 import { MessageType, parseMessage } from "@mocky-balboa/websocket-messages";
 import getPort from "get-port";
-import { WebSocketServer, type RawData } from "ws";
+import { WebSocketServer } from "ws";
 import WebSocket from "isomorphic-ws";
 import express from "express";
 import { Server } from "node:http";
