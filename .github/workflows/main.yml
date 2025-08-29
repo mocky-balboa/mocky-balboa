@@ -50,6 +50,7 @@ jobs:
         run: |
           pnpm changeset version
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
+          node scripts/update-package-readmes.cjs
           pnpm changeset publish
           rm .npmrc
         env:
