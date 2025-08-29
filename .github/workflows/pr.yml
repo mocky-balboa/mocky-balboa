@@ -66,6 +66,7 @@ jobs:
         run: |
           pnpm changeset version --snapshot canary
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
+          node scripts/update-package-readmes.cjs
           pnpm changeset publish --tag canary --no-git-tag
           rm .npmrc
         env:

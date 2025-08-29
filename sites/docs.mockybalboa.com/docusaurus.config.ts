@@ -22,8 +22,8 @@ const config: Config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: "mockybalboa", // Usually your GitHub org/user name.
-  projectName: "mockybalboa", // Usually your repo name.
+  organizationName: "mocky-balboa", // Usually your GitHub org/user name.
+  projectName: "mocky-balboa", // Usually your repo name.
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
@@ -45,7 +45,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            "https://github.com/mockybalboa/mockybalboa/blob/main/sites/docs.mockybalboa/",
+            "https://github.com/mocky-balboa/mocky-balboa/blob/main/sites/docs.mockybalboa.com/",
         },
         theme: {
           customCss: "./src/css/custom.css",
@@ -76,7 +76,7 @@ const config: Config = {
           position: "right",
         },
         {
-          href: "https://github.com/mockybalboa/mockybalboa",
+          href: "https://github.com/mocky-balboa/mocky-balboa",
           label: "GitHub",
           position: "right",
         },
