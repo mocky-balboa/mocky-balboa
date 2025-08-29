@@ -45,7 +45,7 @@ jobs:
       - name: Write release status
         id: release_status
         run: |
-          pnpm changeset status --since origin/main --output release.json
+          pnpm changeset status --since origin/main --output release.json 2> /dev/null || true
           HAS_RELEASE=false
           if [ -f release.json ]; then
             cat release.json
@@ -64,9 +64,10 @@ jobs:
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
         run: |
           pnpm changeset version --snapshot canary
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
           pnpm changeset publish --tag canary --no-git-tag
+          rm .npmrc
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Update PR
