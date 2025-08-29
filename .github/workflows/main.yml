@@ -66,4 +66,4 @@ jobs:
           git config --global user.email "ci-bot@noreply.mockybalboa.com"
           git add packages/*/CHANGELOG.md packages/*/package.json
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-          git push --tags
+          git push origin main --tags
