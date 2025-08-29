@@ -14,7 +14,7 @@
     "start:tests-dev": "pnpm start:tests --dev"
   },
   "dependencies": {
-    "react": "^18",
+    "react": "^19",
     "react-dom": "^18",
     "next": "14.2.32"
   },
@@ -29,7 +29,7 @@
     "get-port": "^7.1.0",
     "typescript": "catalog:",
     "@types/node": "catalog:",
-    "@types/react": "^18",
+    "@types/react": "^19",
     "@types/react-dom": "^18"
   }
 }
