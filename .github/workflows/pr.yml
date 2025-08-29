@@ -36,10 +36,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
+          ref: ${{github.event.pull_request.head.sha}}
           fetch-depth: 0
-
-      - name: Fetch Main Branch
-        run: git fetch origin main
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
@@ -47,7 +45,7 @@ jobs:
       - name: Write release status
         id: release_status
         run: |
-          pnpm changeset status --output release.json
+          pnpm changeset status --since origin/main --output release.json
           HAS_RELEASE=false
           if [ -f release.json ]; then
             cat release.json
