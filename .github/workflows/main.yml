@@ -63,7 +63,7 @@ jobs:
         run: |
           git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
           git config --global user.email "ci-bot@noreply.mockybalboa.com"
-          git add packages/*/CHANGELOG.md packages/*/package.json
+          git add .changeset/ packages/*/CHANGELOG.md packages/*/package.json
           STAGED_FILE_COUNT=$(git diff --name-only --cached | wc -l | awk '{print $1}')
           if [ "$STAGED_FILE_COUNT" -eq 0 ]; then exit 0; fi
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
