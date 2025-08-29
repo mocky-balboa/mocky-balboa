@@ -1,5 +1,11 @@
 # @mocky-balboa/websocket-messages
 
+## 1.0.3
+
+### Patch Changes
+
+- c47c920: Updated package documentation
+
 ## 1.0.2
 
 ### Patch Changes
