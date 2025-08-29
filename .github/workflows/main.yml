@@ -31,10 +31,9 @@ jobs:
         id: release_status
         run: |
           pnpm changeset status --output release.json 2> /dev/null || true
-          HAS_RELEASE=false
+          HAS_RELEASE="$(node scripts/has-release-prepared.cjs)"
           if [ -f release.json ]; then
             cat release.json
-            HAS_RELEASE=true
           fi
 
           echo ""
@@ -65,5 +64,7 @@ jobs:
           git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
           git config --global user.email "ci-bot@noreply.mockybalboa.com"
           git add packages/*/CHANGELOG.md packages/*/package.json
+          STAGED_FILE_COUNT=$(git diff --name-only --cached | wc -l | awk '{print $1}')
+          if [ "$STAGED_FILE_COUNT" -eq 0 ]; then exit 0; fi
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
           git push origin main --tags

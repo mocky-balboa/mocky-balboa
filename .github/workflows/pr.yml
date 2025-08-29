@@ -47,10 +47,9 @@ jobs:
         id: release_status
         run: |
           pnpm changeset status --since origin/main --output release.json 2> /dev/null || true
-          HAS_RELEASE=false
+          HAS_RELEASE="$(node scripts/has-release-prepared.cjs)"
           if [ -f release.json ]; then
             cat release.json
-            HAS_RELEASE=true
           fi
 
           echo ""
