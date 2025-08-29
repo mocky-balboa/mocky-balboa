@@ -15,7 +15,7 @@
     "start:tests-dev": "ENABLE_MOCKY_BALBOA=true pnpm dev --port 3000 --host 0.0.0.0"
   },
   "dependencies": {
-    "@astrojs/node": "^8",
+    "@astrojs/node": "^9",
     "@tailwindcss/vite": "^4.1.12",
     "astro": "^4",
     "tailwindcss": "^4.1.12"

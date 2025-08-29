@@ -93,8 +93,8 @@ importers:
   examples/astro-4:
     dependencies:
       '@astrojs/node':
-        specifier: ^8
-        version: 8.3.4(astro@4.16.19(@types/node@24.3.0)(lightningcss@1.30.1)(rollup@4.46.3)(terser@5.43.1)(typescript@5.9.2))
+        specifier: ^9
+        version: 9.4.3(astro@4.16.19(@types/node@24.3.0)(lightningcss@1.30.1)(rollup@4.46.3)(terser@5.43.1)(typescript@5.9.2))
       '@tailwindcss/vite':
         specifier: ^4.1.12
         version: 4.1.12(vite@5.4.19(@types/node@24.3.0)(lightningcss@1.30.1)(terser@5.43.1))
@@ -919,11 +919,6 @@ packages:
 
   '@astrojs/markdown-remark@6.3.6':
     resolution: {integrity: sha512-bwylYktCTsLMVoCOEHbn2GSUA3c5KT/qilekBKA3CBng0bo1TYjNZPr761vxumRk9kJGqTOtU+fgCAp5Vwokug==}
-
-  '@astrojs/node@8.3.4':
-    resolution: {integrity: sha512-xzQs39goN7xh9np9rypGmbgZj3AmmjNxEMj9ZWz5aBERlqqFF3n8A/w/uaJeZ/bkHS60l1BXVS0tgsQt9MFqBA==}
-    peerDependencies:
-      astro: ^4.2.0
 
   '@astrojs/node@9.4.3':
     resolution: {integrity: sha512-P9BQHY8wQU1y9obknXzxV5SS3EpdaRnuDuHKr3RFC7t+2AzcMXeVmMJprQGijnQ8VdijJ8aS7+12tx325TURMQ==}
@@ -12277,10 +12272,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/node@8.3.4(astro@4.16.19(@types/node@24.3.0)(lightningcss@1.30.1)(rollup@4.46.3)(terser@5.43.1)(typescript@5.9.2))':
+  '@astrojs/node@9.4.3(astro@4.16.19(@types/node@24.3.0)(lightningcss@1.30.1)(rollup@4.46.3)(terser@5.43.1)(typescript@5.9.2))':
     dependencies:
+      '@astrojs/internal-helpers': 0.7.2
       astro: 4.16.19(@types/node@24.3.0)(lightningcss@1.30.1)(rollup@4.46.3)(terser@5.43.1)(typescript@5.9.2)
-      send: 0.19.0
+      send: 1.2.0
       server-destroy: 1.0.1
     transitivePeerDependencies:
       - supports-color
