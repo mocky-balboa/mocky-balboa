@@ -7,6 +7,8 @@ jobs:
   validate_commits:
     name: 📖 Validate commit messages
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -24,6 +26,8 @@ jobs:
     name: 🛠️ Build and test
     needs: validate_commits
     uses: ./.github/workflows/build-and-test.yml
+    permissions:
+      contents: read
 
   canary_release:
     name: 🐥 Canary release
@@ -82,5 +86,6 @@ jobs:
     name: ✅ PR checks passed
     needs: canary_release
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - run: echo "PR checks passed"
