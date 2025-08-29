@@ -5,8 +5,10 @@ const packageRootDir = path.join(__dirname, "..");
 const rootDir = path.resolve(packageRootDir, "..", "..");
 const packagesDir = path.join(rootDir, "packages");
 const changelogDocsDir = path.join(packageRootDir, "docs", "changelogs");
-const changelogDocsDirStats = fs.statSync(changelogDocsDir);
-if (!changelogDocsDirStats.isDirectory()) {
+if (
+  !fs.existsSync(changelogDocsDir) ||
+  !fs.statSync(changelogDocsDir).isDirectory()
+) {
   fs.mkdirSync(changelogDocsDir);
 }
 
@@ -18,8 +20,8 @@ for (const index in packagesItems) {
   if (!itemStats.isDirectory()) continue;
 
   const packageJsonPath = path.join(itemPath, "package.json");
-  const packageJsonStats = fs.statSync(packageJsonPath);
-  if (!packageJsonStats.isFile()) continue;
+  if (!fs.existsSync(packageJsonPath) || !fs.statSync(packageJsonPath).isFile())
+    continue;
 
   try {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
@@ -29,15 +31,20 @@ for (const index in packagesItems) {
     if (!packageName || !packageVersion) continue;
 
     const changelogPath = path.join(itemPath, "CHANGELOG.md");
-    const changelogStats = fs.statSync(changelogPath);
-    let changelog = "No changelog found";
-    if (changelogStats.isFile()) {
+    let changelog = undefined;
+    if (fs.existsSync(changelogPath) && fs.statSync(changelogPath).isFile()) {
       changelog = fs.readFileSync(changelogPath, "utf8");
+      console.log(`Changelog found for package ${packageName}`);
+    } else {
+      console.log(`No changelog found for package ${packageName}`);
     }
 
     const changelogDocPath = path.join(
       changelogDocsDir,
       `${packageName.replace(/\//g, "-")}.md`,
+    );
+    console.log(
+      `Writing ${changelog ? "" : "empty "}changelog for package ${packageName}`,
     );
     fs.writeFileSync(
       changelogDocPath,
@@ -46,7 +53,10 @@ sidebar_position: ${index}
 title: "${packageName}"
 ---
 
-${changelog}`,
+${changelog || "No changelog available"}`,
+    );
+    console.log(
+      `Written ${changelog ? "" : "empty "}changelog for package ${packageName}`,
     );
   } catch (error) {
     console.error(`Error processing package ${packagesItems[index]}:`, error);

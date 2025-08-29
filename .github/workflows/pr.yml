@@ -77,3 +77,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
         run: node scripts/update-canary-release-pr-body.cjs
+
+  pr_checks_passed:
+    name: ✅ PR checks passed
+    needs: canary_release
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "PR checks passed"
