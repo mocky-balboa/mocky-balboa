@@ -27,7 +27,7 @@ jobs:
       - name: Write release status
         id: release_status
         run: |
-          pnpm changeset status --output release.json 2> /dev/null
+          pnpm changeset status --output release.json 2> /dev/null || true
           HAS_RELEASE=false
           if [ test -f release.json ]; then
             cat release.json
