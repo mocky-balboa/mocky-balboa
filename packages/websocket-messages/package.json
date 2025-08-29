@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "uuid": "catalog:",
-    "zod": "^4.0.17"
+    "zod": "^4.1.5"
   },
   "devDependencies": {
     "@swc/cli": "catalog:",
