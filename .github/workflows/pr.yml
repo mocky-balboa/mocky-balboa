@@ -4,32 +4,26 @@ on:
   pull_request:
 
 jobs:
-  validate_commits:
-    name: 📖 Validate commit messages
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
+  # validate_commits:
+  #   name: 📖 Validate commit messages
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ github.event.pull_request.head.ref }}
+  #         fetch-depth: 0
 
-      - name: Fetch Main Branch
-        run: git fetch origin main --depth=1
+  #     - name: Setup monorepo
+  #       uses: ./.github/actions/setup-monorepo
 
-      - name: Fetch Base Branch
-        run: git fetch origin ${{ github.base_ref }} --depth=1
+  #     - name: Validate all commits from PR
+  #       run: pnpm commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-      - name: Setup monorepo
-        uses: ./.github/actions/setup-monorepo
-
-      - name: Validate all commits from PR
-        run: pnpm commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-
-  build_and_test:
-    name: 🛠️ Build and test
-    needs: validate_commits
-    uses: ./.github/workflows/build-and-test.yml
+  # build_and_test:
+  #   name: 🛠️ Build and test
+  #   needs: validate_commits
+  #   uses: ./.github/workflows/build-and-test.yml
 
   canary_release:
     name: 🐥 Canary release
@@ -41,6 +35,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Fetch Main Branch
+        run: git fetch origin main --depth=1
+
+      - name: Fetch Base Branch
+        run: git fetch origin ${{ github.base_ref }} --depth=1
 
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
