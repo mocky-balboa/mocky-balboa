@@ -385,18 +385,18 @@ Useful helper function when you want to modify the response before passing it ba
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
       client.route("**/api", (route) => {
-      const response = await route.fetch();
-      const responseJson = await response.json();
+        const response = await route.fetch();
+        const responseJson = await response.json();
 
-      // Add custom data field to the original response
-      const modifiedResponse = client.modifiedResponse({
+        // Add custom data field to the original response
+        const modifiedResponse = client.modifiedResponse({
           body: JSON.stringify({
           ...responseJson,
           modified: true,
           }),
-      });
+        });
 
-      return modifiedResponse;
+        return modifiedResponse;
       });
       ```
   </TabItem>
@@ -426,3 +426,56 @@ Passthrough results in the request being fulfilled on the server over the networ
 </Tabs>
 
 [Route.passthrough API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#passthrough).
+
+### request (property)
+
+:::info
+
+First introduced in `@mocky-balboa/client@1.1.0`
+
+:::
+
+The request property is the original request object that was passed to the route handler, an instance of the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) class. You can use this to differentiate between how you might want to handle different requests on the same route pattern.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.route("**/api", (route) => {
+        const requestMethod = route.request.method;
+        if (requestMethod === "GET") {
+          return route.fulfill({
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ hello: "world" }),
+          });
+        }
+
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hello: "again world" }),
+        });
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      client.route("**/api", (route) => {
+        const requestMethod = route.request.method;
+        if (requestMethod === "GET") {
+          return route.fulfill({
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ hello: "world" }),
+          });
+        }
+
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hello: "again world" }),
+        });
+      });
+      ```
+  </TabItem>
+</Tabs>

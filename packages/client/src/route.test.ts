@@ -256,6 +256,16 @@ describe("Route.fetch", () => {
       }),
     );
   });
+
+  test("the request body stream can be read multiple times", async () => {
+    // Call fetch twice to ensure the request body can be read multiple times
+    await route.fetch();
+    await route.fetch();
+
+    // Read the request body from the original request
+    const requestBody = await route.request.text();
+    expect(requestBody).toEqual(JSON.stringify({ hello: "world" }));
+  });
 });
 
 describe("Route.continue", () => {

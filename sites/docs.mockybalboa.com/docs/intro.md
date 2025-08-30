@@ -22,3 +22,8 @@ The server integration is responsible for working inside the same process as you
 ### Client
 
 The client integration is responsible for working inside your browser automation framework. It receives requests from the server and allows you to handle them directly within your test suite.
+
+## Similar solutions
+
+- [@playwright/ssr](https://github.com/playwright-community/ssr) no longer active
+- [request-mocking-protocol](https://github.com/vitalets/request-mocking-protocol)
