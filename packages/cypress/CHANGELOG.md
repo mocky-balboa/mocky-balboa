@@ -1,5 +1,12 @@
 # @mocky-balboa/cypress
 
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [bd1a3ad]
+  - @mocky-balboa/client@1.1.0
+
 ## 1.0.3
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @mocky-balboa/client
 
+## 1.1.0
+
+### Minor Changes
+
+- bd1a3ad: Added support for reading the request directly on the route via route.request
+
 ## 1.0.4
 
 ### Patch Changes
