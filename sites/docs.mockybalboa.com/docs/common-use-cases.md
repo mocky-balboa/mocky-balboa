@@ -209,5 +209,8 @@ client.route("https://myservice.com/graphql", async (route) => {
         }),
       });
   }
+
+  // Define a fallback behaviour for when the operationName is not recognized
+  return route.passthrough();
 });
 ```
