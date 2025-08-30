@@ -385,18 +385,18 @@ Useful helper function when you want to modify the response before passing it ba
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
       client.route("**/api", (route) => {
-      const response = await route.fetch();
-      const responseJson = await response.json();
+        const response = await route.fetch();
+        const responseJson = await response.json();
 
-      // Add custom data field to the original response
-      const modifiedResponse = client.modifiedResponse({
+        // Add custom data field to the original response
+        const modifiedResponse = client.modifiedResponse({
           body: JSON.stringify({
           ...responseJson,
           modified: true,
           }),
-      });
+        });
 
-      return modifiedResponse;
+        return modifiedResponse;
       });
       ```
   </TabItem>
