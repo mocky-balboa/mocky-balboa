@@ -141,13 +141,23 @@ export type RouteResponse =
  * Route passed as an argument to the handler callback on {@link Client.route}
  */
 export class Route {
-  /** Request body string. The body is a stream, which once consumed is no longer available */
-  private requestBodyString: string | null | undefined;
+  /** The original request */
+  private readonly _request: Request;
 
   /**
    * @param request - the original request
    */
-  constructor(private readonly request: Request) {}
+  constructor(request: Request) {
+    this._request = request;
+  }
+
+  /**
+   * Get a clone of the original request
+   */
+  get request(): Request {
+    const clonedRequest = this._request.clone();
+    return clonedRequest;
+  }
 
   /**
    * When fulfilling a route
@@ -250,23 +260,12 @@ export class Route {
   }
 
   /**
-   * Reads the cached request body string, or reads from the request body stream if not already read
+   * Gets the request body as a string. Only strings are supported on
+   * the requests
    */
-  private async getRequestBodyString(): Promise<string | null> {
-    if (this.requestBodyString !== undefined) return this.requestBodyString;
-    if (!this.request.body) {
-      this.requestBodyString = null;
-      return this.requestBodyString;
-    }
-
-    const chunks = [];
-    for await (const chunk of this.request.body) {
-      chunks.push(Buffer.from(chunk));
-    }
-
-    // Make sure to set the requestBodyString after reading the stream
-    this.requestBodyString = Buffer.concat(chunks).toString("utf-8");
-    return this.requestBodyString;
+  private getRequestBodyString(): Promise<string | null> {
+    if (!this._request.body) null;
+    return this.request.text();
   }
 
   /**
@@ -325,9 +324,9 @@ export class Route {
     url,
     keepalive = DefaultNetworkOptions.keepalive,
   }: FetchOptions = {}): Promise<Response> {
-    if (url && new URL(url).protocol !== new URL(this.request.url).protocol) {
+    if (url && new URL(url).protocol !== new URL(this._request.url).protocol) {
       throw new Error(
-        `Protocol mismatch: ${new URL(url).protocol} ${new URL(this.request.url).protocol}\n\n${url}\n${this.request.url}`,
+        `Protocol mismatch: ${new URL(url).protocol} ${new URL(this._request.url).protocol}\n\n${url}\n${this._request.url}`,
       );
     }
 
@@ -336,21 +335,21 @@ export class Route {
     let requestInit: RequestInit;
     if (method === "GET" || method === "HEAD") {
       requestInit = {
-        headers: headers ? new Headers(headers) : this.request.headers,
-        method: method ?? this.request.method,
+        headers: headers ? new Headers(headers) : this._request.headers,
+        method: method ?? this._request.method,
         body: null,
         keepalive,
       };
     } else {
       requestInit = {
-        headers: headers ? new Headers(headers) : this.request.headers,
-        method: method ?? this.request.method,
+        headers: headers ? new Headers(headers) : this._request.headers,
+        method: method ?? this._request.method,
         body,
         keepalive,
       };
     }
 
-    const request = new Request(url ?? this.request.url, requestInit);
+    const request = new Request(url ?? this._request.url, requestInit);
 
     let attempts = 0;
     while (attempts < maxRetries) {
