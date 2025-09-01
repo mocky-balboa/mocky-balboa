@@ -4,11 +4,11 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import mockyBalboa from "@mocky-balboa/react-router";
 
-export default defineConfig(({ isSsrBuild }) => ({
+export default defineConfig({
   plugins: [
     tailwindcss(),
     reactRouter(),
     tsconfigPaths(),
     mockyBalboa() as any,
   ],
-}));
+});
