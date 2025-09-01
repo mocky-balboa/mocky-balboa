@@ -69,20 +69,15 @@ The CLI tool will source your Next.js configuration file when you don't explicit
 #### CLI options
 
 ```bash
-  -p, --port [port]                 Port to run the server on (default: "3000")
-  --websocket-port [websocketPort]  Port to run the WebSocket server on (default:
-                                    "58152")
-  -h, --hostname [hostname]         Hostname to bind the server to (default:
-                                    "localhost")
-  -d, --dev                         Run the Next.js server in development mode (default:
-                                    false)
-  -t, --timeout [timeout]           Timeout in milliseconds for the mock server to
-                                    receive a response from the client (default: "5000")
-  --conf [conf]                     Relative or absolute path to the Next.js
-                                    configuration file. Include the file extension.
-                                    Defaults to discovering the path traversing up from
-                                    the current working directory.
-  --help                            display help for command
+-p, --port [port]                 Port to run the server on (default: "3000")
+--websocket-port [websocketPort]  Port to run the WebSocket server on (default: "58152")
+-h, --hostname [hostname]         Hostname to bind the server to (default: "localhost")
+-d, --dev                         Run the Next.js server in development mode (default: false)
+-q, --quiet                       Quiet mode, when enabled suppresses Next.js logs (default: false)
+-t, --timeout [timeout]           Timeout in milliseconds for the mock server to receive a response from the client (default: "5000")
+--conf [conf]                     Relative or absolute path to the Next.js configuration file. Include the file extension. Defaults to
+                                discovering the path traversing up from the current working directory.
+--help                            display help for command
 ```
 
 ### Programmatically
@@ -101,6 +96,9 @@ You might prefer to use the `startServers` function programmatically, especially
             (options) => {
               return next({
                 ...options,
+                // If you want to enable experimental features that are available to enable via the options
+                // experimentalHttpsServer: true,
+                // experimentalTestProxy: true,
                 conf: nextConfig,
               });
             },
@@ -121,6 +119,9 @@ You might prefer to use the `startServers` function programmatically, especially
           (options) => {
             return next({
               ...options,
+              // If you want to enable experimental features that are available to enable via the options
+              // experimentalHttpsServer: true,
+              // experimentalTestProxy: true,
               conf: nextConfig,
             });
           },
