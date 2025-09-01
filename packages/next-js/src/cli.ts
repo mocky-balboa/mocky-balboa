@@ -4,6 +4,10 @@ import { createJiti } from "jiti";
 import { Command } from "commander";
 import { startServers, type CreateNextServer } from "./next-js.js";
 import { DefaultWebSocketServerPort } from "@mocky-balboa/shared-config";
+import {
+  createSelfSignedCertificate,
+  type SelfSignedCertificate,
+} from "./mkcert.js";
 
 const cli = new Command();
 
@@ -38,6 +42,22 @@ cli.option(
 cli.option(
   "--conf [conf]",
   "Relative or absolute path to the Next.js configuration file. Include the file extension. Defaults to discovering the path traversing up from the current working directory.",
+);
+cli.option(
+  "--experimental-https",
+  "Enable experimental HTTPS support (parity with Next.js flag of same name)",
+);
+cli.option(
+  "--experimental-https-cert [certPath]",
+  "Optional path to the HTTPS certificate file (parity with Next.js flag of same name)",
+);
+cli.option(
+  "--experimental-https-ca [caPath]",
+  "Optional path to the HTTPS Certificate Authority file (parity with Next.js flag of same name)",
+);
+cli.option(
+  "--experimental-https-key [keyPath]",
+  "Optional path to the HTTPS key file (parity with Next.js flag of same name)",
 );
 
 const jiti = createJiti(import.meta.url);
@@ -84,6 +104,10 @@ const main = async () => {
     dev: boolean;
     quiet: boolean;
     conf?: string;
+    experimentalHttps: boolean;
+    experimentalHttpsKey?: string;
+    experimentalHttpsCert?: string;
+    experimentalHttpsCa?: string;
   }>();
 
   const nextConfigPath = cliOptions.conf
@@ -98,6 +122,26 @@ const main = async () => {
   const nextConfig = await jiti.import<
     { default: Record<string, unknown> } | Record<string, unknown>
   >(nextConfigPath);
+
+  let certificate: SelfSignedCertificate | undefined;
+  if (cliOptions.experimentalHttps) {
+    const key = cliOptions.experimentalHttpsKey;
+    const cert = cliOptions.experimentalHttpsCert;
+    const rootCA = cliOptions.experimentalHttpsCa;
+
+    if (key && cert) {
+      certificate = {
+        key: path.resolve(key),
+        cert: path.resolve(cert),
+      };
+
+      if (rootCA) {
+        certificate.rootCA = path.resolve(rootCA);
+      }
+    } else {
+      certificate = await createSelfSignedCertificate(cliOptions.hostname);
+    }
+  }
 
   await startServers(
     (options) => {
@@ -123,6 +167,7 @@ const main = async () => {
           timeout: parseInt(cliOptions.timeout, 10),
         },
       },
+      certificate,
     },
   );
 };

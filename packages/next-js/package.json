@@ -62,6 +62,7 @@
     "test": "echo \"No tests\""
   },
   "dependencies": {
+    "@mocky-balboa/logger": "workspace:*",
     "@mocky-balboa/server": "workspace:*",
     "@mocky-balboa/shared-config": "workspace:*",
     "commander": "^14.0.0",

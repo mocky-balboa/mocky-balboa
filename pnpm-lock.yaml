@@ -507,6 +507,9 @@ importers:
 
   packages/next-js:
     dependencies:
+      '@mocky-balboa/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@mocky-balboa/server':
         specifier: workspace:*
         version: link:../server
