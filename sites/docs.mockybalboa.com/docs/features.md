@@ -14,3 +14,4 @@ title: Features
 * **Flexible Response Control:** Fulfill requests with mocked data or modify real responses as they happen.
 * **No Code Changes:** Wraps your server runtime without altering your production application code.
 * **Request Assertions:** Verify that your application is making the correct requests.
+* **HTTPS local development:** Support for HTTPS local development.

@@ -69,15 +69,25 @@ The CLI tool will source your Next.js configuration file when you don't explicit
 #### CLI options
 
 ```bash
--p, --port [port]                 Port to run the server on (default: "3000")
---websocket-port [websocketPort]  Port to run the WebSocket server on (default: "58152")
--h, --hostname [hostname]         Hostname to bind the server to (default: "localhost")
--d, --dev                         Run the Next.js server in development mode (default: false)
--q, --quiet                       Hide error messages containing server information (default: false)
--t, --timeout [timeout]           Timeout in milliseconds for the mock server to receive a response from the client (default: "5000")
---conf [conf]                     Relative or absolute path to the Next.js configuration file. Include the file extension. Defaults to
-                                discovering the path traversing up from the current working directory.
---help                            display help for command
+Usage: mocky-balboa-next-js [options]
+
+Starts the Next.js server for your application as well as the necessary mocky-balboa servers
+
+Options:
+  -p, --port [port]                 Port to run the server on (default: "3000")
+  --websocket-port [websocketPort]  Port to run the WebSocket server on (default: "58152")
+  -h, --hostname [hostname]         Hostname to bind the server to (default: "0.0.0.0")
+  -t, --timeout [timeout]           Timeout in milliseconds for the mock server to receive a response from the client (default: "5000")
+  --https                           Enable https server. Either https or http server is run, not both. When no --https-cert and --https-key are
+                                    provided, a self-signed certificate will be automatically generated.
+  --https-cert [certPath]           Optional path to the https certificate file
+  --https-ca [caPath]               Optional path to the https Certificate Authority file
+  --https-key [keyPath]             Optional path to the https key file
+  -d, --dev                         Run the Next.js server in development mode (default: false)
+  -q, --quiet                       Hide error messages containing server information (default: false)
+  --conf [conf]                     Relative or absolute path to the Next.js configuration file. Include the file extension. Defaults to
+                                    discovering the path traversing up from the current working directory.
+  --help                            display help for command
 ```
 
 ### Programmatically

@@ -1,0 +1,3 @@
+{
+  "entryPoints": ["src/next-js.ts", "src/cache-handler.ts"]
+}

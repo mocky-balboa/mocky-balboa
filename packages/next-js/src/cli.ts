@@ -1,39 +1,29 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createJiti } from "jiti";
-import { Command } from "commander";
 import { startServers, type CreateNextServer } from "./next-js.js";
-import { DefaultWebSocketServerPort } from "@mocky-balboa/shared-config";
+import {
+  createCommand,
+  parseCLIOptions,
+  getSelfSignedCertificate,
+} from "@mocky-balboa/cli-utils";
 
-const cli = new Command();
+interface CLIOptions {
+  dev: boolean;
+  quiet: boolean;
+  conf?: string;
+}
 
-cli
-  .name("mocky-balboa-next-js")
-  .description(
-    "Starts the Next.js server for your application as well as the necessary mocky-balboa servers",
-  );
-
-cli.option("-p, --port [port]", "Port to run the server on", "3000");
-cli.option(
-  "--websocket-port [websocketPort]",
-  "Port to run the WebSocket server on",
-  `${DefaultWebSocketServerPort}`,
+const cli = createCommand(
+  "mocky-balboa-next-js",
+  "Starts the Next.js server for your application as well as the necessary mocky-balboa servers",
 );
-cli.option(
-  "-h, --hostname [hostname]",
-  "Hostname to bind the server to",
-  "localhost",
-);
+
 cli.option("-d, --dev", "Run the Next.js server in development mode", false);
 cli.option(
   "-q, --quiet",
   "Hide error messages containing server information",
   false,
-);
-cli.option(
-  "-t, --timeout [timeout]",
-  "Timeout in milliseconds for the mock server to receive a response from the client",
-  "5000",
 );
 cli.option(
   "--conf [conf]",
@@ -75,16 +65,7 @@ const getNextConfigPath = async (cwd: string): Promise<string> => {
 };
 
 const main = async () => {
-  cli.parse();
-  const cliOptions = cli.opts<{
-    port: string;
-    websocketPort: string;
-    timeout: string;
-    hostname: string;
-    dev: boolean;
-    quiet: boolean;
-    conf?: string;
-  }>();
+  const cliOptions = parseCLIOptions<CLIOptions>(cli);
 
   const nextConfigPath = cliOptions.conf
     ? path.resolve(process.cwd(), cliOptions.conf)
@@ -98,6 +79,8 @@ const main = async () => {
   const nextConfig = await jiti.import<
     { default: Record<string, unknown> } | Record<string, unknown>
   >(nextConfigPath);
+
+  const certificate = await getSelfSignedCertificate(cliOptions);
 
   await startServers(
     (options) => {
@@ -123,6 +106,7 @@ const main = async () => {
           timeout: parseInt(cliOptions.timeout, 10),
         },
       },
+      certificate,
     },
   );
 };

@@ -10,7 +10,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mocky-balboa/mocky-balboa.git",
-    "directory": "packages/client"
+    "directory": "packages/vite"
   },
   "keywords": [
     "vite-plugin",
@@ -52,10 +52,11 @@
     "test": "echo \"No tests\""
   },
   "dependencies": {
+    "@mocky-balboa/logger": "workspace:*",
     "@mocky-balboa/server": "workspace:*"
   },
   "peerDependencies": {
-    "vite": ">=2.x.x"
+    "vite": ">=2.0.0"
   },
   "devDependencies": {
     "@swc/cli": "catalog:",

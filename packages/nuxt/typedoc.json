@@ -1,0 +1,3 @@
+{
+  "entryPoints": ["src/nuxt.ts", "src/server-plugin.ts"]
+}

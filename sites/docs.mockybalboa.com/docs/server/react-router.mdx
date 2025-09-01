@@ -1,0 +1,159 @@
+---
+sidebar_position: 25
+title: React Router
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Mocky Balboa and React Router
+
+How to use Mocky Balboa with [React Router](https://reactrouter.com/).
+
+:::info[Supported versions]
+
+__≥ 7.0.0__
+
+:::
+
+## Installation
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm add -D @mocky-balboa/react-router
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm install -D @mocky-balboa/react-router
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn add -D @mocky-balboa/react-router
+    ```
+  </TabItem>
+</Tabs>
+
+## Usage
+
+### Dev mode
+
+In dev mode, you need to ensure the Vite config is setup for SSR mode in your `react-router.config.{ts,js}`:
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        // react-router.config.js
+        import type { Config } from "@react-router/dev/config";
+
+        export default {
+          ssr: true,
+        } satisfies Config;
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      // react-router.config.js
+      /** @type {import('@react-router/dev/config').Config} */
+      export default {
+        ssr: true,
+      };
+      ```
+  </TabItem>
+</Tabs>
+
+You then need to add the Vite plugin to `vite.config.{ts,js}`
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        // vite.config.ts
+        import { defineConfig } from "vite";
+        import mockyBalboa from "@mocky-balboa/react-router";
+
+        export default defineConfig({
+          plugins: [mockyBalboa()],
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      // vite.config.js
+      import { defineConfig } from "vite";
+      import mockyBalboa from "@mocky-balboa/react-router";
+
+      export default defineConfig({
+        plugins: [mockyBalboa()],
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+For plugin options, see the [API reference](https://api-reference.mockybalboa.com/interfaces/_mocky-balboa_vite.MockyBalboaVitePluginOptions).
+
+### Build and serve
+
+Build your React Router application using the standard `react-router build` command. Ensure you've setup the React Router config and Vite plugin as described above in the [dev mode](#dev-mode) section.
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm react-router build
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm react-router build
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn react-router build
+    ```
+  </TabItem>
+</Tabs>
+
+Now serve your React Router application using the `mocky-balboa-react-router` command.
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+      ```bash
+      pnpm mocky-balboa-react-router
+      ```
+    </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash
+    npm mocky-balboa-react-router
+    ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash
+    yarn mocky-balboa-react-router
+    ```
+  </TabItem>
+</Tabs>
+
+Run `mocky-balboa-react-router --help` for usage options or see below for all options.
+
+```bash
+Usage: mocky-balboa-react-router [options]
+
+Starts a Node.js http server powered by Express for your React Router application as well as the necessary mocky-balboa servers
+
+Options:
+  -p, --port [port]                 Port to run the server on (default: "3000")
+  --websocket-port [websocketPort]  Port to run the WebSocket server on (default: "58152")
+  -h, --hostname [hostname]         Hostname to bind the server to (default: "0.0.0.0")
+  -t, --timeout [timeout]           Timeout in milliseconds for the mock server to receive a response from the client (default: "5000")
+  --https                           Enable https server. Either https or http server is run, not both. When no --https-cert and --https-key are
+                                    provided, a self-signed certificate will be automatically generated.
+  --https-cert [certPath]           Optional path to the https certificate file
+  --https-ca [caPath]               Optional path to the https Certificate Authority file
+  --https-key [keyPath]             Optional path to the https key file
+  --help                            display help for command
+```
+
+## API reference
+
+[API reference](https://api-reference.mockybalboa.com/modules/_mocky-balboa_vite)

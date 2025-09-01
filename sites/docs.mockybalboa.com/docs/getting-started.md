@@ -27,4 +27,5 @@ Check out the guides below to get started in your framework.
 - [Koa](./server/koa)
 - [Next.js](./server/next-js)
 - [Nuxt](./server/nuxt)
+- [React Router](./server/react-router)
 - [Custom integration](./server/custom)

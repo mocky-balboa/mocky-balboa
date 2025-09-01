@@ -1,9 +1,11 @@
 import { parse } from "node:url";
 import {
   createServer,
+  Server,
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
+import { createServer as createHttpsServer } from "node:https";
 import {
   clientIdentityStorage,
   startServer,
@@ -11,6 +13,12 @@ import {
   UnsetClientIdentity,
   type ServerOptions,
 } from "@mocky-balboa/server";
+import {
+  getServerStartedOnString,
+  loadCertificateFiles,
+  type SelfSignedCertificate,
+} from "@mocky-balboa/cli-utils";
+import { logger } from "./logger.js";
 
 /** Next.js relevant create server options */
 export interface NextServerOptions<TWithConfig extends boolean = false> {
@@ -107,13 +115,15 @@ export type CreateNextServer<TWithConfig extends boolean = false> = (
 const startNextJSServer = async (
   createNextServer: CreateNextServer,
   { dev, port, hostname, quiet }: RequiredNextOptions,
+  certificate?: SelfSignedCertificate | undefined,
 ) => {
   const app = createNextServer({ dev, quiet, customServer: true });
   const handle = app.getRequestHandler();
 
   await app.prepare();
-  return new Promise<void>((resolve, reject) => {
-    createServer((req, res) => {
+  return new Promise<void>(async (resolve, reject) => {
+    let server: Server;
+    const handler = (req: IncomingMessage, res: ServerResponse) => {
       let clientIdentity = req.headers[ClientIdentityStorageHeader];
       if (typeof clientIdentity !== "string") {
         clientIdentity = UnsetClientIdentity;
@@ -123,11 +133,37 @@ const startNextJSServer = async (
         const parsedUrl = parse(req.url ?? "", true);
         return handle(req, res, parsedUrl);
       });
-    })
-      .once("error", reject)
-      .listen(port, hostname, () => {
-        resolve();
-      });
+    };
+
+    if (certificate) {
+      try {
+        const { cert, key, ca } = await loadCertificateFiles(certificate);
+        server = createHttpsServer(
+          {
+            cert,
+            key,
+            ca,
+          },
+          handler,
+        );
+      } catch (error) {
+        reject(error);
+        return;
+      }
+    } else {
+      server = createServer(handler);
+    }
+
+    server.once("error", reject).listen(port, hostname, () => {
+      logger.info(
+        getServerStartedOnString(
+          certificate ? "https" : "http",
+          hostname,
+          port,
+        ),
+      );
+      resolve();
+    });
   });
 };
 
@@ -139,13 +175,18 @@ export const startServers = async (
   options: {
     next?: NextOptions;
     server?: ServerOptions;
+    certificate?: SelfSignedCertificate | undefined;
   } = {},
 ) => {
   await Promise.all([
     startServer(options.server),
-    startNextJSServer(createNextServer, {
-      ...DefaultOptions,
-      ...options.next,
-    }),
+    startNextJSServer(
+      createNextServer,
+      {
+        ...DefaultOptions,
+        ...options.next,
+      },
+      options.certificate,
+    ),
   ]);
 };
