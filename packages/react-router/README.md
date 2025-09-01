@@ -1,3 +1,3 @@
-# @mocky-balboa/vite
+# @mocky-balboa/react-router
 
 [Documentation](https://docs.mockybalboa.com)
