@@ -381,6 +381,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.2
         version: 19.1.7(@types/react@19.1.10)
+      cypress:
+        specifier: ^15.0.0
+        version: 15.0.0
       playwright:
         specifier: ^1.54.2
         version: 1.54.2
