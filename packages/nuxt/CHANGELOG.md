@@ -1,5 +1,12 @@
 # @mocky-balboa/nuxt
 
+## 1.0.6
+
+### Patch Changes
+
+- Updated dependencies [c1a1571]
+  - @mocky-balboa/server@1.0.6
+
 ## 1.0.5
 
 ### Patch Changes

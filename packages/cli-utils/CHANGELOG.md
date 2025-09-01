@@ -1,5 +1,16 @@
 # @mocky-balboa/cli-utils
 
+## 1.0.0
+
+### Major Changes
+
+- c1a1571: Full v1 release for @mocky-balboa/cli-utils @mocky-balboa/react-router @mocky-balboa/vite
+
+### Patch Changes
+
+- Updated dependencies [c1a1571]
+  - @mocky-balboa/server@1.0.6
+
 ## 0.1.0
 
 ### Minor Changes

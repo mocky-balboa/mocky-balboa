@@ -1,5 +1,14 @@
 # @mocky-balboa/next-js
 
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [c1a1571]
+- Updated dependencies [c1a1571]
+  - @mocky-balboa/cli-utils@1.0.0
+  - @mocky-balboa/server@1.0.6
+
 ## 1.2.0
 
 ### Minor Changes
