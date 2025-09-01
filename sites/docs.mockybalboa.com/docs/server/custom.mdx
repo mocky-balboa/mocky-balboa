@@ -123,3 +123,32 @@ To ensure the server can identify the client who initiated the request to your s
 </Tabs>
 
 [API reference](https://api-reference.mockybalboa.com/modules/_mocky-balboa_server)
+
+## Vite plugin
+
+If you are only wanting to integrate with a Vite development server, you can use the `@mocky-balboa/vite` package for the Vite plugin.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import { defineConfig } from "vite";
+        import mockyBalboa from "@mocky-balboa/react-router";
+
+        export default defineConfig({
+          plugins: [mockyBalboa()],
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { defineConfig } from "vite";
+      import mockyBalboa from "@mocky-balboa/react-router";
+
+      export default defineConfig({
+        plugins: [mockyBalboa()],
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+See [@mocky-balboa/vite plugin API reference](https://api-reference.mockybalboa.com/interfaces/_mocky-balboa_vite.MockyBalboaVitePluginOptions) for available options.
