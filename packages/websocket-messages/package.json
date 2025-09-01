@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/websocket-messages",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "WebSocket message utils for Mocky Balboa.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

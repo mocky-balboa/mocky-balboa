@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/vite",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Vite dev server plugin for Mocky Balboa.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

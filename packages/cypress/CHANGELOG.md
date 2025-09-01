@@ -1,5 +1,14 @@
 # @mocky-balboa/cypress
 
+## 1.0.7
+
+### Patch Changes
+
+- 563d332: Updated docs for server support list
+- Updated dependencies [563d332]
+  - @mocky-balboa/client@1.1.3
+  - @mocky-balboa/logger@1.0.5
+
 ## 1.0.6
 
 ### Patch Changes

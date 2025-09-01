@@ -1,5 +1,11 @@
 # @mocky-balboa/websocket-messages
 
+## 1.0.6
+
+### Patch Changes
+
+- 563d332: Updated docs for server support list
+
 ## 1.0.5
 
 ### Patch Changes

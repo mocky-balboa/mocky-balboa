@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/shared-config",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Shared configuration for Mocky Balboa packages.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

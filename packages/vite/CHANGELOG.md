@@ -1,5 +1,14 @@
 # @mocky-balboa/shared-config
 
+## 1.0.1
+
+### Patch Changes
+
+- 563d332: Updated docs for server support list
+- Updated dependencies [563d332]
+  - @mocky-balboa/logger@1.0.5
+  - @mocky-balboa/server@1.0.7
+
 ## 1.0.0
 
 ### Major Changes

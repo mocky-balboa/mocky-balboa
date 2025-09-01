@@ -1,5 +1,15 @@
 # @mocky-balboa/astro
 
+## 1.1.2
+
+### Patch Changes
+
+- 563d332: Updated docs for server support list
+- Updated dependencies [563d332]
+  - @mocky-balboa/cli-utils@1.0.1
+  - @mocky-balboa/logger@1.0.5
+  - @mocky-balboa/server@1.0.7
+
 ## 1.1.1
 
 ### Patch Changes

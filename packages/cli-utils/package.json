@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/cli-utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Mocky Balboa CLI utilities for server integrations with CLI's.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",
