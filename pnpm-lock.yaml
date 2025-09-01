@@ -553,6 +553,9 @@ importers:
       '@mocky-balboa/cli-utils':
         specifier: workspace:*
         version: link:../cli-utils
+      '@mocky-balboa/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@mocky-balboa/server':
         specifier: workspace:*
         version: link:../server

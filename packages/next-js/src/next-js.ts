@@ -14,7 +14,12 @@ import {
   UnsetClientIdentity,
   type ServerOptions,
 } from "@mocky-balboa/server";
-import type { SelfSignedCertificate } from "@mocky-balboa/cli-utils";
+import {
+  getServerStartedOnString,
+  loadCertificateFiles,
+  type SelfSignedCertificate,
+} from "@mocky-balboa/cli-utils";
+import { logger } from "./logger.js";
 
 /** Next.js relevant create server options */
 export interface NextServerOptions<TWithConfig extends boolean = false> {
@@ -133,14 +138,7 @@ const startNextJSServer = async (
 
     if (certificate) {
       try {
-        const [cert, key, ca] = await Promise.all([
-          fs.readFile(certificate.cert),
-          fs.readFile(certificate.key),
-          certificate.rootCA
-            ? fs.readFile(certificate.rootCA)
-            : Promise.resolve(undefined),
-        ]);
-
+        const { cert, key, ca } = await loadCertificateFiles(certificate);
         server = createHttpsServer(
           {
             cert,
@@ -158,6 +156,13 @@ const startNextJSServer = async (
     }
 
     server.once("error", reject).listen(port, hostname, () => {
+      logger.info(
+        getServerStartedOnString(
+          certificate ? "https" : "http",
+          hostname,
+          port,
+        ),
+      );
       resolve();
     });
   });

@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import http from "node:http";
+import http, { Server } from "node:http";
 import https from "node:https";
 import path from "node:path";
 import { Command } from "commander";
@@ -80,6 +80,20 @@ export const createExpressServer = (): express.Express => {
   return app;
 };
 
+export const loadCertificateFiles = async (
+  certificate: SelfSignedCertificate,
+) => {
+  const [cert, key, ca] = await Promise.all([
+    fs.readFile(certificate.cert),
+    fs.readFile(certificate.key),
+    certificate.rootCA
+      ? fs.readFile(certificate.rootCA)
+      : Promise.resolve(undefined),
+  ]);
+
+  return { cert, key, ca };
+};
+
 export const getSelfSignedCertificate = async ({
   hostname,
   https,
@@ -109,6 +123,37 @@ export const getSelfSignedCertificate = async ({
   }
 };
 
+const getServerUrls = (
+  protocol: "http" | "https",
+  hostname: string,
+  port: number,
+): string[] => {
+  const hosts: string[] = [];
+  if (hostname === "0.0.0.0") {
+    hosts.push("localhost", "127.0.0.1", "0.0.0.0");
+  } else if (["localhost", "127.0.0.1"].includes(hostname)) {
+    hosts.push("127.0.0.1", "localhost");
+  } else {
+    hosts.push(hostname);
+  }
+
+  return hosts.map((host) => `${protocol}://${host}:${port}`);
+};
+
+export const getServerStartedOnString = (
+  protocol: "http" | "https",
+  hostname: string,
+  port: number,
+) => {
+  return `Server started available at:\n${getServerUrls(
+    protocol,
+    hostname,
+    port,
+  )
+    .map((url) => `  - ${url}`)
+    .join("\n")}`;
+};
+
 export const startServers = async <TCLIOptions extends CommonCLIOptions>(
   app: express.Express,
   cliOptions: TCLIOptions,
@@ -125,25 +170,35 @@ export const startServers = async <TCLIOptions extends CommonCLIOptions>(
     },
   });
 
-  await new Promise<void>((resolve, reject) => {
-    const server = certificate
-      ? https.createServer(certificate, app)
-      : http.createServer(app);
+  await new Promise<void>(async (resolve, reject) => {
+    let server: Server;
+    if (certificate) {
+      try {
+        const { key, cert, ca } = await loadCertificateFiles(certificate);
+        server = https.createServer({ key, cert, ca }, app);
+      } catch (error) {
+        reject(error);
+        return;
+      }
+    } else {
+      server = http.createServer(app);
+    }
 
-    server.listen(
-      parseInt(cliOptions.port, 10),
-      cliOptions.hostname,
-      (error?: Error) => {
-        if (error) {
-          reject(error);
-        } else {
-          logger.info(
-            `Server started on http://${cliOptions.hostname}:${cliOptions.port}`,
-          );
-          resolve();
-        }
-      },
-    );
+    const port = parseInt(cliOptions.port, 10);
+    server.listen(port, cliOptions.hostname, (error?: Error) => {
+      if (error) {
+        reject(error);
+      } else {
+        logger.info(
+          getServerStartedOnString(
+            certificate ? "https" : "http",
+            cliOptions.hostname,
+            port,
+          ),
+        );
+        resolve();
+      }
+    });
   });
 };
 
