@@ -14,6 +14,7 @@ Check out the [documentation](https://docs.mockybalboa.com) to get started.
 - [Koa](https://docs.mockybalboa.com/docs/server/koa)
 - [Next.js](https://docs.mockybalboa.com/docs/server/next-js)
 - [Nuxt](https://docs.mockybalboa.com/docs/server/nuxt)
+- [React Router](https://docs.mockybalboa.com/docs/server/react-router)
 
 ## Browser automation tool support
 
