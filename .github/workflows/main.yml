@@ -54,6 +54,7 @@ jobs:
           node scripts/update-package-readmes.cjs
           pnpm changeset publish
           rm .npmrc
+          git push origin --tags
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -69,4 +70,3 @@ jobs:
           STAGED_FILE_COUNT=$(git diff --name-only --cached | wc -l | awk '{print $1}')
           if [ "$STAGED_FILE_COUNT" -eq 0 ]; then exit 0; fi
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-          git push origin main --tags
