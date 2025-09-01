@@ -1,5 +1,15 @@
 # @mocky-balboa/server
 
+## 1.0.4
+
+### Patch Changes
+
+- 247b01c: Updated types output on build, added new quiet CLI option for Next.js integration, added new Vite package for vite plugin
+- Updated dependencies [247b01c]
+  - @mocky-balboa/websocket-messages@1.0.5
+  - @mocky-balboa/shared-config@1.0.4
+  - @mocky-balboa/logger@1.0.4
+
 ## 1.0.3
 
 ### Patch Changes

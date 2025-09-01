@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/logger",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Logger library for Mocky Balboa",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

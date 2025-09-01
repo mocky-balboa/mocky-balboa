@@ -1,5 +1,11 @@
 # @mocky-balboa/logger
 
+## 1.0.4
+
+### Patch Changes
+
+- 247b01c: Updated types output on build, added new quiet CLI option for Next.js integration, added new Vite package for vite plugin
+
 ## 1.0.3
 
 ### Patch Changes
