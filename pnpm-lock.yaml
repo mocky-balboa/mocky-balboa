@@ -771,8 +771,8 @@ importers:
         specifier: ^0.28.11
         version: 0.28.11(typescript@5.9.2)
       typedoc-github-theme:
-        specifier: ^0.3.0
-        version: 0.3.0(typedoc@0.28.11(typescript@5.9.2))
+        specifier: ^0.3.1
+        version: 0.3.1(typedoc@0.28.11(typescript@5.9.2))
 
   sites/docs.mockybalboa.com:
     dependencies:
@@ -11176,8 +11176,8 @@ packages:
   typedarray-to-buffer@3.1.5:
     resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
 
-  typedoc-github-theme@0.3.0:
-    resolution: {integrity: sha512-7HzKJt8ZZSTNYczK8BcZZbpr7GsyTZgsoLFKtO4NYxXOb7mSr92yTj7hl16ind0WsOzxPo2DZGjkUH2VoPrdxg==}
+  typedoc-github-theme@0.3.1:
+    resolution: {integrity: sha512-j6PmkAGmf/MGCzYjQcUH6jS9djPsNl/IoTXooxC+MoeMkBhbmPyKJlpR6Lw12BLoe2OYpYA2J1KMktUJXp/8Sw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       typedoc: ~0.28.0
@@ -24964,7 +24964,7 @@ snapshots:
     dependencies:
       is-typedarray: 1.0.0
 
-  typedoc-github-theme@0.3.0(typedoc@0.28.11(typescript@5.9.2)):
+  typedoc-github-theme@0.3.1(typedoc@0.28.11(typescript@5.9.2)):
     dependencies:
       typedoc: 0.28.11(typescript@5.9.2)
 

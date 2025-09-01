@@ -25,6 +25,6 @@
   "devDependencies": {
     "serve": "^14.2.4",
     "typedoc": "^0.28.11",
-    "typedoc-github-theme": "^0.3.0"
+    "typedoc-github-theme": "^0.3.1"
   }
 }
