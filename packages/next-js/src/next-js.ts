@@ -26,7 +26,7 @@ export interface NextServerOptions<TWithConfig extends boolean = false> {
    */
   dev?: boolean;
   /**
-   * Quiet mode
+   * Quiet mode for Next.js
    *
    * @default false
    */
@@ -55,7 +55,7 @@ export interface NextServerOptions<TWithConfig extends boolean = false> {
  * @property dev - Whether to use development mode {@link NextServerOptions.dev}
  * @property port - Port to bind Next.js server to {@link NextServerOptions.port}
  * @property hostname - Host to bind Next.js server to {@link NextServerOptions.hostname}
- * @property quiet - Suppress Next.js logs when true {@link NextServerOptions.quiet}
+ * @property quiet - Hide error messages containing server information {@link NextServerOptions.quiet}
  * @interface
  */
 export type NextOptions = Pick<

@@ -27,7 +27,7 @@ cli.option(
 cli.option("-d, --dev", "Run the Next.js server in development mode", false);
 cli.option(
   "-q, --quiet",
-  "Quiet mode, when enabled suppresses Next.js logs",
+  "Hide error messages containing server information",
   false,
 );
 cli.option(
@@ -82,6 +82,7 @@ const main = async () => {
     timeout: string;
     hostname: string;
     dev: boolean;
+    quiet: boolean;
     conf?: string;
   }>();
 
@@ -112,6 +113,7 @@ const main = async () => {
         dev: cliOptions.dev,
         port: parseInt(cliOptions.port, 10),
         hostname: cliOptions.hostname,
+        quiet: cliOptions.quiet,
       },
       server: {
         webSocketServerOptions: {
