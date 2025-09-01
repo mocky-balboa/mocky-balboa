@@ -46,11 +46,6 @@ export const createCommand = (name: string, description: string) => {
     "Timeout in milliseconds for the mock server to receive a response from the client",
     "5000",
   );
-  cli.option(
-    "-t, --timeout [timeout]",
-    "Timeout in milliseconds for the mock server to receive a response from the client",
-    "5000",
-  );
 
   // https options
   cli.option(
@@ -73,6 +68,7 @@ export const createCommand = (name: string, description: string) => {
 export const parseCLIOptions = <TOptions = Record<string, never>>(
   cli: Command,
 ) => {
+  cli.parse();
   const cliOptions = cli.opts<CLIOptions<TOptions>>();
   return cliOptions;
 };
