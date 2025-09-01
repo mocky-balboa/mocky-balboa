@@ -34,16 +34,25 @@ const mockyBalboaIntegration = (
         logger.info("Mocky Balboa server started");
       },
       // Inject middleware
-      "astro:config:setup": ({ addMiddleware, updateConfig, logger }) => {
+      "astro:config:setup": ({
+        addMiddleware,
+        updateConfig,
+        logger,
+        config,
+      }) => {
         if (!enabled) {
           logger.info("Mocky Balboa integration disabled");
           return;
         }
 
-        logger.info("Setting config.output to 'server'");
-        updateConfig({
-          output: "server",
-        });
+        if (config.output !== "server") {
+          logger.warn(
+            "Mocky Balboa integration only works with 'server' output. Setting config.output to 'server'.",
+          );
+          updateConfig({
+            output: "server",
+          });
+        }
 
         logger.info("Registering Mocky Balboa middleware");
         addMiddleware({
