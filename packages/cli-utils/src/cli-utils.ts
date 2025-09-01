@@ -242,14 +242,16 @@ const getServerEntry = async (
 export const getServerEntryHandler = async (
   distDir: string,
   expectedRelativePaths: string[],
-  exportName: string,
+  exportName?: string,
 ) => {
   const astroServerEntry = await getServerEntry(
     process.cwd(),
     distDir,
     expectedRelativePaths,
   );
-  const handler = await import(astroServerEntry).then((mod) => mod[exportName]);
+  const handler = await import(astroServerEntry).then((mod) =>
+    exportName ? mod[exportName] : mod,
+  );
   if (!handler) {
     throw new Error(
       `Export ${exportName} not found in ${path.relative(process.cwd(), astroServerEntry)}`,
