@@ -1,5 +1,12 @@
 # @mocky-balboa/client
 
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [e703541]
+  - @mocky-balboa/shared-config@1.0.5
+
 ## 1.1.1
 
 ### Patch Changes

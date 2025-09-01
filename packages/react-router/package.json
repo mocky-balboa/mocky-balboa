@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/react-router",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Mocky Balboa integration for React Router.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

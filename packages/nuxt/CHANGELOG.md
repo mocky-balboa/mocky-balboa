@@ -1,5 +1,13 @@
 # @mocky-balboa/nuxt
 
+## 1.0.5
+
+### Patch Changes
+
+- Updated dependencies [e703541]
+  - @mocky-balboa/shared-config@1.0.5
+  - @mocky-balboa/server@1.0.5
+
 ## 1.0.4
 
 ### Patch Changes
