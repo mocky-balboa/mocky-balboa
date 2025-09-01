@@ -60,7 +60,7 @@
     "@mocky-balboa/shared-config": "workspace:*",
     "@mocky-balboa/websocket-messages": "workspace:*",
     "mime-types": "^3.0.1",
-    "msw": "^2.10.5",
+    "msw": "^2.11.1",
     "uuid": "catalog:",
     "ws": "catalog:"
   },
