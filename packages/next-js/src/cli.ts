@@ -26,6 +26,11 @@ cli.option(
 );
 cli.option("-d, --dev", "Run the Next.js server in development mode", false);
 cli.option(
+  "-q, --quiet",
+  "Hide error messages containing server information",
+  false,
+);
+cli.option(
   "-t, --timeout [timeout]",
   "Timeout in milliseconds for the mock server to receive a response from the client",
   "5000",
@@ -77,6 +82,7 @@ const main = async () => {
     timeout: string;
     hostname: string;
     dev: boolean;
+    quiet: boolean;
     conf?: string;
   }>();
 
@@ -107,6 +113,7 @@ const main = async () => {
         dev: cliOptions.dev,
         port: parseInt(cliOptions.port, 10),
         hostname: cliOptions.hostname,
+        quiet: cliOptions.quiet,
       },
       server: {
         webSocketServerOptions: {

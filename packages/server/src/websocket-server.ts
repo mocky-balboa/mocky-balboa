@@ -55,13 +55,18 @@ const connectionOnMessage =
   };
 
 /**
+ * Callback to close the WebSocket server
+ */
+export type CloseWebSocketServer = () => Promise<void>;
+
+/**
  * Start the WebSocket server. Manages the first message sent by the client and the client pool ({@link connections}).
  *
  * @throws {Error} If the WebSocket server fails to start within 3 seconds.
  */
 export const startWebSocketServer = async ({
   port = DefaultWebSocketServerPort,
-}: WebSocketServerOptions): Promise<() => Promise<void>> => {
+}: WebSocketServerOptions): Promise<CloseWebSocketServer> => {
   const wss = new WebSocketServer({ port });
 
   await new Promise<void>((resolve, reject) => {

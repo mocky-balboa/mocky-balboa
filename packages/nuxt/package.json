@@ -29,27 +29,17 @@
   "license": "MIT",
   "packageManager": "pnpm@10.14.0",
   "main": "./dist/cjs/nuxt.cjs",
-  "types": "./dist/cjs/nuxt.d.ts",
+  "types": "./dist/types/nuxt.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "default": "./dist/esm/nuxt.js",
-        "types": "./dist/esm/nuxt.d.ts"
-      },
-      "require": {
-        "default": "./dist/cjs/nuxt.cjs",
-        "types": "./dist/cjs/nuxt.d.ts"
-      }
+      "import": "./dist/esm/nuxt.js",
+      "require": "./dist/cjs/nuxt.cjs",
+      "types": "./dist/types/nuxt.d.ts"
     },
     "./server-plugin": {
-      "import": {
-        "default": "./dist/esm/server-plugin.js",
-        "types": "./dist/esm/server-plugin.d.ts"
-      },
-      "require": {
-        "default": "./dist/cjs/server-plugin.cjs",
-        "types": "./dist/cjs/server-plugin.d.ts"
-      }
+      "import": "./dist/esm/server-plugin.js",
+      "require": "./dist/cjs/server-plugin.cjs",
+      "types": "./dist/types/server-plugin.d.ts"
     }
   },
   "scripts": {
@@ -58,8 +48,8 @@
     "build:esm:types": "tsc --emitDeclarationOnly --project tsconfig.build.esm.json",
     "build:cjs:types": "tsc --emitDeclarationOnly --project tsconfig.build.cjs.json",
     "build": "pnpm clean && pnpm run build:esm && pnpm run build:cjs && pnpm run build:types && pnpm run post:build",
-    "build:types": "pnpm run build:esm:types && pnpm run build:cjs:types",
-    "build:watch": "concurrently \"pnpm run build:esm --watch\" \"pnpm run build:cjs --watch\" \"pnpm run build:esm:types --watch\" \"pnpm run build:cjs:types --watch\" \"pnpm run post:build:watch\"",
+    "build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json",
+    "build:watch": "concurrently \"pnpm run build:esm --watch\" \"pnpm run build:cjs --watch\" \"pnpm run build:types --watch\" \"pnpm run post:build:watch\"",
     "post:build": "pnpm --workspace-root package-post-cjs-build $(pwd)",
     "post:build:watch": "chokidar \"dist/cjs/**/*.cjs\" -c \"pnpm run post:build\"",
     "clean": "rimraf dist",

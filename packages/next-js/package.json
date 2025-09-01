@@ -31,30 +31,20 @@
   "license": "MIT",
   "packageManager": "pnpm@10.14.0",
   "main": "./dist/cjs/next-js.cjs",
-  "types": "./dist/cjs/next-js.d.ts",
+  "types": "./dist/types/next-js.d.ts",
   "bin": {
     "mocky-balboa-next-js": "./dist/esm/cli.js"
   },
   "exports": {
     ".": {
-      "import": {
-        "default": "./dist/esm/next-js.js",
-        "types": "./dist/esm/next-js.d.ts"
-      },
-      "require": {
-        "default": "./dist/cjs/next-js.cjs",
-        "types": "./dist/cjs/next-js.d.ts"
-      }
+      "import": "./dist/esm/next-js.js",
+      "require": "./dist/cjs/next-js.cjs",
+      "types": "./dist/types/next-js.d.ts"
     },
     "./cache-handler": {
-      "import": {
-        "default": "./dist/esm/cache-handler.js",
-        "types": "./dist/esm/cache-handler.d.ts"
-      },
-      "require": {
-        "default": "./dist/cjs/cache-handler.cjs",
-        "types": "./dist/cjs/cache-handler.d.ts"
-      }
+      "import": "./dist/esm/cache-handler.js",
+      "require": "./dist/cjs/cache-handler.cjs",
+      "types": "./dist/types/cache-handler.d.ts"
     }
   },
   "scripts": {
@@ -63,8 +53,8 @@
     "build:esm:types": "tsc --emitDeclarationOnly --project tsconfig.build.esm.json",
     "build:cjs:types": "tsc --emitDeclarationOnly --project tsconfig.build.cjs.json",
     "build": "pnpm clean && pnpm run build:esm && pnpm run build:cjs && pnpm run build:types && pnpm run post:build",
-    "build:types": "pnpm run build:esm:types && pnpm run build:cjs:types",
-    "build:watch": "concurrently \"pnpm run build:esm --watch\" \"pnpm run build:cjs --watch\" \"pnpm run build:esm:types --watch\" \"pnpm run build:cjs:types --watch\" \"pnpm run post:build:watch\"",
+    "build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json",
+    "build:watch": "concurrently \"pnpm run build:esm --watch\" \"pnpm run build:cjs --watch\" \"pnpm run build:types --watch\" \"pnpm run post:build:watch\"",
     "post:build": "pnpm --workspace-root package-post-cjs-build $(pwd)",
     "post:build:watch": "chokidar \"dist/cjs/**/*.cjs\" -c \"pnpm run post:build\"",
     "clean": "rimraf dist",

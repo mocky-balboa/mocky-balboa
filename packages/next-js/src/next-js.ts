@@ -26,8 +26,9 @@ export interface NextServerOptions<TWithConfig extends boolean = false> {
    */
   dev?: boolean;
   /**
-   * Quiet mode
-   * @ignore
+   * Quiet mode for Next.js
+   *
+   * @default false
    */
   quiet?: boolean;
   /**
@@ -54,9 +55,13 @@ export interface NextServerOptions<TWithConfig extends boolean = false> {
  * @property dev - Whether to use development mode {@link NextServerOptions.dev}
  * @property port - Port to bind Next.js server to {@link NextServerOptions.port}
  * @property hostname - Host to bind Next.js server to {@link NextServerOptions.hostname}
+ * @property quiet - Hide error messages containing server information {@link NextServerOptions.quiet}
  * @interface
  */
-export type NextOptions = Pick<NextServerOptions, "dev" | "port" | "hostname">;
+export type NextOptions = Pick<
+  NextServerOptions,
+  "dev" | "port" | "hostname" | "quiet"
+>;
 
 /**
  * Non-nullable {@link NextOptions}
@@ -69,6 +74,7 @@ const DefaultOptions: RequiredNextOptions = {
   dev: false,
   port: 3000,
   hostname: "localhost",
+  quiet: false,
 };
 
 /**
@@ -100,9 +106,9 @@ export type CreateNextServer<TWithConfig extends boolean = false> = (
  */
 const startNextJSServer = async (
   createNextServer: CreateNextServer,
-  { dev, port, hostname }: RequiredNextOptions,
+  { dev, port, hostname, quiet }: RequiredNextOptions,
 ) => {
-  const app = createNextServer({ dev, quiet: true, customServer: true });
+  const app = createNextServer({ dev, quiet, customServer: true });
   const handle = app.getRequestHandler();
 
   await app.prepare();

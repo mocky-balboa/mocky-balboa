@@ -1,7 +1,7 @@
 {
-  "name": "@mocky-balboa/server",
-  "version": "1.0.3",
-  "description": "Server library for Mocky Balboa to enable real-time network mocking for your server-side network requests in your browser based test suites via WebSockets.",
+  "name": "@mocky-balboa/vite",
+  "version": "0.0.0",
+  "description": "Vite dev server plugin for Mocky Balboa.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",
   "bugs": {
@@ -13,13 +13,16 @@
     "directory": "packages/client"
   },
   "keywords": [
+    "vite-plugin",
+    "mocky",
+    "balboa",
+    "dev",
     "mocking",
     "network",
     "testing",
     "tests",
     "integration",
-    "server",
-    "client"
+    "server"
   ],
   "author": {
     "name": "Lewis Nelson",
@@ -27,25 +30,18 @@
   },
   "license": "MIT",
   "packageManager": "pnpm@10.14.0",
-  "main": "./dist/cjs/server.cjs",
-  "types": "./dist/types/server.d.ts",
+  "main": "./dist/cjs/plugin.cjs",
+  "types": "./dist/types/plugin.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/esm/server.js",
-      "require": "./dist/cjs/server.cjs",
-      "types": "./dist/types/server.d.ts"
-    },
-    "./middleware": {
-      "import": "./dist/esm/middleware.js",
-      "require": "./dist/cjs/middleware.cjs",
-      "types": "./dist/types/middleware.d.ts"
+      "import": "./dist/esm/plugin.js",
+      "require": "./dist/cjs/plugin.cjs",
+      "types": "./dist/types/plugin.d.ts"
     }
   },
   "scripts": {
     "build:esm": "swc src --out-dir dist/esm -C module.type=es6 --strip-leading-paths",
     "build:cjs": "swc src --out-dir dist/cjs -C module.type=commonjs --strip-leading-paths --out-file-extension cjs",
-    "build:esm:types": "tsc --emitDeclarationOnly --project tsconfig.build.esm.json",
-    "build:cjs:types": "tsc --emitDeclarationOnly --project tsconfig.build.cjs.json",
     "build": "pnpm clean && pnpm run build:esm && pnpm run build:cjs && pnpm run build:types && pnpm run post:build",
     "build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json",
     "build:watch": "concurrently \"pnpm run build:esm --watch\" \"pnpm run build:cjs --watch\" \"pnpm run build:types --watch\" \"pnpm run post:build:watch\"",
@@ -53,34 +49,22 @@
     "post:build:watch": "chokidar \"dist/cjs/**/*.cjs\" -c \"pnpm run post:build\"",
     "clean": "rimraf dist",
     "release": "semantic-release",
-    "test": "vitest"
+    "test": "echo \"No tests\""
   },
   "dependencies": {
-    "@mocky-balboa/logger": "workspace:*",
-    "@mocky-balboa/shared-config": "workspace:*",
-    "@mocky-balboa/websocket-messages": "workspace:*",
-    "mime-types": "^3.0.1",
-    "msw": "^2.10.5",
-    "uuid": "catalog:",
-    "ws": "catalog:"
+    "@mocky-balboa/server": "workspace:*"
+  },
+  "peerDependencies": {
+    "vite": ">=2.x.x"
   },
   "devDependencies": {
     "@swc/cli": "catalog:",
     "@swc/core": "catalog:",
     "chokidar-cli": "catalog:",
-    "@types/express": "catalog:",
-    "@types/koa": "catalog:",
-    "@types/mime-types": "^3.0.1",
     "@types/node": "catalog:",
-    "@types/ws": "catalog:",
     "concurrently": "catalog:",
-    "express": "catalog:",
-    "fastify": "catalog:",
-    "@fastify/express": "catalog:",
-    "koa": "catalog:",
-    "get-port": "catalog:",
     "rimraf": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vite": "^7"
   }
 }
