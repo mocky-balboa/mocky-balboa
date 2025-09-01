@@ -70,3 +70,4 @@ jobs:
           STAGED_FILE_COUNT=$(git diff --name-only --cached | wc -l | awk '{print $1}')
           if [ "$STAGED_FILE_COUNT" -eq 0 ]; then exit 0; fi
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+          git push origin main
