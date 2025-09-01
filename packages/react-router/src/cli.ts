@@ -7,6 +7,7 @@ import {
   startServers,
   express,
 } from "@mocky-balboa/cli-utils";
+import { createRequestHandler } from "@react-router/express";
 
 const cli = createCommand(
   "mocky-balboa-react-router",
@@ -15,19 +16,19 @@ const cli = createCommand(
 
 const main = async () => {
   const cliOptions = parseCLIOptions(cli);
-  const handler = await getServerEntryHandler(
+  const build = await getServerEntryHandler(
     path.resolve(process.cwd(), "build"),
     ["server/index"],
-    "app",
   );
 
   const app = createExpressServer();
+  app.use("/assets", express.static("build/client/assets"));
+  app.use(express.static("build/client"));
   app.use(
-    "/assets",
-    express.static("build/client/assets", { immutable: true, maxAge: "1y" }),
+    createRequestHandler({
+      build,
+    }),
   );
-  app.use(express.static("build/client", { maxAge: "1h" }));
-  app.use(handler);
 
   await startServers(app, cliOptions);
 };

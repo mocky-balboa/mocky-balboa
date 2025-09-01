@@ -56,7 +56,8 @@
   "dependencies": {
     "@mocky-balboa/cli-utils": "workspace:*",
     "@mocky-balboa/logger": "workspace:*",
-    "@mocky-balboa/vite": "workspace:*"
+    "@mocky-balboa/vite": "workspace:*",
+    "@react-router/express": "^7.8.2"
   },
   "devDependencies": {
     "@swc/cli": "catalog:",
