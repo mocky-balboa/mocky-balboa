@@ -26,6 +26,11 @@ cli.option(
 );
 cli.option("-d, --dev", "Run the Next.js server in development mode", false);
 cli.option(
+  "-q, --quiet",
+  "Quiet mode, when enabled suppresses Next.js logs",
+  false,
+);
+cli.option(
   "-t, --timeout [timeout]",
   "Timeout in milliseconds for the mock server to receive a response from the client",
   "5000",
