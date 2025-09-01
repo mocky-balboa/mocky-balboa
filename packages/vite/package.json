@@ -56,7 +56,7 @@
     "@mocky-balboa/server": "workspace:*"
   },
   "peerDependencies": {
-    "vite": ">=2.x.x"
+    "vite": ">=2.0.0"
   },
   "devDependencies": {
     "@swc/cli": "catalog:",
