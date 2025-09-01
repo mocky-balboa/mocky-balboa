@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.build.esm.json",
-  "compilerOptions": {
-    "module": "CommonJS",
-    "outDir": "./dist/cjs",
-    "verbatimModuleSyntax": false
-  },
-  "exclude": ["dist", "**/*.test.ts", "src/test/**", "src/cli.ts"]
-}

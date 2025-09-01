@@ -1,5 +1,6 @@
 import {
   startWebSocketServer,
+  type CloseWebSocketServer,
   type WebSocketServerOptions,
 } from "./websocket-server.js";
 import {
@@ -26,13 +27,15 @@ export interface ServerOptions {
  */
 export const startServer = async ({
   webSocketServerOptions = {},
-}: ServerOptions = {}) => {
+}: ServerOptions = {}): Promise<CloseWebSocketServer> => {
   logger.info("Starting Mocky Balboa server");
-  await Promise.all([
+  const [closeWebSocketServer] = await Promise.all([
     startWebSocketServer(webSocketServerOptions),
     bindMockServiceWorker(),
   ]);
   logger.info("Mocky Balboa server started");
+
+  return closeWebSocketServer;
 };
 
 export { clientIdentityStorage } from "./trace.js";
@@ -40,7 +43,10 @@ export {
   ClientIdentityStorageHeader,
   UnsetClientIdentity,
 } from "@mocky-balboa/shared-config";
-export type { WebSocketServerOptions } from "./websocket-server.js";
+export type {
+  WebSocketServerOptions,
+  CloseWebSocketServer,
+} from "./websocket-server.js";
 export type { MockServerOptions } from "./mock-server.js";
 export type { Request, NextFunction } from "./middleware.js";
 export { default as mockyBalboaMiddleware } from "./middleware.js";
