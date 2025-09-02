@@ -35,8 +35,8 @@ const main = async () => {
   );
 
   const app = createExpressServer();
-  app.use("/assets", express.static("build/client/assets"));
-  app.use(express.static("build/client"));
+  app.use("/assets", express.static(`${distDir}/client/assets`));
+  app.use(express.static(`${distDir}/client`));
   app.use(
     createRequestHandler({
       build,
