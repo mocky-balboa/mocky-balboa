@@ -52,8 +52,8 @@ jobs:
           pnpm changeset version
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
           node scripts/update-package-readmes.cjs
-          pnpm changeset publish
-          pnpm changeset tag
+          pnpm changeset publish --no-git-tag
+          node scripts/tag-release-packages.cjs
           rm .npmrc
           git push origin --tags
         env:
