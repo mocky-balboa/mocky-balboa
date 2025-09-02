@@ -4,35 +4,35 @@ on:
   pull_request:
 
 jobs:
-  # validate_commits:
-  #   name: 📖 Validate commit messages
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #   steps:
-  #     - name: Checkout Repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         ref: ${{ github.event.pull_request.head.ref }}
-  #         fetch-depth: 0
+  validate_commits:
+    name: 📖 Validate commit messages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
 
-  #     - name: Setup monorepo
-  #       uses: ./.github/actions/setup-monorepo
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
 
-  #     - name: Validate all commits from PR
-  #       run: pnpm commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+      - name: Validate all commits from PR
+        run: pnpm commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-  # build_and_test:
-  #   name: 🛠️ Build and test
-  #   needs: validate_commits
-  #   uses: ./.github/workflows/build-and-test.yml
-  #   permissions:
-  #     contents: read
+  build_and_test:
+    name: 🛠️ Build and test
+    needs: validate_commits
+    uses: ./.github/workflows/build-and-test.yml
+    permissions:
+      contents: read
 
   canary_release:
     name: 🐥 Canary release
-    # needs:
-    #   - build_and_test
+    needs:
+      - build_and_test
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -84,10 +84,10 @@ jobs:
           PR_NUMBER: ${{ github.event.number }}
         run: node scripts/update-canary-release-pr-body.cjs
 
-  # pr_checks_passed:
-  #   name: ✅ PR checks passed
-  #   needs: canary_release
-  #   runs-on: ubuntu-latest
-  #   permissions: {}
-  #   steps:
-  #     - run: echo "PR checks passed"
+  pr_checks_passed:
+    name: ✅ PR checks passed
+    needs: canary_release
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - run: echo "PR checks passed"
