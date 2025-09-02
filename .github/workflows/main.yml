@@ -53,11 +53,22 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
           node scripts/update-package-readmes.cjs
           pnpm changeset publish --no-git-tag
-          node scripts/tag-release-packages.cjs
           rm .npmrc
-          git push origin --tags
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag release
+        if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
+        run: |
+          node scripts/tag-release-packages.cjs
+          git push origin --tags
+
+      - name: Create GitHub releases
+        if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/create-github-releases.cjs
 
       - name: Commit changes
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
