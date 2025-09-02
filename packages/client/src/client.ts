@@ -26,6 +26,14 @@ export type UrlMatcher =
   | RegExp
   | ((url: URL) => boolean | Promise<boolean>);
 
+/** Possible values for route type */
+export type RouteType = "server-only" | "client-only" | "both";
+export const RouteType = {
+  ServerOnly: "server-only",
+  ClientOnly: "client-only",
+  Both: "both",
+};
+
 /** Options when configuring a route */
 export interface RouteOptions {
   /**
@@ -35,6 +43,16 @@ export interface RouteOptions {
    * When `undefined`, the route handler will be run indefinitely.
    */
   times?: number;
+  /**
+   * Defines the behaviour of the route handler.
+   *
+   * - `server-only` - The route handler will only be called if the request is executed on the server.
+   * - `client-only` - The route handler will only be called if the request is executed on the client.
+   * - `both` - The route handler will be called regardless of whether the request is executed on the server or client.
+   *
+   * @default "both"
+   */
+  type?: RouteType;
 }
 
 type RouteMeta = RouteOptions & {
@@ -82,6 +100,15 @@ export interface ResponseData {
 }
 
 /**
+ * External handlers should not handle explicit fallbacks as this is used
+ * internally to continue to the next handler
+ */
+export type ExternalRouteHandlerRouteResponse = Exclude<
+  RouteResponse,
+  { type: "fallback" }
+>;
+
+/**
  * Client used to interface with the WebSocket server for mocking server-side network requests.
  *
  * @hideconstructor
@@ -96,6 +123,9 @@ export class Client {
     MessageType,
     Set<(message: ParsedMessage) => void | Promise<void>>
   > = new Map();
+
+  /** Convenient access to route types */
+  public readonly RouteType = RouteType;
 
   /** Registered route handlers to handle outgoing network requests on the server */
   private routeHandlers: Map<
@@ -254,6 +284,42 @@ export class Client {
   }
 
   /**
+   * Increments the call count for a route handler. Function to be called
+   * whenever a route handler is executed, irregardless of the result.
+   */
+  private incrementRouteHandlerCallCount = (
+    routeHandlerId: string,
+    routeMeta: RouteMeta,
+  ) => {
+    routeMeta.calls++;
+    if (routeMeta.times === routeMeta.calls) {
+      this.unroute(routeHandlerId);
+    }
+  };
+
+  /**
+   * Deduce whether or not a handler should be executed based on the route metadata and handler type.
+   *
+   * @param routeMeta - The metadata & options of the route.
+   * @param handlerType - The type of the handler wanting to execute the route handler.
+   * @returns Whether or not the handler should be executed.
+   */
+  private shouldHandleRouteType(
+    routeMeta: RouteMeta,
+    handlerType: "server" | "client",
+  ) {
+    const { type = RouteType.Both } = routeMeta;
+    switch (handlerType) {
+      case "server":
+        return type === "server-only" || type === "both";
+      case "client":
+        return type === "client-only" || type === "both";
+      default:
+        throw new Error(`Invalid handler type: ${handlerType}`);
+    }
+  }
+
+  /**
    * Callback handler when a request message is received from the WebSocket server. This method is responsible for finding the appropriate route handlers, executing them, and sending the response back to the WebSocket server.
    *
    * @param message - The received request message.
@@ -275,6 +341,8 @@ export class Client {
       .routeHandlers) {
       // Skip the handler if the URL does not match
       if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
+      // Skip the handler if it should not be handled by the server
+      if (!this.shouldHandleRouteType(routeMeta, "server")) continue;
 
       // Execute the handler
       const routeResponse = await handler(route);
@@ -302,13 +370,10 @@ export class Client {
           break;
       }
 
-      // If we have responded check if the route needs to be unregistered then exit
-      if (responded) {
-        routeMeta.calls++;
-        if (routeMeta.times === routeMeta.calls) {
-          this.unroute(routeHandlerId);
-        }
+      this.incrementRouteHandlerCallCount(routeHandlerId, routeMeta);
 
+      // If we have responded then exit
+      if (responded) {
         return;
       }
     }
@@ -467,6 +532,52 @@ export class Client {
    */
   unrouteAll() {
     this.routeHandlers.clear();
+  }
+
+  /**
+   * Allows an external handler to be injected into the route handling process for dealing with
+   * client-side request interception.
+   *
+   * @param options - options for the external route handler
+   * @param options.extractRequest - a function that extracts a request from the arguments passed to the external handler
+   * @param options.handleResult - a function that transforms the internal result to the external handlers expected result
+   * @returns a function that acts as a handler for the external route handler
+   */
+  attachExternalClientSideRouteHandler<TCallbackArgs extends any[], TResult>({
+    extractRequest,
+    handleResult,
+  }: {
+    extractRequest: (...args: TCallbackArgs) => Request | Promise<Request>;
+    handleResult: (
+      response: ExternalRouteHandlerRouteResponse | undefined,
+      ...args: TCallbackArgs
+    ) => TResult | undefined | Promise<TResult | undefined>;
+  }): (...args: TCallbackArgs) => Promise<TResult | undefined> {
+    return async (...args: TCallbackArgs) => {
+      const request = await extractRequest(...args);
+      const url = new URL(request.url);
+      const route = new Route(request);
+
+      for (const [routeHandlerId, [urlMatcher, handler, routeMeta]] of this
+        .routeHandlers) {
+        // Skip the handler if the URL does not match
+        if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
+        // Skip the handler if it should not be handled by the client
+        if (!this.shouldHandleRouteType(routeMeta, "client")) continue;
+
+        // Execute the handler
+        const routeResponse = await handler(route);
+        let finalResponse: TResult | undefined;
+        if (routeResponse.type !== "fallback") {
+          finalResponse = await handleResult(routeResponse, ...args);
+        }
+
+        this.incrementRouteHandlerCallCount(routeHandlerId, routeMeta);
+        if (finalResponse) return finalResponse;
+      }
+
+      await handleResult(undefined, ...args);
+    };
   }
 
   /**
