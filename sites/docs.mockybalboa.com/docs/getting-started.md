@@ -28,4 +28,5 @@ Check out the guides below to get started in your framework.
 - [Next.js](./server/next-js)
 - [Nuxt](./server/nuxt)
 - [React Router](./server/react-router)
+- [SvelteKit](./server/sveltekit)
 - [Custom integration](./server/custom)

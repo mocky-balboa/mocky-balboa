@@ -108,3 +108,9 @@ Below is a basic example of how to use Mocky Balboa to mock a server-side networ
 
 1. See [the client guide](../client-guide) for more information on how you can mock server-side network requests from directly within your Playwright tests.
 1. See [the advanced page](../advanced) for more information on advanced usage and how the framework works under the hood.
+
+## Mocking client-side requests
+
+Mocky Balboa does not support mocking client-side requests. This is a choice made by design to ensure predictable behaviour in the tests. For example, you may use different auth strategies on the client-side for the same requests you may make on the server-side. Applying a mock that covers both of these could allow bugs to slip through that might otherwise have been caught.
+
+That said you could build your own abstraction layer on top of Mocky Balboa and Playwright to call `client.route` and `page.route` from the same function. This might be more useful in for example a SvelteKit application where SSR and CSR can happen when loading a page.
