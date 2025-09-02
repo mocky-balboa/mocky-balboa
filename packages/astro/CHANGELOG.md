@@ -1,5 +1,15 @@
 # @mocky-balboa/astro
 
+## 1.1.3
+
+### Patch Changes
+
+- [98b6b11](https://github.com/mocky-balboa/mocky-balboa/commit/98b6b113136331eeeda0f21990e62776763585f9): GitHub releases now part of release pipeline. This is the first release in GitHub releases for this package. See the packages CHANGELOG.md for packages full history.
+- Updated dependencies [[98b6b11](https://github.com/mocky-balboa/mocky-balboa/commit/98b6b113136331eeeda0f21990e62776763585f9)]
+  - [@mocky-balboa/cli-utils@1.0.2](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fcli-utils%401.0.2)
+  - [@mocky-balboa/logger@1.0.6](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Flogger%401.0.6)
+  - [@mocky-balboa/server@1.0.8](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fserver%401.0.8)
+
 ## 1.1.2
 
 ### Patch Changes

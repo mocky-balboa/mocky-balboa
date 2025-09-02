@@ -1,5 +1,11 @@
 # @mocky-balboa/logger
 
+## 1.0.6
+
+### Patch Changes
+
+- [98b6b11](https://github.com/mocky-balboa/mocky-balboa/commit/98b6b113136331eeeda0f21990e62776763585f9): GitHub releases now part of release pipeline. This is the first release in GitHub releases for this package. See the packages CHANGELOG.md for packages full history.
+
 ## 1.0.5
 
 ### Patch Changes

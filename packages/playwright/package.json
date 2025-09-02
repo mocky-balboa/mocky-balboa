@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/playwright",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Playwright integration for Mocky Balboa. Mock your server-side network requests directly inside your Playwright tests.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",
