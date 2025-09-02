@@ -34,15 +34,20 @@ async function getDependencyReleaseLine(changesets, dependenciesUpdated) {
     (changeset) =>
       `- Updated dependencies${
         changeset.commit
-          ? ` [${getGitHubLink(changeset.commit.slice(0, 7), getGitHubLink(`commit/${changeset.commit}`))}]`
+          ? ` [${getLink(changeset.commit.slice(0, 7), getGitHubLink(`commit/${changeset.commit}`))}]`
           : ""
       }`,
   );
 
-  const updatedDependenciesList = dependenciesUpdated.map(
-    (dependency) =>
-      `  - ${dependency.name}@${dependency.newVersion} (${getLink("link", getGitHubLink(`tree/${encodeURIComponent(`${dependency.name}@${dependency.newVersion}`)}/packages/${getPackageDirectory(dependency.name)}`))})`,
-  );
+  const updatedDependenciesList = dependenciesUpdated.map((dependency) => {
+    const linkLabel = `${dependency.name}@${dependency.newVersion}`;
+    const encodedTag = encodeURIComponent(
+      `${dependency.name}@${dependency.newVersion}`,
+    );
+    const linkPath = `releases/tag/${encodedTag}`;
+    const link = getGitHubLink(linkPath);
+    return `  - ${getLink(linkLabel, link)}`;
+  });
 
   return [...changesetLinks, ...updatedDependenciesList].join("\n");
 }
