@@ -1,5 +1,5 @@
 ---
-"@mocky-balboa/sveltekit": minor
+"@mocky-balboa/sveltekit": major
 ---
 
-Added support for SvelteKit
+SvelteKit integration added for Mocky Balboa
