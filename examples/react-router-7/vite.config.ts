@@ -9,6 +9,9 @@ export default defineConfig({
     tailwindcss(),
     reactRouter(),
     tsconfigPaths(),
+    // As any is here due to mismatched dependencies in local workspace
+    // this is only an issue in this monorepo and not required when you
+    // are using the package in your own project
     mockyBalboa() as any,
   ],
 });
