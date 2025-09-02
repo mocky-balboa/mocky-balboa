@@ -1,5 +1,11 @@
 # @mocky-balboa/react-router
 
+## 1.1.0
+
+### Minor Changes
+
+- [82f81cc](https://github.com/mocky-balboa/mocky-balboa/commit/82f81cc9cf638035596910b4aad97f8d317db2e8): Added CLI arg to mocky-balboa-react-router to specify dist dir (default is "build")
+
 ## 1.0.1
 
 ### Patch Changes
