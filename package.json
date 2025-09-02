@@ -16,7 +16,9 @@
     "prepare-release": "pnpm changeset",
     "package-post-cjs-build": "node ./scripts/package-post-cjs-build.cjs"
   },
-  "keywords": [],
+  "keywords": [
+    
+  ],
   "license": "MIT",
   "packageManager": "pnpm@10.14.0",
   "devDependencies": {
@@ -30,5 +32,10 @@
     "octokit": "^5.0.3",
     "oxlint": "^1.14.0",
     "recursive-readdir": "^2.2.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
