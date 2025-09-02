@@ -67,10 +67,12 @@ jobs:
       - name: Release packages
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
         run: |
-          pnpm changeset version --snapshot canary
+          pnpm changeset pre enter canary
+          pnpm changeset version
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
           node scripts/update-package-readmes.cjs
-          pnpm changeset publish --tag canary
+          node scripts/update-package-canary-versions.cjs $(git rev-parse --short HEAD)
+          pnpm changeset publish --no-git-tag
           rm .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
