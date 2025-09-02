@@ -17,13 +17,6 @@ const [nextFight, nextFightError] =
         ? nextFightResult.value
         : [null, nextFightResult.reason as Error];
 
-const trainingStats = {
-    running: "10 Miles",
-    heavyBag: "3 x 2 minute rounds",
-    situps: "200 Reps",
-    intensity: "HIGH",
-};
-
 const getDataCardClasses = (error: boolean) => {
     const classes = ["p-6", "rounded-xl", "border", "flex", "flex-col"];
 
