@@ -129,7 +129,10 @@ test("loading fight data using file path", async ({ page, mocky }) => {
   mocky.route(nextFightEndpoint, (route) => {
     return route.fulfill({
       status: 200,
-      path: path.resolve(__dirname, "james-clubber-lang.next-fight.json"),
+      path: path.resolve(
+        import.meta.dirname,
+        "james-clubber-lang.next-fight.json",
+      ),
     });
   });
 
