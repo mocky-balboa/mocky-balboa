@@ -109,7 +109,8 @@ export type ExternalRouteHandlerRouteResponse = Exclude<
 >;
 
 /**
- * Client used to interface with the WebSocket server for mocking server-side network requests.
+ * Client used to interface with the WebSocket server for mocking server-side network requests. And
+ * optionally integrating for mocking client-side network requests.
  *
  * @hideconstructor
  */
