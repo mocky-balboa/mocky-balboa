@@ -8,7 +8,7 @@
     "dev": "react-router dev --port 3000 --host 0.0.0.0",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "test:cypress": "echo \"No Cypress tests due to issues with client hydration on SSR causing Cypress tests to fail\"",
+    "test:cypress": "pnpm cypress run",
     "test:playwright": "pnpm playwright test",
     "start:tests": "mocky-balboa-react-router -h 0.0.0.0",
     "start:tests-dev": "pnpm dev"
@@ -23,6 +23,7 @@
     "react-router": "^7.7.1"
   },
   "devDependencies": {
+    "@mocky-balboa/cypress": "workspace:*",
     "@mocky-balboa/playwright": "workspace:*",
     "@playwright/test": "^1.54.2",
     "@react-router/dev": "^7.7.1",

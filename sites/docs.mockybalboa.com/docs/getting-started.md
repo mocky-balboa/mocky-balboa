@@ -4,7 +4,13 @@ sidebar_position: 3
 
 # Getting started
 
-There are two components to Mocky Balboa. The first is the __server integration__, which is responsible for intercepting outbound http requests and mocking the responses. The second is the __client integration__, which is responsible for resolving the mocked responses.
+:::info
+
+The terms `mocky` and `client` are used interchangeably throughout the documentation. They both refer to the instance of the Mocky Balboa client. See [client guide for more information on the client](./client-guide/client).
+
+:::
+
+There are two components to Mocky Balboa. The first is the __server integration__, which is responsible for intercepting outbound http requests and mocking the responses. The second is the __client integration__, which is responsible for resolving the mocked responses across the stack.
 
 There is first-class support for popular frameworks and tools, but you can also write your own integrations.
 
@@ -13,13 +19,13 @@ There is first-class support for popular frameworks and tools, but you can also 
 
 Check out the guides below to get started in your framework.
 
-### Browser automation integrations
+## Browser automation integrations
 
 - [Playwright](./client/playwright)
 - [Cypress](./client/cypress)
 - [Custom integration](./client/custom)
 
-### Server framework integrations
+## Server framework integrations
 
 - [Astro](./server/astro)
 - [Express](./server/express)

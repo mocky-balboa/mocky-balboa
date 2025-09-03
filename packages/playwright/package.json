@@ -1,7 +1,7 @@
 {
   "name": "@mocky-balboa/playwright",
   "version": "1.0.8",
-  "description": "Playwright integration for Mocky Balboa. Mock your server-side network requests directly inside your Playwright tests.",
+  "description": "Playwright integration for Mocky Balboa. Mock your full-stack network requests directly inside your Playwright tests.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",
   "bugs": {
@@ -34,6 +34,11 @@
       "import": "./dist/esm/playwright.js",
       "require": "./dist/cjs/playwright.cjs",
       "types": "./dist/types/playwright.d.ts"
+    },
+    "./test": {
+      "import": "./dist/esm/test.js",
+      "require": "./dist/cjs/test.cjs",
+      "types": "./dist/types/test.d.ts"
     }
   },
   "scripts": {
@@ -48,7 +53,7 @@
     "post:build:watch": "chokidar \"dist/cjs/**/*.cjs\" -c \"pnpm run post:build\"",
     "clean": "rimraf dist",
     "release": "semantic-release",
-    "test": "echo \"No tests\""
+    "test": "vitest"
   },
   "dependencies": {
     "@mocky-balboa/client": "workspace:*",
@@ -65,6 +70,7 @@
     "@types/node": "catalog:",
     "concurrently": "catalog:",
     "rimraf": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

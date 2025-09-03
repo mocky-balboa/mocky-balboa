@@ -35,35 +35,50 @@ __≥ 14.x.x__
   </TabItem>
 </Tabs>
 
+
 ## Usage
 
-Below is a basic example of how to use Mocky Balboa to mock a server-side network request from directly within your Cypress tests.
+Using the commands provided results in a singleton instance of the Mocky Balboa client being setup on the `window` object. The instance is only created the first time `cy.mocky` is called.
+
+### Setup commands
+
+The recommended approach is to register the commands. This requires importing the commands in your E2E tests support file, `cypress/support/e2e.{js,jsx,ts,tsx}` by default.
 
 <Tabs groupId="javascript-language">
   <TabItem value="typescript" label="TypeScript" default>
         ```TypeScript
-        import { createClient } from "@mocky-balboa/cypress";
+        // cypress/support/e2e.ts
+        import "@mocky-balboa/cypress/commands";
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      // cypress/support/e2e.js
+      import "@mocky-balboa/cypress/commands";
+      ```
+  </TabItem>
+</Tabs>
 
-        it("my page loads", async () => {
-          cy
-            .then(() => {
-              // Create our Mocky Balboa client and establish a connection with the server
-              return createClient(cy);
-            }).then((client) => {
-              // Register our fixture on routes matching '**/api/users'
-              client.route("**/api/users", (route) => {
-                return route.fulfill({
-                  status: 200,
-                  body: JSON.stringify([
-                    { id: "user-1", name: "John Doe" },
-                    { id: "user-2", name: "Jane Doe" }
-                  ]),
-                  headers: {
-                    "Content-Type": "application/json"
-                  },
-                });
+### The "mocky" command
+
+The primary command you'll be using in your tests is `cy.mocky`. This accepts a callback parameter where you can setup and teardown your routes.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        it("loads the correct users", async () => {
+          cy.mocky((mocky) => {
+            mocky.route("**/api/users", (route) => {
+              return route.fulfill({
+                status: 200,
+                body: JSON.stringify([
+                  { id: "user-1", name: "John Doe" },
+                  { id: "user-2", name: "Jane Doe" }
+                ]),
+                headers: { "Content-Type": "application/json" },
               });
             });
+          });
 
           // Visit the page of our application in the browser
           cy.visit("/");
@@ -75,28 +90,19 @@ Below is a basic example of how to use Mocky Balboa to mock a server-side networ
   </TabItem>
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
-      import { createClient } from "@mocky-balboa/cypress";
-
-      it("my page loads", async () => {
-        cy
-          .then(() => {
-            // Create our Mocky Balboa client and establish a connection with the server
-            return createClient(cy);
-          }).then((client) => {
-            // Register our fixture on routes matching '**/api/users'
-            client.route("**/api/users", (route) => {
-              return route.fulfill({
-                status: 200,
-                body: JSON.stringify([
-                  { id: "user-1", name: "John Doe" },
-                  { id: "user-2", name: "Jane Doe" }
-                ]),
-                headers: {
-                  "Content-Type": "application/json"
-                },
-              });
+      it("loads the correct users", async () => {
+        cy.mocky((mocky) => {
+          mocky.route("**/api/users", (route) => {
+            return route.fulfill({
+              status: 200,
+              body: JSON.stringify([
+                { id: "user-1", name: "John Doe" },
+                { id: "user-2", name: "Jane Doe" }
+              ]),
+              headers: { "Content-Type": "application/json" },
             });
           });
+        });
 
         // Visit the page of our application in the browser
         cy.visit("/");
@@ -108,74 +114,76 @@ Below is a basic example of how to use Mocky Balboa to mock a server-side networ
   </TabItem>
 </Tabs>
 
-### Asserting on a request
+### Configuring the client
 
-If you want to assert on a request made on the server you can use [client.waitForRequest](../client-guide#waiting-for-a-request).
+You can specify custom connection options if you need to override the default options when connecting the client to the server using the `mockySetConnectionOptions` command.
 
 <Tabs groupId="javascript-language">
   <TabItem value="typescript" label="TypeScript" default>
         ```TypeScript
-        import { createClient } from "@mocky-balboa/cypress";
+        it("...", async () => {
+          // Make sure you call mockySetConnectionOptions before any calls to cy.mocky
+          cy.mockySetConnectionOptions({ port: 1234 });
 
-        it("my page loads", async () => {
-          let usersRequestPromise: Promise<Request>;
-          cy
-            .then(() => {
-              // Create our Mocky Balboa client and establish a connection with the server
-              return createClient();
-            }).then((client) => {
-              // Listen for a request to the /api/users endpoint
-              usersRequestPromise = client.waitForRequest("**/api/users");
-            });
-
-          // Visit the page of our application in the browser
-          cy.visit("/");
-
-          cy.then(() => {
-            // Wait for the request to /api/users to be fulfilled
-            return requestPromise;
-          }).then((request) => {
-            // Assert on the request
-            expect(request.headers.get("X-Public-Api-Key")).to.equal(
-              "public-api-key",
-            );
+          cy.mocky((mocky) => {
+            // ...
           });
         });
         ```
   </TabItem>
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
-      import { createClient } from "@mocky-balboa/cypress";
+      it("...", async () => {
+        // Make sure you call mockySetConnectionOptions before any calls to cy.mocky
+        cy.mockySetConnectionOptions({ port: 1234 });
 
-      it("my page loads", async () => {
-        let usersRequestPromise;
-        cy
-          .then(() => {
-            // Create our Mocky Balboa client and establish a connection with the server
-            return createClient();
-          }).then((client) => {
-            // Listen for a request to the /api/users endpoint
-            usersRequestPromise = client.waitForRequest("**/api/users");
-          });
-
-        // Visit the page of our application in the browser
-        cy.visit("/");
-
-        cy.then(() => {
-          // Wait for the request to /api/users to be fulfilled
-          return requestPromise;
-        }).then((request) => {
-          // Assert on the request
-          expect(request.headers.get("X-Public-Api-Key")).to.equal(
-            "public-api-key",
-          );
+        cy.mocky((mocky) => {
+          // ...
         });
       });
       ```
   </TabItem>
 </Tabs>
 
+### Asserting on a request with "mockyWaitForRequest"
+
+If you want to assert on a request made on the server you can use the `mockyWaitForRequest` command. To do this you need to also pass an "action" which is a callback that you expect to invoke the request you are waiting on. For example if we expect navigating to "/" to trigger our `/api/users` request our action would look like `() => cy.visit("/")`. You can run any code within an action provided it returns a Cypress `Chainable`.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        it("calls /api/users with the correct public API key", async () => {
+          cy
+            .mockyWaitForRequest(() => cy.visit("/"), "**/api/users")
+            .then((request) => {
+              expect(request.headers.get("X-Public-Api-Key")).to.equal(
+                "public-api-key",
+              );
+            });
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      it("calls /api/users with the correct public API key", async () => {
+        cy
+          .mockyWaitForRequest(() => cy.visit("/"), "**/api/users")
+          .then((request) => {
+            expect(request.headers.get("X-Public-Api-Key")).to.equal(
+              "public-api-key",
+            );
+          });
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+## Limitations
+
+- There is no support for using `path` on `route.fulfill`. This is due to the difficulties of integrating chainable commands to the asynchronous internal request interception. Instead you can read the file contents and pass it as a string to the `body`. `cy.intercept` doesn't support stubbing binary responses which would be the only thing files can offer over declarative mocks. Trying to use `path` on `route.fulfill` will result in an error being thrown.
+
 ## Further usage
 
-1. See [the client guide](../client-guide) for more information on how you can mock server-side network requests from directly within your Cypress tests.
+1. See [the client guide](../client-guide/client) for more information on how you can setup routes via the mocky client.
+1. See [the route guide](../client-guide/route) for more information on how you can interact interact with routes on `mocky.route`.
 1. See [the advanced page](../advanced) for more information on advanced usage and how the framework works under the hood.

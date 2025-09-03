@@ -1,6 +1,6 @@
 # 🥊 Mocky Balboa
 
-A server-side network mocking library for your SSR applications. Fixture http network requests on your server-side application for browser automation testing without having to modify your application logic.
+A network mocking library for your SSR applications. Fixture http network requests on your server-side application for browser automation testing without having to modify your application logic.
 
 ## Getting started
 
@@ -28,7 +28,34 @@ Don't see your framework? Create a [custom server integration](https://docs.mock
 
 ## Examples
 
-See [examples](examples) for more information.
+### Playwright example
+
+```TypeScript
+import { expect } from "@playwright/test";
+import { test } from "@mocky-balboa/playwright";
+
+test("a route that performs server and client network requests", async ({ page, mocky }) => {
+  // Mocks the request on both the client and the server
+  mocky.route("**/api/endpoint", (route) => {
+    return route.fulfill({
+      status: 200,
+      body: JSON.stringify({ message: "Hello, World!" }),
+      headers: { "Content-Type": "application/json" },
+    });
+  }, {
+    // Optionally configure the route
+    // type: "both" to mock on both client and server (default behaviour)
+    // type: "server-only" to mock on the server only
+    // type: "client-only" to mock on the client only
+  });
+
+  await page.goto("http://localhost:3000");
+});
+```
+
+### More examples
+
+See [examples](examples) for example projects.
 
 ## Contributing
 

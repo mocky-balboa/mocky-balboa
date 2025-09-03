@@ -11,6 +11,12 @@ import TabItem from '@theme/TabItem';
 
 # Custom Mocky Balboa client integration
 
+:::note[API Reference]
+
+[@mocky-balboa/client](https://api-reference.mockybalboa.com/modules/_mocky-balboa_client.html)
+
+:::
+
 If you need a custom integration for Mocky Balboa, you can use the `@mocky-balboa/client` package to integrate with your browser automation framework. There are a few things to keep in mind when setting up the integration:
 
 1. Ensure you connect the client to the Mocky Balboa server before executing any tests.
@@ -132,4 +138,14 @@ Make sure to disconnect the client from the Mocky Balboa server when you are don
   </TabItem>
 </Tabs>
 
-[API reference](https://api-reference.mockybalboa.com/modules/_mocky-balboa_client.html)
+## Injecting a client route handler
+
+:::note[API Reference]
+
+[Client.attachExternalClientSideRouteHandler](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.client#attachexternalclientsideroutehandler)
+
+:::
+
+To re-use the same route handler interface for both client and server side network requests, you can inject a client route handler into the client instance. This expects a function callback in the implementing framework that can accept arbitrary arguments and returns any response. It is on you to transform the incoming arguments to a `Request` object that can be used by Mocky Balboa internally, and transform the `ExternalRouteHandlerRouteResponse` to the appropriate response for your framework.
+
+For an example of this see the [Playwright integration code](https://github.com/mocky-balboa/mocky-balboa/blob/main/packages/playwright/src/playwright.ts).
