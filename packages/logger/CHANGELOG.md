@@ -1,5 +1,11 @@
 # @mocky-balboa/logger
 
+## 1.0.7
+
+### Patch Changes
+
+- [d326511](https://github.com/mocky-balboa/mocky-balboa/commit/d3265110ad1c72af09ef2f85cf543df2d5a5bad2): Documentation updates
+
 ## 1.0.6
 
 ### Patch Changes

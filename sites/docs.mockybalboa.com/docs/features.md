@@ -6,6 +6,7 @@ title: Features
 # Features
 
 * **Framework Agnostic:** Seamlessly integrates with any Node.js application or browser automation framework.
+* **Mock server and client requests:** Mock both server and client requests on the same interface.
 * **Isolated Mocks:** Guarantees that mocks aren't leaked between tests, whilst maintaining parallelism for test runs.
 * **Simple Setup:** Get started with no configuration needed, just follow the quickstart guide.
 * **Binary Support:** Mock binary responses using local files.

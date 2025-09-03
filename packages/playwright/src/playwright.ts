@@ -8,9 +8,10 @@ import {
 } from "@mocky-balboa/client";
 import type { BrowserContext } from "@playwright/test";
 import { logger } from "./logger.js";
+import { extractRequest, handleResult } from "./route.js";
 
 /**
- * Creates a Mocky Balboa client used to mock server-side network requests at runtime defined by your test suite.
+ * Creates a Mocky Balboa client used to mock full-stack network requests at runtime defined by your test suite.
  *
  * @param {BrowserContext} context - The Playwright browser context
  * @param {ConnectOptions} [options={}] - Optional connection options {@link ConnectOptions}
@@ -22,7 +23,7 @@ import { logger } from "./logger.js";
  *   // Create the Mocky Balboa client
  *   const client = await createClient(context);
  *
- *   // Register your mock which your application will call on the server
+ *   // Register your mock which your application will call on the server or the client
  *   client.route("**\/api", (route) => {
  *     route.fulfill({
  *       status: 200,
@@ -44,6 +45,16 @@ export const createClient = async (
   await context.setExtraHTTPHeaders({
     [ClientIdentityStorageHeader]: client.clientIdentifier,
   });
+
+  // Defer all client-side route handling to Mocky Balboa client
+  await context.route(
+    "**",
+    // Transforms the playwright route object into a Request object
+    client.attachExternalClientSideRouteHandler({
+      extractRequest,
+      handleResult,
+    }),
+  );
 
   // When the client receives an error message from the server we should log the error and close the context. This can help prevent false positives in test cases.
   client.on(

@@ -1,0 +1,327 @@
+---
+sidebar_position: 1
+title: Client
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Client
+
+:::note[API Reference]
+
+[Client](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client)
+
+:::
+
+## Registering a route handler
+
+:::note[API Reference]
+
+[Client.route](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#route)
+
+:::
+
+Registering a route handler allows you to intercept requests and modify the response in various ways via the [Route](./route) class passed as an argument to the handler.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+    ```TypeScript
+    // Matching URL's with glob patterns
+    client.route("**/api", (route) => {
+        return route.fulfill(...);
+    });
+
+    // Matching URL's with regular expressions
+    client.route(/^.*?\/api$/, (route) => {
+        return route.fulfill(...);
+    });
+
+    // Matching URL's with a custom function
+    client.route((url: URL) => {
+        return url.pathname.startsWith("/api");
+    }, (route) => {
+        return route.fulfill(...);
+    });
+    ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    // Matching URL's with glob patterns
+    client.route("**/api", (route) => {
+        return route.fulfill(...);
+    });
+
+    // Matching URL's with regular expressions
+    client.route(/^.*?\/api$/, (route) => {
+        return route.fulfill(...);
+    });
+
+    // Matching URL's with a custom function
+    client.route((url) => {
+        return url.pathname.startsWith("/api");
+    }, (route) => {
+        return route.fulfill(...);
+    });
+    ```
+  </TabItem>
+</Tabs>
+
+## Mock n times
+
+:::note[API Reference]
+
+[Client.route](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#route)
+
+:::
+
+The route handler will be removed once its been executed _n_ times.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      // Once the route handler is matched 3 times it will be removed from the client
+      client.route("**/api", (route) => {
+        return route.fulfill(...);
+      }, { times: 3 });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      // Once the route handler is matched 3 times it will be removed from the client
+      client.route("**/api", (route) => {
+        return route.fulfill(...);
+      }, { times: 3 });
+      ```
+  </TabItem>
+</Tabs>
+
+## Mock client and server side requests (default behaviour)
+
+:::note[API Reference]
+
+[Client.route](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#route)
+
+:::
+
+`RouteOptions.type` defaults to `"both"` when not explicitly set.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      // The route handler will handle requests that originate from the client or server side
+      client.route("**/api", (route) => {
+        return route.fulfill(...);
+      }, { type: "both" });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      // The route handler will handle requests that originate from the client or server side
+      client.route("**/api", (route) => {
+        return route.fulfill(...);
+      }, { type: "both" });
+      ```
+  </TabItem>
+</Tabs>
+
+## Only mock server side requests
+
+:::note[API Reference]
+
+[Client.route](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#route)
+
+:::
+
+Setting `RouteOptions.type` to `"server-only"` will only mock server side requests. This is useful if you differentiate between client and server side requests. For example, authentication strategies can be different between client and server side.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      // The route handler will handle requests that originate from the server only
+      client.route("**/api", (route) => {
+        return route.fulfill(...);
+      }, { type: "server-only" });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      // The route handler will handle requests that originate from the server only
+      client.route("**/api", (route) => {
+        return route.fulfill(...);
+      }, { type: "server-only" });
+      ```
+  </TabItem>
+</Tabs>
+
+## Only mock client side requests
+
+:::note[API Reference]
+
+[Client.route](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#route)
+
+:::
+
+Setting `RouteOptions.type` to `"client-only"` will only mock client side requests. This is useful if you differentiate between client and server side requests. For example, authentication strategies can be different between client and server side.
+
+This is the equivalent of Playwright's `page.route` or Cypress' `cy.intercept`. This is a convenient interface that allows you to mock requests across the stack without having to call different functions.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      // The route handler will handle requests that originate from the client (browser) only
+      client.route("**/api", (route) => {
+        return route.fulfill(...);
+      }, { type: "client-only" });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      // The route handler will handle requests that originate from the client (browser) only
+      client.route("**/api", (route) => {
+        return route.fulfill(...);
+      }, { type: "client-only" });
+      ```
+  </TabItem>
+</Tabs>
+
+## Unregistering a route handler
+
+:::note[API Reference]
+
+[Client.unroute](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#unroute)
+
+:::
+
+If you want to disable a route handler, you can use the `unroute` method:
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+    ```TypeScript
+    const routeHandlerId = client.route("**/api", (route) => {
+        return route.fulfill(...);
+    });
+
+    client.unroute(routeHandlerId);
+    ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    const routeHandlerId = client.route("**/api", (route) => {
+        return route.fulfill(...);
+    });
+
+    client.unroute(routeHandlerId);
+    ```
+  </TabItem>
+</Tabs>
+
+## Unregistering all route handlers
+
+:::note[API Reference]
+
+[Client.unrouteAll](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#unrouteall)
+
+:::
+
+Used to unregister all route handlers registered on the client.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+    ```TypeScript
+    client.unrouteAll();
+    ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    client.unrouteAll();
+    ```
+  </TabItem>
+</Tabs>
+
+## Waiting for a request
+
+:::note[API Reference]
+
+[Client.waitForRequest](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#waitforrequest)
+
+:::
+
+When you need to wait for a request to be made, you can use `client.waitForRequest`.
+
+:::tip
+
+Use `client.waitForRequest` to assert on the request being sent on the server.
+
+:::
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+    ```TypeScript
+    const requestPromise = client.waitForRequest("**/api");
+
+    // Run code that triggers the request, i.e. loading a page
+
+    // Await the request
+    const request = await requestPromise;
+
+    // Assert on the request
+    expect(request.headers.get("Authorization")).toBeDefined();
+    ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    const requestPromise = client.waitForRequest();
+
+    // Run code that triggers the request, i.e. loading a page
+
+    // Await the request
+    const request = await requestPromise;
+
+    // Assert on the request
+    expect(request.headers.get("Authorization")).toBeDefined();
+    ```
+  </TabItem>
+</Tabs>
+
+## Waiting for a request on the client only or the server only
+
+:::note[API Reference]
+
+[Client.waitForRequest](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#waitforrequest)
+
+:::
+
+Similar to [Client.route](#only-mock-server-side-requests) you can scope waiting for requests to the client, server, or both. The default behavior is to wait for requests on both the client and the server. The resolved request is the first request to be made.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+    ```TypeScript
+    const requestPromise = client.waitForRequest("**/api", {
+      // Allows you to scope waiting for requests to the client, server, or both.
+      // "server-only" | "client-only" | "both"
+      type: "client-only",
+    });
+
+    // Run code that triggers the request, i.e. loading a page
+
+    // Await the request
+    const request = await requestPromise;
+
+    // Assert on the request
+    expect(request.headers.get("Authorization")).toBeDefined();
+    ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    const requestPromise = client.waitForRequest();
+
+    // Run code that triggers the request, i.e. loading a page
+
+    // Await the request
+    const request = await requestPromise;
+
+    // Assert on the request
+    expect(request.headers.get("Authorization")).toBeDefined();
+    ```
+  </TabItem>
+</Tabs>

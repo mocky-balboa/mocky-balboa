@@ -1,0 +1,348 @@
+---
+sidebar_position: 90
+title: Route
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Route
+
+:::note[API Reference]
+
+[Route](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route)
+
+:::
+
+## continue
+
+:::note[API Reference]
+
+[Route.continue](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#continue)
+
+:::
+
+Continue will execute the request on the client and pass the response back to the server.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.route("**/api", (route) => {
+        return route.continue();
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    client.route("**/api", (route) => {
+      return route.continue();
+    });
+    ```
+  </TabItem>
+</Tabs>
+
+You can optionally override aspects of the request.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.route("**/api", (route) => {
+        return route.continue({
+          // Will override all request headers rather than extend them
+          headers: {
+            "X-Override": "value",
+          },
+        });
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    client.route("**/api", (route) => {
+      return route.continue({
+        // Will override all request headers rather than extend them
+        headers: {
+          "X-Override": "value",
+        },
+      });
+    });
+    ```
+  </TabItem>
+</Tabs>
+
+## error
+
+:::note[API Reference]
+
+[Route.error](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#error)
+
+:::
+
+Error will simulate a network level error causing `fetch` to throw an error.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.route("**/api", (route) => {
+        return route.error();
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      client.route("**/api", (route) => {
+        return route.error();
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+## fallback
+
+:::note[API Reference]
+
+[Route.fallback](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#fallback)
+
+:::
+
+Fallback to the next route handler. If there are no more route handlers the request will default to [passthrough](#passthrough).
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.route("**/api", (route) => {
+        return route.fallback();
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      client.route("**/api", (route) => {
+        return route.fallback();
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+## fetch
+
+:::note[API Reference]
+
+[Route.fetch](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#fetch)
+
+:::
+
+Similar to [continue](#continue) but will not pass the response back to the server. This is useful when you want to fetch the data from the remote server and modify the response before passing it back to the server.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.route("**/api", (route) => {
+        const response = await route.fetch();
+        response.headers.set("X-Custom-Header", "Value");
+        return response;
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      client.route("**/api", (route) => {
+        const response = await route.fetch();
+        response.headers.set("X-Custom-Header", "Value");
+        return response;
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+## fulfill
+
+:::note[API Reference]
+
+[Route.fulfill](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#fulfill)
+
+:::
+
+Useful when you want to fixture the response with mock data. This allows you to fully control the response body, status, and headers.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.route("**/api", (route) => {
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hello: "world" }),
+        });
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      client.route("**/api", (route) => {
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hello: "world" }),
+        });
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+You can also fulfill the response with a file. Any file type is supported, allowing you to mock binary data. The content-type header (if not explicitly set) will be derived from the file extension using the [mime-types](https://www.npmjs.com/package/mime-types) package.
+
+:::tip
+
+Make sure to use absolute paths for the file path using the [path](https://nodejs.org/api/path.html) module.
+
+:::
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.route("**/api", (route) => {
+        return route.fulfill({
+          path: "/path/to/file.json",
+        });
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      client.route("**/api", (route) => {
+        return route.fulfill({
+          path: "/path/to/file.json",
+        });
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+## modifyReponse
+
+:::note[API Reference]
+
+[Route.modifyResponse](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#modifyresponse)
+
+:::
+
+Useful helper function when you want to modify the response before passing it back to the server, as with `route.fetch()`.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        client.route("**/api", (route) => {
+        const response = await route.fetch();
+        const responseJson = await response.json();
+
+        // Add custom data field to the original response
+        const modifiedResponse = client.modifiedResponse({
+            body: JSON.stringify({
+            ...responseJson,
+            modified: true,
+            }),
+        });
+
+        return modifiedResponse;
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      client.route("**/api", (route) => {
+        const response = await route.fetch();
+        const responseJson = await response.json();
+
+        // Add custom data field to the original response
+        const modifiedResponse = client.modifiedResponse({
+          body: JSON.stringify({
+          ...responseJson,
+          modified: true,
+          }),
+        });
+
+        return modifiedResponse;
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+## passthrough
+
+:::note[API Reference]
+
+[Route.passthrough](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#passthrough)
+
+:::
+
+Passthrough results in the request being fulfilled on the server over the network without any interference. This is the default behaviour when no route handlers are defined, or there is no match on the URL for any of the route handlers. It's also the fallback behaviour when the last matched route handler returns `route.fallback()`.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.route("**/api", (route) => {
+        return route.passthrough();
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      client.route("**/api", (route) => {
+        return route.passthrough();
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+## request (property)
+
+:::info
+
+First introduced in `@mocky-balboa/client@1.1.0`
+
+:::
+
+The request property is the original request object that was passed to the route handler, an instance of the [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) class. You can use this to differentiate between how you might want to handle different requests on the same route pattern.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+      ```TypeScript
+      client.route("**/api", (route) => {
+        const requestMethod = route.request.method;
+        if (requestMethod === "GET") {
+          return route.fulfill({
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ hello: "world" }),
+          });
+        }
+
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hello: "again world" }),
+        });
+      });
+      ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      client.route("**/api", (route) => {
+        const requestMethod = route.request.method;
+        if (requestMethod === "GET") {
+          return route.fulfill({
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ hello: "world" }),
+          });
+        }
+
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hello: "again world" }),
+        });
+      });
+      ```
+  </TabItem>
+</Tabs>

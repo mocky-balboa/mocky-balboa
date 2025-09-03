@@ -12,7 +12,7 @@ import {
   MessageType,
   parseMessage,
 } from "@mocky-balboa/websocket-messages";
-import { Client } from "./client.js";
+import { Client, type ExternalRouteHandlerRouteResponse } from "./client.js";
 import { type RawData, type WebSocketServer } from "ws";
 import WebSocket from "isomorphic-ws";
 import {
@@ -479,6 +479,49 @@ describe("Client", () => {
       });
     });
 
+    test("when a route is registered to only run 1 time it is removed after running once even if the fallback behaviour is the result of the handler", async () => {
+      const mock = vi.fn();
+      client.route(
+        (_requestUrl: URL) => {
+          return true;
+        },
+        (route) => {
+          mock();
+          return route.fallback();
+        },
+        { times: 1 },
+      );
+
+      const requestMessageOptions = {
+        request: {
+          method: "GET",
+          url: "http://example.com/another-endpoint",
+          headers: { Accept: "application/json" },
+        },
+      };
+
+      const firstRequestMessage = new Message(MessageType.REQUEST, {
+        ...requestMessageOptions,
+        id: "first-request-id",
+      });
+      const secondRequestMessage = new Message(MessageType.REQUEST, {
+        ...requestMessageOptions,
+        id: "second-request-id",
+      });
+
+      const firstIdlePromise = waitForAckIdle(serverWs);
+      // Send the first request to the client
+      serverWs.send(firstRequestMessage.toString());
+      await firstIdlePromise;
+
+      const secondIdlePromise = waitForAckIdle(serverWs);
+      // Send the second request to the client
+      serverWs.send(secondRequestMessage.toString());
+      await secondIdlePromise;
+
+      expect(mock).toHaveBeenCalledOnce();
+    });
+
     test("when a route that matches is unregistered before the request is sent - the response should be passed through", async () => {
       const routeId = client.route(
         (_requestUrl: URL) => {
@@ -590,6 +633,299 @@ describe("Client", () => {
           error: true,
           response: undefined,
         },
+      });
+    });
+
+    test("when setting up a route with the type set to 'server-only' the server route handler is called", async () => {
+      const mock = vi.fn();
+      client.route(
+        (_requestUrl: URL) => {
+          return true;
+        },
+        (route) => {
+          mock();
+          return route.fulfill({});
+        },
+        { type: "server-only" },
+      );
+
+      const requestMessageOptions = {
+        request: {
+          method: "GET",
+          url: "http://example.com/another-endpoint",
+          headers: { Accept: "application/json" },
+        },
+      };
+
+      const serverRequestMessage = new Message(MessageType.REQUEST, {
+        ...requestMessageOptions,
+        id: "first-request-id",
+      });
+
+      const serverIdlePromise = waitForAckIdle(serverWs);
+      // Send the first request to the client
+      serverWs.send(serverRequestMessage.toString());
+      await serverIdlePromise;
+
+      expect(mock).toHaveBeenCalledOnce();
+    });
+
+    test("when setting up a route without explicitly setting the type the server route handler is called", async () => {
+      const mock = vi.fn();
+      client.route(
+        (_requestUrl: URL) => {
+          return true;
+        },
+        (route) => {
+          mock();
+          return route.fulfill({});
+        },
+      );
+
+      const requestMessageOptions = {
+        request: {
+          method: "GET",
+          url: "http://example.com/another-endpoint",
+          headers: { Accept: "application/json" },
+        },
+      };
+
+      const serverRequestMessage = new Message(MessageType.REQUEST, {
+        ...requestMessageOptions,
+        id: "first-request-id",
+      });
+
+      const serverIdlePromise = waitForAckIdle(serverWs);
+      // Send the first request to the client
+      serverWs.send(serverRequestMessage.toString());
+      await serverIdlePromise;
+
+      expect(mock).toHaveBeenCalledOnce();
+    });
+
+    test("when setting up a route with the type set to 'both' the server route handler is called", async () => {
+      const mock = vi.fn();
+      client.route(
+        (_requestUrl: URL) => {
+          return true;
+        },
+        (route) => {
+          mock();
+          return route.fulfill({});
+        },
+        { type: "both" },
+      );
+
+      const requestMessageOptions = {
+        request: {
+          method: "GET",
+          url: "http://example.com/another-endpoint",
+          headers: { Accept: "application/json" },
+        },
+      };
+
+      const serverRequestMessage = new Message(MessageType.REQUEST, {
+        ...requestMessageOptions,
+        id: "first-request-id",
+      });
+
+      const serverIdlePromise = waitForAckIdle(serverWs);
+      // Send the first request to the client
+      serverWs.send(serverRequestMessage.toString());
+      await serverIdlePromise;
+
+      expect(mock).toHaveBeenCalledOnce();
+    });
+
+    test("when setting up a route with the type set to 'client-only' the server route handler is not called", async () => {
+      const mock = vi.fn();
+      client.route(
+        (_requestUrl: URL) => {
+          return true;
+        },
+        (route) => {
+          mock();
+          return route.fulfill({});
+        },
+        { type: "client-only" },
+      );
+
+      const requestMessageOptions = {
+        request: {
+          method: "GET",
+          url: "http://example.com/another-endpoint",
+          headers: { Accept: "application/json" },
+        },
+      };
+
+      const serverRequestMessage = new Message(MessageType.REQUEST, {
+        ...requestMessageOptions,
+        id: "first-request-id",
+      });
+
+      const serverIdlePromise = waitForAckIdle(serverWs);
+      // Send the first request to the client
+      serverWs.send(serverRequestMessage.toString());
+      await serverIdlePromise;
+
+      expect(mock).not.toBeCalled();
+    });
+
+    describe("using an external client side route handler", () => {
+      type ExternalRoute = {
+        request: Request;
+        respond: (
+          response: ExternalRouteHandlerRouteResponse | undefined,
+        ) => ExternalRouteHandlerRouteResponse;
+      };
+
+      let externalRoute: ExternalRoute;
+      let externalHandler: (
+        externalRoute: ExternalRoute,
+      ) => Promise<ExternalRouteHandlerRouteResponse | undefined>;
+      beforeEach(() => {
+        externalRoute = {
+          request: new Request("http://example.com/another-endpoint"),
+          respond: vi.fn().mockImplementation((response) => response),
+        };
+
+        externalHandler = client.attachExternalClientSideRouteHandler({
+          extractRequest: (externalRoute: ExternalRoute) => {
+            return externalRoute.request;
+          },
+          handleResult: (
+            routeResponse: ExternalRouteHandlerRouteResponse | undefined,
+            externalRoute: ExternalRoute,
+          ) => {
+            return externalRoute.respond(routeResponse);
+          },
+        });
+      });
+
+      test("when setting up a route with the type set to 'server-only' the client route handler is not called", async () => {
+        client.route(
+          (_requestUrl: URL) => {
+            return true;
+          },
+          (route) => {
+            return route.fulfill({});
+          },
+          { type: "server-only" },
+        );
+
+        const response = await externalHandler(externalRoute);
+        expect(response).toBeUndefined();
+      });
+
+      test("when setting up a route without explicitly setting the type the client route handler is called", async () => {
+        client.route(
+          (_requestUrl: URL) => {
+            return true;
+          },
+          (route) => {
+            return route.fulfill({});
+          },
+        );
+
+        const response = await externalHandler(externalRoute);
+        expect(response).toEqual({
+          type: "fulfill",
+          response: expect.any(Response),
+          path: undefined,
+        });
+      });
+
+      test("when setting up a route with the type set to 'both' the client route handler is called", async () => {
+        client.route(
+          (_requestUrl: URL) => {
+            return true;
+          },
+          (route) => {
+            return route.fulfill({});
+          },
+          { type: "both" },
+        );
+
+        const response = await externalHandler(externalRoute);
+        expect(response).toEqual({
+          type: "fulfill",
+          response: expect.any(Response),
+          path: undefined,
+        });
+      });
+
+      test("when setting up a route with the type set to 'client-only' the client route handler is called", async () => {
+        client.route(
+          (_requestUrl: URL) => {
+            return true;
+          },
+          (route) => {
+            return route.fulfill({});
+          },
+          { type: "client-only" },
+        );
+
+        const response = await externalHandler(externalRoute);
+        expect(response).toEqual({
+          type: "fulfill",
+          response: expect.any(Response),
+          path: undefined,
+        });
+      });
+
+      test("when specifying a maximum amount of times for the route to be handled and the route being able to be processed on client and server the total times is shared between client and server calls", async () => {
+        const mock = vi.fn();
+        client.route(
+          (_requestUrl: URL) => {
+            return true;
+          },
+          (route) => {
+            mock();
+            return route.fulfill({});
+          },
+          { times: 1 },
+        );
+
+        const requestMessageOptions = {
+          request: {
+            method: "GET",
+            url: "http://example.com/another-endpoint",
+            headers: { Accept: "application/json" },
+          },
+        };
+
+        const serverRequestMessage = new Message(MessageType.REQUEST, {
+          ...requestMessageOptions,
+          id: "first-request-id",
+        });
+
+        const serverIdlePromise = waitForAckIdle(serverWs);
+        // Send the first request to the client
+        serverWs.send(serverRequestMessage.toString());
+        await serverIdlePromise;
+
+        // Trigger the request handler on the client
+        const response = await externalHandler(externalRoute);
+
+        // The request should only have been handled once
+        expect(mock).toHaveBeenCalledOnce();
+
+        // The client handler should have never run
+        expect(response).toBeUndefined();
+
+        // The server handler should have been executed once
+        expect(mockResponseRegister).toHaveBeenCalledWith({
+          type: MessageType.RESPONSE,
+          messageId: expect.any(String),
+          payload: {
+            id: "first-request-id",
+            response: {
+              status: 200,
+              headers: {},
+              body: "",
+            },
+          },
+        });
       });
     });
   });

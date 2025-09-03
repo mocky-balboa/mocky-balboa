@@ -8,9 +8,10 @@ import {
 } from "@mocky-balboa/client";
 import type Cypress from "cypress";
 import { logger } from "./logger.js";
+import { extractRequest, handleResult } from "./intercept.js";
 
 /**
- * Creates a Mocky Balboa client used to mock server-side network requests at runtime defined by your test suite.
+ * Creates a Mocky Balboa client used to mock network requests at runtime defined by your test suite.
  *
  * @param {Cypress.Chainable} cy - The instance of Cypress i.e. `cy`
  * @param {ConnectOptions} [options={}] - Optional connection options {@link ConnectOptions}
@@ -45,9 +46,13 @@ export const createClient = async (
 ): Promise<Client> => {
   const client = new Client();
 
-  cy.intercept(/.*/, (req) => {
-    req.headers[ClientIdentityStorageHeader] = client.clientIdentifier;
-  });
+  cy.intercept(
+    /.*/,
+    client.attachExternalClientSideRouteHandler({
+      extractRequest: extractRequest(client.clientIdentifier),
+      handleResult,
+    }),
+  );
 
   // When the client receives an error message from the server we should log the error and close the context. This can help prevent false positives in test cases.
   client.on(

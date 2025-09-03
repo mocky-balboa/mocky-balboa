@@ -1,5 +1,32 @@
 # @mocky-balboa/cypress
 
+## 2.0.0
+
+### Major Changes
+
+- [d326511](https://github.com/mocky-balboa/mocky-balboa/commit/d3265110ad1c72af09ef2f85cf543df2d5a5bad2): - Client side mocking now part of default behaviour. See [@mocky-balboa/client@2.0.0](https://github.com/mocky-balboa/mocky-balboa/tree/%40mocky-balboa/client%402.0.0) for changes there.
+  - Ability to use custom commands – `import "@mocky-balboa/cypress/commands"` into your support file:
+    ```typescript
+    it("does something", () => {
+      cy.mocky((mocky) => {
+        mocky
+          .route
+          //...
+          ();
+      });
+    });
+    ```
+
+  **BREAKING CHANGES**
+  - Behaviour of mocking has changed from server only to both client and server side mocking
+
+### Patch Changes
+
+- Updated dependencies [[d326511](https://github.com/mocky-balboa/mocky-balboa/commit/d3265110ad1c72af09ef2f85cf543df2d5a5bad2)]
+- Updated dependencies [[d326511](https://github.com/mocky-balboa/mocky-balboa/commit/d3265110ad1c72af09ef2f85cf543df2d5a5bad2)]
+  - [@mocky-balboa/logger@1.0.7](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Flogger%401.0.7)
+  - [@mocky-balboa/client@2.0.0](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fclient%402.0.0)
+
 ## 1.0.8
 
 ### Patch Changes

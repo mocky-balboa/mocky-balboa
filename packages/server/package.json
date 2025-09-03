@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/server",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Server library for Mocky Balboa to enable real-time network mocking for your server-side network requests in your browser based test suites via WebSockets.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

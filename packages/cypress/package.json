@@ -1,7 +1,7 @@
 {
   "name": "@mocky-balboa/cypress",
-  "version": "1.0.8",
-  "description": "Cypress integration for Mocky Balboa. Mock your server-side network requests directly inside your Cypress tests.",
+  "version": "2.0.0",
+  "description": "Cypress integration for Mocky Balboa. Mock your full-stack network requests directly inside your Cypress tests.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",
   "bugs": {
@@ -34,6 +34,11 @@
       "import": "./dist/esm/cypress.js",
       "require": "./dist/cjs/cypress.cjs",
       "types": "./dist/types/cypress.d.ts"
+    },
+    "./commands": {
+      "import": "./dist/esm/commands.js",
+      "require": "./dist/cjs/commands.cjs",
+      "types": "./dist/types/commands.d.ts"
     }
   },
   "scripts": {
