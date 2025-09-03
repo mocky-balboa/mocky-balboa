@@ -1,5 +1,5 @@
 import type { Client, ConnectOptions } from "@mocky-balboa/client";
-import { test as base } from "@playwright/test";
+import { test as base, type TestType } from "@playwright/test";
 import { createClient } from "./playwright.js";
 
 /**
@@ -16,15 +16,35 @@ export interface MockyPlaywrightTest {
   mockyConnectOptions: ConnectOptions;
 }
 
+// Type helpers for extracting generics from the TestType
+type ExtractTestTypeGenerics<Type> =
+  Type extends TestType<infer X, infer Y> ? [X, Y] : never;
+type ExtractTestArgs<Type> =
+  ExtractTestTypeGenerics<Type> extends [infer X, infer Y] ? X : never;
+type ExtractWorkerArgs<Type> =
+  ExtractTestTypeGenerics<Type> extends [infer X, infer Y] ? Y : never;
+
+/**
+ * Extend a base test derived from Playwright's test object. This function
+ * allows you to extend a custom test object by passing it as an argument.
+ */
+export const extendTest = <TBaseTest extends typeof base>(
+  baseTest: TBaseTest,
+) =>
+  baseTest.extend<MockyPlaywrightTest>({
+    mockyConnectOptions: {},
+    mocky: async ({ context, mockyConnectOptions }, use) => {
+      const mocky = await createClient(context, mockyConnectOptions);
+      use(mocky);
+    },
+  }) as unknown as TestType<
+    ExtractTestArgs<TBaseTest> & MockyPlaywrightTest,
+    ExtractWorkerArgs<TBaseTest> & {}
+  >;
+
 /**
  * Extend the base playwright test with the mocky property
  */
-const test = base.extend<MockyPlaywrightTest>({
-  mockyConnectOptions: {},
-  mocky: async ({ context, mockyConnectOptions }, use) => {
-    const mocky = await createClient(context, mockyConnectOptions);
-    use(mocky);
-  },
-});
+const test = extendTest(base);
 
 export default test;
