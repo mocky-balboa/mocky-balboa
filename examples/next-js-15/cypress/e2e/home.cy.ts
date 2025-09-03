@@ -3,8 +3,7 @@ import {
   FightStatus,
   TrainingIntensity,
   type TrainingRegime,
-} from "../src/lib/data";
-import { type Client, createClient } from "@mocky-balboa/cypress";
+} from "../../src/lib/data";
 
 const nextFightEndpoint = "http://localhost:58157/api/next-fight";
 const trainingRegimeEndpoint = "http://localhost:58157/api/training-regime";
@@ -41,22 +40,13 @@ const trainingRegime: TrainingRegime = {
   },
 };
 
-let client: Client;
-beforeEach(() => {
-  cy.then<Client>(() => {
-    return createClient(cy);
-  }).then((c) => {
-    client = c;
-  });
-});
-
 it("when there's a network error loading the next fight data", () => {
-  cy.then(() => {
-    client.route(nextFightEndpoint, (route) => {
+  cy.mocky((mocky) => {
+    mocky.route(nextFightEndpoint, (route) => {
       return route.error();
     });
 
-    client.route(trainingRegimeEndpoint, (route) => {
+    mocky.route(trainingRegimeEndpoint, (route) => {
       return route.fulfill({
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -70,8 +60,8 @@ it("when there's a network error loading the next fight data", () => {
 });
 
 it("when there's a network error loading the training regime data", () => {
-  cy.then(() => {
-    client.route(nextFightEndpoint, (route) => {
+  cy.mocky((mocky) => {
+    mocky.route(nextFightEndpoint, (route) => {
       return route.fulfill({
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -79,7 +69,7 @@ it("when there's a network error loading the training regime data", () => {
       });
     });
 
-    client.route(trainingRegimeEndpoint, (route) => {
+    mocky.route(trainingRegimeEndpoint, (route) => {
       return route.error();
     });
   });
@@ -90,8 +80,8 @@ it("when there's a network error loading the training regime data", () => {
 
 describe("when the data is loaded successfully", () => {
   beforeEach(() => {
-    cy.then(() => {
-      client.route(nextFightEndpoint, (route) => {
+    cy.mocky((mocky) => {
+      mocky.route(nextFightEndpoint, (route) => {
         return route.fulfill({
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -99,7 +89,7 @@ describe("when the data is loaded successfully", () => {
         });
       });
 
-      client.route(trainingRegimeEndpoint, (route) => {
+      mocky.route(trainingRegimeEndpoint, (route) => {
         return route.fulfill({
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -121,13 +111,9 @@ describe("when the data is loaded successfully", () => {
 
   it("it loads the data for the next fight with the correct custom X-Public-Api-Key header value", () => {
     let requestPromise: Promise<Request>;
-    cy.then(() => {
-      requestPromise = client.waitForRequest(nextFightEndpoint);
-    });
-
-    cy.visit("/");
-
-    cy.then(() => {
+    cy.mocky((mocky) => {
+      requestPromise = mocky.waitForRequest(nextFightEndpoint);
+      cy.visit("/");
       return requestPromise;
     }).then((request) => {
       expect(request.headers.get("X-Public-Api-Key")).to.equal(
