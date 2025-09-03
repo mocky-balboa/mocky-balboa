@@ -1,5 +1,26 @@
 # @mocky-balboa/client
 
+## 2.0.0
+
+### Major Changes
+
+- [d326511](https://github.com/mocky-balboa/mocky-balboa/commit/d3265110ad1c72af09ef2f85cf543df2d5a5bad2): Support injecting handlers for client side route interception. **API not changed**, but behaviour has changed from defaulting from only mocking on the server to mocking on both the server and the client.
+
+  Added the ability to scope mocks to:
+  - `server-only`
+  - `client-only`
+  - `both` (default behaviour)
+
+  **BREAKING CHANGES**
+  - Behaviour of mocking has changed from server only to both client and server side mocking
+
+### Patch Changes
+
+- Updated dependencies [[d326511](https://github.com/mocky-balboa/mocky-balboa/commit/d3265110ad1c72af09ef2f85cf543df2d5a5bad2)]
+  - [@mocky-balboa/logger@1.0.7](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Flogger%401.0.7)
+  - [@mocky-balboa/shared-config@1.0.8](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fshared-config%401.0.8)
+  - [@mocky-balboa/websocket-messages@1.0.8](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fwebsocket-messages%401.0.8)
+
 ## 1.1.4
 
 ### Patch Changes

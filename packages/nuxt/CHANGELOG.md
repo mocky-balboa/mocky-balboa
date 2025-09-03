@@ -1,5 +1,15 @@
 # @mocky-balboa/nuxt
 
+## 1.0.9
+
+### Patch Changes
+
+- [d326511](https://github.com/mocky-balboa/mocky-balboa/commit/d3265110ad1c72af09ef2f85cf543df2d5a5bad2): Documentation updates
+- Updated dependencies [[d326511](https://github.com/mocky-balboa/mocky-balboa/commit/d3265110ad1c72af09ef2f85cf543df2d5a5bad2)]
+  - [@mocky-balboa/logger@1.0.7](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Flogger%401.0.7)
+  - [@mocky-balboa/server@1.0.9](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fserver%401.0.9)
+  - [@mocky-balboa/shared-config@1.0.8](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fshared-config%401.0.8)
+
 ## 1.0.8
 
 ### Patch Changes
