@@ -32,7 +32,7 @@ export const RouteType = {
   ServerOnly: "server-only",
   ClientOnly: "client-only",
   Both: "both",
-};
+} as const;
 
 /** Options when configuring a route */
 export interface RouteOptions {
@@ -66,6 +66,16 @@ export interface WaitForRequestOptions {
    * @default {@link DefaultWaitForRequestTimeout}
    */
   timeout?: number;
+  /**
+   * Determines where to expect the request to be executed from
+   *
+   * - `server-only` - The request will only be received if it originated from the server.
+   * - `client-only` - The request will only be received if it originated from the client.
+   * - `both` - The request will be received regardless of whether it originated from the server or client. The request returned is the first request received.
+   *
+   * @default "both"
+   */
+  type?: RouteType;
 }
 
 /**
@@ -124,6 +134,12 @@ export class Client {
     MessageType,
     Set<(message: ParsedMessage) => void | Promise<void>>
   > = new Map();
+  /** Tracks whether an external client side route handler is attached */
+  private externalClientSideRouteHandlerAttached = false;
+  /** Callback handlers for waiting on client-side network requests */
+  private clientWaitForRequestHandlers: Set<
+    (request: Request) => Promise<void>
+  > = new Set();
 
   /** Convenient access to route types */
   public readonly RouteType = RouteType;
@@ -259,6 +275,7 @@ export class Client {
     urlMatcher: UrlMatcher,
     {
       timeout: timeoutDuration = DefaultWaitForRequestTimeout,
+      type = RouteType.Both,
     }: WaitForRequestOptions = {},
   ): Promise<Request> {
     return new Promise<Request>((resolve, reject) => {
@@ -266,21 +283,45 @@ export class Client {
         reject(new Error("Timed out waiting for request"));
       }, timeoutDuration);
 
-      const onRequest = async (
+      const client = this;
+      async function onServerRequest(
         message: ParsedMessageType<MessageTypes["REQUEST"]>,
-      ) => {
-        const urlMatch = await this.doesUrlMatch(
+      ) {
+        const urlMatch = await client.doesUrlMatch(
           urlMatcher,
           new URL(message.payload.request.url),
         );
         if (urlMatch) {
-          this.off(MessageType.REQUEST, onRequest);
+          unregisterHandlers();
           clearTimeout(timeout);
-          resolve(this.getRequestObjectFromRequestMessage(message));
+          resolve(client.getRequestObjectFromRequestMessage(message));
         }
-      };
+      }
 
-      this.on(MessageType.REQUEST, onRequest);
+      async function onClientRequest(request: Request) {
+        const urlMatch = await client.doesUrlMatch(
+          urlMatcher,
+          new URL(request.url),
+        );
+        if (urlMatch) {
+          unregisterHandlers();
+          clearTimeout(timeout);
+          resolve(request);
+        }
+      }
+
+      function unregisterHandlers() {
+        client.off(MessageType.REQUEST, onServerRequest);
+        client.clientWaitForRequestHandlers.delete(onClientRequest);
+      }
+
+      if (this.shouldHandleRouteType(type, "server")) {
+        this.on(MessageType.REQUEST, onServerRequest);
+      }
+
+      if (this.shouldHandleRouteType(type, "client")) {
+        this.clientWaitForRequestHandlers.add(onClientRequest);
+      }
     });
   }
 
@@ -306,10 +347,10 @@ export class Client {
    * @returns Whether or not the handler should be executed.
    */
   private shouldHandleRouteType(
-    routeMeta: RouteMeta,
+    routeType: RouteType | undefined,
     handlerType: "server" | "client",
   ) {
-    const { type = RouteType.Both } = routeMeta;
+    const type = routeType ?? RouteType.Both;
     switch (handlerType) {
       case "server":
         return type === "server-only" || type === "both";
@@ -343,7 +384,7 @@ export class Client {
       // Skip the handler if the URL does not match
       if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
       // Skip the handler if it should not be handled by the server
-      if (!this.shouldHandleRouteType(routeMeta, "server")) continue;
+      if (!this.shouldHandleRouteType(routeMeta.type, "server")) continue;
 
       // Execute the handler
       const routeResponse = await handler(route);
@@ -539,6 +580,8 @@ export class Client {
    * Allows an external handler to be injected into the route handling process for dealing with
    * client-side request interception.
    *
+   * @internal
+   *
    * @param options - options for the external route handler
    * @param options.extractRequest - a function that extracts a request from the arguments passed to the external handler
    * @param options.handleResult - a function that transforms the internal result to the external handlers expected result
@@ -557,6 +600,13 @@ export class Client {
       ...args: TCallbackArgs
     ) => TResult | undefined | Promise<TResult | undefined>;
   }): (...args: TCallbackArgs) => Promise<TResult | undefined> {
+    if (this.externalClientSideRouteHandlerAttached) {
+      logger.warn(
+        "External client side route handler already attached. Are you sure you want to call attachExternalClientSideRouteHandler? attachExternalClientSideRouteHandler was only intended to be called once per client instance.",
+      );
+    }
+
+    this.externalClientSideRouteHandlerAttached = true;
     return async (...args: TCallbackArgs) => {
       const request = await extractRequest(...args);
       const url = new URL(request.url);
@@ -567,7 +617,7 @@ export class Client {
         // Skip the handler if the URL does not match
         if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
         // Skip the handler if it should not be handled by the client
-        if (!this.shouldHandleRouteType(routeMeta, "client")) continue;
+        if (!this.shouldHandleRouteType(routeMeta.type, "client")) continue;
 
         // Execute the handler
         const routeResponse = await handler(route);
