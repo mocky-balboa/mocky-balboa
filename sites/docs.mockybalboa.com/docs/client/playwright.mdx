@@ -42,15 +42,204 @@ Below is a basic example of how to use Mocky Balboa to mock a server-side networ
 <Tabs groupId="javascript-language">
   <TabItem value="typescript" label="TypeScript" default>
         ```TypeScript
+        import { expect } from "@playwright/test";
+        import test from "@mocky-balboa/playwright/test";
+
+        test("my page loads", async ({ page, mocky }) => {
+          // Register our fixture on routes matching '**/api/users'
+          mocky.route("**/api/users", (route) => {
+            return route.fulfill({
+              status: 200,
+              body: JSON.stringify([
+                { id: "user-1", name: "John Doe" },
+                { id: "user-2", name: "Jane Doe" }
+              ]),
+              headers: {
+                "Content-Type": "application/json"
+              },
+            });
+          });
+
+          // Visit the page of our application in the browser
+          await page.goto("http://localhost:3000");
+
+          // Our mock above should have been returned on our server
+          await expect(page.getByText("John Doe")).toBeVisible();
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { test, expect } from "@playwright/test";
+      import test from "@mocky-balboa/playwright/test";
+
+      test("my page loads", async ({ page, mocky }) => {
+        // Register our fixture on routes matching '**/api/users'
+        mocky.route("**/api/users", (route) => {
+          return route.fulfill({
+            status: 200,
+            body: JSON.stringify([
+              { id: "user-1", name: "John Doe" },
+              { id: "user-2", name: "Jane Doe" }
+            ]),
+            headers: {
+              "Content-Type": "application/json"
+            },
+          });
+        });
+
+        // Visit the page of our application in the browser
+        await page.goto("http://localhost:3000");
+
+        // Our mock above should have been returned on our server
+        await expect(page.getByText("John Doe")).toBeVisible();
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+### Extending test
+
+If you are already extending Playwrights `test` you'll need to either extend the test exported on `@mocky-balboa/playwright/test` or utilise the exported `extendTest` function.
+
+Extending directly:
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import test from "@mocky-balboa/playwright/test";
+
+        const myExtendedTest = test.extend({ ... });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import test from "@mocky-balboa/playwright/test";
+
+      const myExtendedTest = test.extend({ ... });
+      ```
+  </TabItem>
+</Tabs>
+
+Using `extendTest`:
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import { test } from "@playwright/test";
+        import { extendTest } from "@mocky-balboa/playwright/test";
+
+        const myExtendedTest = extendTest(test.extend({ ... }));
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { test } from "@playwright/test";
+      import { extendTest } from "@mocky-balboa/playwright/test";
+
+      const myExtendedTest = extendTest(test.extend({ ... }));
+      ```
+  </TabItem>
+</Tabs>
+
+`extendTest` allows you to compose multiple integrations that may run `test.extend` without having to use Mocky Balboa as the base test.
+
+### Configuring connection options
+
+If you are using the Mocky Balboa `test` object you can define the connection parameters for the client on a per test basis in `test.beforeEach` or at a global level on `extendTest`.
+
+Extending in `test.beforeEach`:
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import { expect } from "@playwright/test";
+        import test from "@mocky-balboa/playwright/test";
+
+        /**
+         * If you are using `mocky` in a beforeEach hook make sure you
+         * update the mockyConnectOptions in it's own isolated
+         * beforeEach hook first, otherwise the mocky instance will
+         * try and connect using the global or default options.
+         */
+        test.beforeEach(({ mockyConnectOptions }) => {
+          // Set the WebSocket server port for connecting to
+          mockyConnectOptions.port = 1234;
+
+          // Custom timeout for waiting on requests from the server
+          mockyConnectOptions.timeout = 10000;
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { expect } from "@playwright/test";
+      import test from "@mocky-balboa/playwright/test";
+
+      /**
+       * If you are using `mocky` in a beforeEach hook make sure you
+       * update the mockyConnectOptions in it's own isolated
+       * beforeEach hook first, otherwise the mocky instance will
+       * try and connect using the global or default options.
+       */
+      test.beforeEach(({ mockyConnectOptions }) => {
+        // Set the WebSocket server port for connecting to
+        mockyConnectOptions.port = 1234;
+
+        // Custom timeout for waiting on requests from the server
+        mockyConnectOptions.timeout = 10000;
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+Extending globally with `extendTest`:
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        import { test } from "@playwright/test";
+        import { extendTest } from "@mocky-balboa/playwright/test";
+
+        const myExtendedTest = extendTest(test.extend({ ... }), {
+          // Override the websocket server port
+          port: 1234,
+          // Custom timeout for waiting on requests from the server
+          timeout: 10000,
+        });
+        ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      import { test } from "@playwright/test";
+      import { extendTest } from "@mocky-balboa/playwright/test";
+
+      const myExtendedTest = extendTest(test.extend({ ... }), {
+        // Override the websocket server port
+        port: 1234,
+        // Custom timeout for waiting on requests from the server
+        timeout: 10000,
+      });
+      ```
+  </TabItem>
+</Tabs>
+
+### Opting out of test.extend
+
+You don't need to use the `test` object exported from `@mocky-balboa/playwright/test`. This might be the case if you are testing multiple applications from the same test suite where not all applications have an embedded Mocky Balboa server. For this you can manage your own instance of the client.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
         import { test, expect } from "@playwright/test";
         import { createClient } from "@mocky-balboa/playwright";
 
-        test("my page loads", async ({ page, context }) => {
-          // Create our Mocky Balboa client and establish a connection with the server
-          const client = await createClient(context);
+        test("my page loads", async ({ page }) => {
+          // Optionally pass connection options here
+          const mocky = createClient();
 
           // Register our fixture on routes matching '**/api/users'
-          client.route("**/api/users", (route) => {
+          mocky.route("**/api/users", (route) => {
             return route.fulfill({
               status: 200,
               body: JSON.stringify([
@@ -76,12 +265,12 @@ Below is a basic example of how to use Mocky Balboa to mock a server-side networ
       import { test, expect } from "@playwright/test";
       import { createClient } from "@mocky-balboa/playwright";
 
-      test("my page loads", async ({ page, context }) => {
-        // Create our Mocky Balboa client and establish a connection with the server
-        const client = await createClient(context);
+      test("my page loads", async ({ page }) => {
+        // Optionally pass connection options here
+        const mocky = createClient();
 
         // Register our fixture on routes matching '**/api/users'
-        client.route("**/api/users", (route) => {
+        mocky.route("**/api/users", (route) => {
           return route.fulfill({
             status: 200,
             body: JSON.stringify([
@@ -106,11 +295,5 @@ Below is a basic example of how to use Mocky Balboa to mock a server-side networ
 
 ## Further usage
 
-1. See [the client guide](../client-guide) for more information on how you can mock server-side network requests from directly within your Playwright tests.
+1. See [the client guide](../client-guide/client) for more information on how you can mock server-side network requests from directly within your Playwright tests.
 1. See [the advanced page](../advanced) for more information on advanced usage and how the framework works under the hood.
-
-## Mocking client-side requests
-
-Mocky Balboa does not support mocking client-side requests. This is a choice made by design to ensure predictable behaviour in the tests. For example, you may use different auth strategies on the client-side for the same requests you may make on the server-side. Applying a mock that covers both of these could allow bugs to slip through that might otherwise have been caught.
-
-That said you could build your own abstraction layer on top of Mocky Balboa and Playwright to call `client.route` and `page.route` from the same function. This might be more useful in for example a SvelteKit application where SSR and CSR can happen when loading a page.

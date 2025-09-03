@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 
 # Common use cases
 
-Here's a list of some common use cases and how they can be implemented with Mocky Balboa. The examples provided are all written using [Playwright](https://playwright.dev/). However the [Mocky Balboa client](./client-guide) is the same regardless of the testing framework you choose.
+Here's a list of some common use cases and how they can be implemented with Mocky Balboa. The examples provided are all written using [Playwright](https://playwright.dev/). However the [Mocky Balboa client](./client-guide/client) is the same regardless of the testing framework you choose.
 
 ## Mocking the same API request across multiple tests
 
@@ -15,18 +15,14 @@ Probably the most common use case is mocking the same API request across multipl
 <Tabs groupId="javascript-language">
   <TabItem value="typescript" label="TypeScript" default>
       ```TypeScript
-      import { test, expect } from "@playwright/test";
-      import { createClient, Client } from "@mocky-balboa/playwright";
-
-      let client: Client;
-      test.beforeEach(async ({ context }) => {
-        client = await createClient(context);
-      });
+      import { expect } from "@playwright/test";
+      import test from "@mocky-balboa/playwright/test";
 
       test("when there's a network error loading the API data", async ({
         page,
+        mocky,
       }) => {
-        client.route("**/api/data", (route) => {
+        mocky.route("**/api/data", (route) => {
           // Simulates a network error, causing any call to "fetch(...)" to throw an error
           return route.error();
         });
@@ -40,8 +36,9 @@ Probably the most common use case is mocking the same API request across multipl
 
       test("when the API data loads with populated data", async ({
         page,
+        mocky,
       }) => {
-        client.route("**/api/data", (route) => {
+        mocky.route("**/api/data", (route) => {
           // Respond with non-empty data set
           return route.fulfill({
             status: 200,
@@ -57,8 +54,9 @@ Probably the most common use case is mocking the same API request across multipl
 
       test("when the API data loads with no data", async ({
         page,
+        mocky,
       }) => {
-        client.route("**/api/data", (route) => {
+        mocky.route("**/api/data", (route) => {
           // Respond with empty list
           return route.fulfill({
             status: 200,
@@ -75,18 +73,14 @@ Probably the most common use case is mocking the same API request across multipl
   </TabItem>
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
-      import { test, expect } from "@playwright/test";
-      import { createClient } from "@mocky-balboa/playwright";
-
-      let client;
-      test.beforeEach(async ({ context }) => {
-        client = await createClient(context);
-      });
+      import { expect } from "@playwright/test";
+      import test from "@mocky-balboa/playwright/test";
 
       test("when there's a network error loading the API data", async ({
         page,
+        mocky,
       }) => {
-        client.route("**/api/data", (route) => {
+        mocky.route("**/api/data", (route) => {
           // Simulates a network error, causing any call to "fetch(...)" to throw an error
           return route.error();
         });
@@ -100,8 +94,9 @@ Probably the most common use case is mocking the same API request across multipl
 
       test("when the API data loads with populated data", async ({
         page,
+        mocky,
       }) => {
-        client.route("**/api/data", (route) => {
+        mocky.route("**/api/data", (route) => {
           // Respond with non-empty data set
           return route.fulfill({
             status: 200,
@@ -117,8 +112,9 @@ Probably the most common use case is mocking the same API request across multipl
 
       test("when the API data loads with no data", async ({
         page,
+        mocky,
       }) => {
-        client.route("**/api/data", (route) => {
+        mocky.route("**/api/data", (route) => {
           // Respond with empty list
           return route.fulfill({
             status: 200,
@@ -142,7 +138,7 @@ You might only want to mock a request a certain number of times. For example, yo
 <Tabs groupId="javascript-language">
   <TabItem value="typescript" label="TypeScript" default>
       ```TypeScript
-      client.route("**/api/data", (route) => {
+      mocky.route("**/api/data", (route) => {
         return route.fulfill({ ... });
       // The route handler will only be called once if the route matches
       }, { times: 1 });
@@ -150,7 +146,7 @@ You might only want to mock a request a certain number of times. For example, yo
   </TabItem>
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
-      client.route("**/api/data", (route) => {
+      mocky.route("**/api/data", (route) => {
         return route.fulfill({ ... });
       // The route handler will only be called once if the route matches
       }, { times: 1 });
@@ -165,19 +161,15 @@ Another common use case is asserting the request sent by the server contains the
 <Tabs groupId="javascript-language">
   <TabItem value="typescript" label="TypeScript" default>
       ```TypeScript
-      import { test, expect } from "@playwright/test";
-      import { createClient, Client } from "@mocky-balboa/playwright";
-
-      let client: Client;
-      test.beforeEach(async ({ context }) => {
-        client = await createClient(context);
-      });
+      import { expect } from "@playwright/test";
+      import test from "@mocky-balboa/playwright/test";
 
       test("the API is called with the correct request body", async ({
         page,
+        mocky,
       }) => {
         // Note you don't need to setup a route handler for the request
-        const requestPromise = client.waitForRequest("**/api/data");
+        const requestPromise = mocky.waitForRequest("**/api/data");
         await page.goto("http://localhost:3000");
 
         // Make sure you defer waiting on the promise until after you've navigated to the page
@@ -192,9 +184,10 @@ Another common use case is asserting the request sent by the server contains the
 
       test("the API is called with the correct request headers", async ({
         page,
+        mocky,
       }) => {
         // Note you don't need to setup a route handler for the request
-        const requestPromise = client.waitForRequest("**/api/data", {
+        const requestPromise = mocky.waitForRequest("**/api/data", {
           // Optionally define a timeout for waiting on the request in ms
           // Defaults to 5000ms
           timeout: 8000,
@@ -212,19 +205,15 @@ Another common use case is asserting the request sent by the server contains the
   </TabItem>
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
-      import { test, expect } from "@playwright/test";
-      import { createClient } from "@mocky-balboa/playwright";
-
-      let client;
-      test.beforeEach(async ({ context }) => {
-        client = await createClient(context);
-      });
+      import { expect } from "@playwright/test";
+      import test from "@mocky-balboa/playwright/test";
 
       test("the API is called with the correct request body", async ({
         page,
+        mocky,
       }) => {
         // Note you don't need to setup a route handler for the request
-        const requestPromise = client.waitForRequest("**/api/data");
+        const requestPromise = mocky.waitForRequest("**/api/data");
         await page.goto("http://localhost:3000");
 
         // Make sure you defer waiting on the promise until after you've navigated to the page
@@ -239,9 +228,10 @@ Another common use case is asserting the request sent by the server contains the
 
       test("the API is called with the correct request headers", async ({
         page,
+        mocky,
       }) => {
         // Note you don't need to setup a route handler for the request
-        const requestPromise = client.waitForRequest("**/api/data", {
+        const requestPromise = mocky.waitForRequest("**/api/data", {
           // Optionally define a timeout for waiting on the request in ms
           // Defaults to 5000ms
           timeout: 8000,
@@ -266,10 +256,10 @@ Use files to mock binary response data. The mime type of the file is automatical
 <Tabs groupId="javascript-language">
   <TabItem value="typescript" label="TypeScript" default>
       ```TypeScript
-      client.route("**/user/*/profile-image", (route) => {
+      mocky.route("**/user/*/profile-image", (route) => {
         return route.fulfill({
-          // Relative paths are resolved on the server from the current working directory
-          // i.e. process.cwd()
+          // Try to use absolute paths as the path can be resolved on
+          // the server or the client
           path: "/path/to/image.png",
         });
       });
@@ -277,10 +267,10 @@ Use files to mock binary response data. The mime type of the file is automatical
   </TabItem>
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
-      client.route("**/user/*/profile-image", (route) => {
+      mocky.route("**/user/*/profile-image", (route) => {
         return route.fulfill({
-          // Relative paths are resolved on the server from the current working directory
-          // i.e. process.cwd()
+          // Try to use absolute paths as the path can be resolved on
+          // the server or the client
           path: "/path/to/image.png",
         });
       });
@@ -296,7 +286,7 @@ Sometimes we can work with third-party APIs via SDKs that don't allow us to modi
   <TabItem value="typescript" label="TypeScript" default>
       ```TypeScript
       // Mock a request to a third-party API
-      client.route("https://api.example.com/api/user", (route) => {
+      mocky.route("https://api.example.com/api/user", (route) => {
         return route.fulfill({
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -312,7 +302,7 @@ Sometimes we can work with third-party APIs via SDKs that don't allow us to modi
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
       // Mock a request to a third-party API
-      client.route("https://api.example.com/api/user", (route) => {
+      mocky.route("https://api.example.com/api/user", (route) => {
         return route.fulfill({
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -340,7 +330,7 @@ Perhaps you're calling a POST endpoint multiple times in your test with differen
 <Tabs groupId="javascript-language">
   <TabItem value="typescript" label="TypeScript" default>
       ```TypeScript
-      client.route("https://myservice.com/graphql", async (route) => {
+      mocky.route("https://myservice.com/graphql", async (route) => {
         const { operationName } = await route.request.json();
         switch (operationName) {
           case "getUser":
@@ -383,7 +373,7 @@ Perhaps you're calling a POST endpoint multiple times in your test with differen
   </TabItem>
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
-      client.route("https://myservice.com/graphql", async (route) => {
+      mocky.route("https://myservice.com/graphql", async (route) => {
         const { operationName } = await route.request.json();
         switch (operationName) {
           case "getUser":

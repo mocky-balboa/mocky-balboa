@@ -1,180 +1,25 @@
 ---
 sidebar_position: 90
-title: Client guide
+title: Route
 ---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Mocky Balboa client guide
+# Route
 
-Check out the examples below for some common use cases.
+:::note[API Reference]
 
-## Client
-
-For full usage, see [API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client).
-
-### Registering a route handler
-
-Registering a route handler allows you to intercept requests and modify the response in various ways via the [Route](#route) class passed as an argument to the handler.
-
-<Tabs groupId="javascript-language">
-  <TabItem value="typescript" label="TypeScript" default>
-    ```TypeScript
-    // Matching URL's with glob patterns
-    client.route("**/api", (route) => {
-        return route.fulfill(...);
-    });
-
-    // Matching URL's with regular expressions
-    client.route(/^.*?\/api$/, (route) => {
-        return route.fulfill(...);
-    });
-
-    // Matching URL's with a custom function
-    client.route((url: URL) => {
-        return url.pathname.startsWith("/api");
-    }, (route) => {
-        return route.fulfill(...);
-    });
-    ```
-  </TabItem>
-  <TabItem value="javascript" label="JavaScript">
-    ```JavaScript
-    // Matching URL's with glob patterns
-    client.route("**/api", (route) => {
-        return route.fulfill(...);
-    });
-
-    // Matching URL's with regular expressions
-    client.route(/^.*?\/api$/, (route) => {
-        return route.fulfill(...);
-    });
-
-    // Matching URL's with a custom function
-    client.route((url) => {
-        return url.pathname.startsWith("/api");
-    }, (route) => {
-        return route.fulfill(...);
-    });
-    ```
-  </TabItem>
-</Tabs>
-
-You can also register a route to handle _n_ times by specifying the `times` option:
-
-<Tabs groupId="javascript-language">
-  <TabItem value="typescript" label="TypeScript" default>
-      ```TypeScript
-      // Once the route handler is matched 3 times it will be removed from the client
-      client.route("**/api", (route) => {
-        return route.fulfill(...);
-      }, { times: 3 });
-      ```
-  </TabItem>
-  <TabItem value="javascript" label="JavaScript">
-      ```JavaScript
-      // Once the route handler is matched 3 times it will be removed from the client
-      client.route("**/api", (route) => {
-        return route.fulfill(...);
-      }, { times: 3 });
-      ```
-  </TabItem>
-</Tabs>
-
-[Client.route API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#route)
-
-### Unregistering a route handler
-
-If you want to disable a route handler, you can use the `unroute` method:
-
-<Tabs groupId="javascript-language">
-  <TabItem value="typescript" label="TypeScript" default>
-    ```TypeScript
-    const routeHandlerId = client.route("**/api", (route) => {
-        return route.fulfill(...);
-    });
-
-    client.unroute(routeHandlerId);
-    ```
-  </TabItem>
-  <TabItem value="javascript" label="JavaScript">
-    ```JavaScript
-    const routeHandlerId = client.route("**/api", (route) => {
-        return route.fulfill(...);
-    });
-
-    client.unroute(routeHandlerId);
-    ```
-  </TabItem>
-</Tabs>
-
-[Client.unroute API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#unroute)
-
-### Unregistering all route handlers
-
-Used to unregister all route handlers registered on the client.
-
-<Tabs groupId="javascript-language">
-  <TabItem value="typescript" label="TypeScript" default>
-    ```TypeScript
-    client.unrouteAll();
-    ```
-  </TabItem>
-  <TabItem value="javascript" label="JavaScript">
-    ```JavaScript
-    client.unrouteAll();
-    ```
-  </TabItem>
-</Tabs>
-
-[Client.unrouteAll API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#unrouteAll)
-
-### Waiting for a request
-
-When you need to wait for a request to be made, you can use `client.waitForRequest`.
-
-:::tip
-
-Use `client.waitForRequest` to assert on the request being sent on the server.
+[Route](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route)
 
 :::
 
-<Tabs groupId="javascript-language">
-  <TabItem value="typescript" label="TypeScript" default>
-    ```TypeScript
-    const requestPromise = client.waitForRequest("**/api");
+## continue
 
-    // Run code that triggers the request, i.e. loading a page
+:::note[API Reference]
 
-    // Await the request
-    const request = await requestPromise;
+[Route.continue](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#continue)
 
-    // Assert on the request
-    expect(request.headers.get("Authorization")).toBeDefined();
-    ```
-  </TabItem>
-  <TabItem value="javascript" label="JavaScript">
-    ```JavaScript
-    const requestPromise = client.waitForRequest();
-
-    // Run code that triggers the request, i.e. loading a page
-
-    // Await the request
-    const request = await requestPromise;
-
-    // Assert on the request
-    expect(request.headers.get("Authorization")).toBeDefined();
-    ```
-  </TabItem>
-</Tabs>
-
-[Client.waitForRequest API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#waitForRequest)
-
-## Route
-
-For full usage, see [API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route).
-
-### continue
+:::
 
 Continue will execute the request on the client and pass the response back to the server.
 
@@ -224,9 +69,13 @@ You can optionally override aspects of the request.
   </TabItem>
 </Tabs>
 
-[Route.continue API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#continue).
+## error
 
-### error
+:::note[API Reference]
+
+[Route.error](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#error)
+
+:::
 
 Error will simulate a network level error causing `fetch` to throw an error.
 
@@ -247,9 +96,13 @@ Error will simulate a network level error causing `fetch` to throw an error.
   </TabItem>
 </Tabs>
 
-[Route.error API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#error).
+## fallback
 
-### fallback
+:::note[API Reference]
+
+[Route.fallback](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#fallback)
+
+:::
 
 Fallback to the next route handler. If there are no more route handlers the request will default to [passthrough](#passthrough).
 
@@ -270,9 +123,13 @@ Fallback to the next route handler. If there are no more route handlers the requ
   </TabItem>
 </Tabs>
 
-[Route.fallback API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#fallback).
+## fetch
 
-### fetch
+:::note[API Reference]
+
+[Route.fetch](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#fetch)
+
+:::
 
 Similar to [continue](#continue) but will not pass the response back to the server. This is useful when you want to fetch the data from the remote server and modify the response before passing it back to the server.
 
@@ -297,9 +154,13 @@ Similar to [continue](#continue) but will not pass the response back to the serv
   </TabItem>
 </Tabs>
 
-[Route.fetch API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#fetch).
+## fulfill
 
-### fulfill
+:::note[API Reference]
+
+[Route.fulfill](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#fulfill)
+
+:::
 
 Useful when you want to fixture the response with mock data. This allows you to fully control the response body, status, and headers.
 
@@ -357,9 +218,13 @@ Make sure to use absolute paths for the file path using the [path](https://nodej
   </TabItem>
 </Tabs>
 
-[Route.fetch API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#fetch).
+## modifyReponse
 
-### modifyReponse
+:::note[API Reference]
+
+[Route.modifyResponse](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#modifyresponse)
+
+:::
 
 Useful helper function when you want to modify the response before passing it back to the server, as with `route.fetch()`.
 
@@ -402,9 +267,13 @@ Useful helper function when you want to modify the response before passing it ba
   </TabItem>
 </Tabs>
 
-[Route.modifyResponse API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#modifyResponse).
+## passthrough
 
-### passthrough
+:::note[API Reference]
+
+[Route.passthrough](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#passthrough)
+
+:::
 
 Passthrough results in the request being fulfilled on the server over the network without any interference. This is the default behaviour when no route handlers are defined, or there is no match on the URL for any of the route handlers. It's also the fallback behaviour when the last matched route handler returns `route.fallback()`.
 
@@ -425,9 +294,7 @@ Passthrough results in the request being fulfilled on the server over the networ
   </TabItem>
 </Tabs>
 
-[Route.passthrough API reference](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Route#passthrough).
-
-### request (property)
+## request (property)
 
 :::info
 
