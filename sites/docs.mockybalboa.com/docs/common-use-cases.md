@@ -139,7 +139,9 @@ You might only want to mock a request a certain number of times. For example, yo
   <TabItem value="typescript" label="TypeScript" default>
       ```TypeScript
       mocky.route("**/api/data", (route) => {
-        return route.fulfill({ ... });
+        return route.fulfill({
+          // ...
+        });
       // The route handler will only be called once if the route matches
       }, { times: 1 });
       ```
@@ -147,7 +149,9 @@ You might only want to mock a request a certain number of times. For example, yo
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
       mocky.route("**/api/data", (route) => {
-        return route.fulfill({ ... });
+        return route.fulfill({
+          // ...
+        });
       // The route handler will only be called once if the route matches
       }, { times: 1 });
       ```

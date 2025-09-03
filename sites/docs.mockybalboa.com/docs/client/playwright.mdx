@@ -109,14 +109,18 @@ Extending directly:
         ```TypeScript
         import test from "@mocky-balboa/playwright/test";
 
-        const myExtendedTest = test.extend({ ... });
+        const myExtendedTest = test.extend({
+          // ...
+        });
         ```
   </TabItem>
   <TabItem value="javascript" label="JavaScript">
       ```JavaScript
       import test from "@mocky-balboa/playwright/test";
 
-      const myExtendedTest = test.extend({ ... });
+      const myExtendedTest = test.extend({
+        // ...
+      });
       ```
   </TabItem>
 </Tabs>
@@ -129,7 +133,9 @@ Using `extendTest`:
         import { test } from "@playwright/test";
         import { extendTest } from "@mocky-balboa/playwright/test";
 
-        const myExtendedTest = extendTest(test.extend({ ... }));
+        const myExtendedTest = extendTest(test.extend({
+          // ...
+        }));
         ```
   </TabItem>
   <TabItem value="javascript" label="JavaScript">
@@ -137,7 +143,9 @@ Using `extendTest`:
       import { test } from "@playwright/test";
       import { extendTest } from "@mocky-balboa/playwright/test";
 
-      const myExtendedTest = extendTest(test.extend({ ... }));
+      const myExtendedTest = extendTest(test.extend({
+        // ...
+      }));
       ```
   </TabItem>
 </Tabs>
@@ -201,7 +209,9 @@ Extending globally with `extendTest`:
         import { test } from "@playwright/test";
         import { extendTest } from "@mocky-balboa/playwright/test";
 
-        const myExtendedTest = extendTest(test.extend({ ... }), {
+        const myExtendedTest = extendTest(test.extend({
+          // ...
+        }), {
           // Override the websocket server port
           port: 1234,
           // Custom timeout for waiting on requests from the server
@@ -214,7 +224,9 @@ Extending globally with `extendTest`:
       import { test } from "@playwright/test";
       import { extendTest } from "@mocky-balboa/playwright/test";
 
-      const myExtendedTest = extendTest(test.extend({ ... }), {
+      const myExtendedTest = extendTest(test.extend({
+        // ...
+      }), {
         // Override the websocket server port
         port: 1234,
         // Custom timeout for waiting on requests from the server
@@ -295,5 +307,6 @@ You don't need to use the `test` object exported from `@mocky-balboa/playwright/
 
 ## Further usage
 
-1. See [the client guide](../client-guide/client) for more information on how you can mock server-side network requests from directly within your Playwright tests.
+1. See [the client guide](../client-guide/client) for more information on how you can setup routes via the mocky client.
+1. See [the route guide](../client-guide/route) for more information on how you can interact interact with routes on `mocky.route`.
 1. See [the advanced page](../advanced) for more information on advanced usage and how the framework works under the hood.
