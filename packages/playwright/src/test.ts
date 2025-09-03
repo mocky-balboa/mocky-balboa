@@ -30,9 +30,10 @@ type ExtractWorkerArgs<Type> =
  */
 export const extendTest = <TBaseTest extends typeof base>(
   baseTest: TBaseTest,
+  mockyConnectOptions?: ConnectOptions,
 ) =>
   baseTest.extend<MockyPlaywrightTest>({
-    mockyConnectOptions: {},
+    mockyConnectOptions: { ...mockyConnectOptions },
     mocky: async ({ context, mockyConnectOptions }, use) => {
       const mocky = await createClient(context, mockyConnectOptions);
       use(mocky);
