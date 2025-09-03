@@ -1,5 +1,13 @@
 # @mocky-balboa/react-router
 
+## 1.1.3
+
+### Patch Changes
+
+- [72c1709](https://github.com/mocky-balboa/mocky-balboa/commit/72c1709b85e3d39c03903fc0f89547cc3a4d80eb): Fixed CLI bin missing hashbangs
+  - Releases [PR #31](https://github.com/mocky-balboa/mocky-balboa/pull/31)
+    - Addresses [issue #30](https://github.com/mocky-balboa/mocky-balboa/issues/30)
+
 ## 1.1.2
 
 ### Patch Changes
