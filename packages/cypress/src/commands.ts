@@ -1,9 +1,30 @@
-import { Client, type ConnectOptions } from "@mocky-balboa/client";
+import {
+  Client,
+  Route,
+  type ConnectOptions,
+  type FulfillOptions,
+  type FulfillRouteResponse,
+  type RouteOptions,
+  type RouteResponse,
+  type UrlMatcher,
+} from "@mocky-balboa/client";
 import { createClient } from "./cypress.js";
 
 /** Callback for mocky command used to extract any type of response */
 type MockyCallback<TResponse> = (
-  mocky: Client,
+  mocky: Omit<Client, "route"> & {
+    route: (
+      urlMatcher: UrlMatcher,
+      handler: (
+        route: Omit<Route, "fulfill"> & {
+          fulfill: (
+            options: Omit<FulfillOptions, "path">,
+          ) => FulfillRouteResponse;
+        },
+      ) => Promise<RouteResponse> | RouteResponse,
+      options?: RouteOptions,
+    ) => string;
+  },
 ) => Promise<TResponse> | TResponse;
 
 /** Setup types for custom commands */
