@@ -543,7 +543,10 @@ export class Client {
    * @param options.handleResult - a function that transforms the internal result to the external handlers expected result
    * @returns a function that acts as a handler for the external route handler
    */
-  attachExternalClientSideRouteHandler<TCallbackArgs extends any[], TResult>({
+  attachExternalClientSideRouteHandler<
+    TCallbackArgs extends unknown[],
+    TResult,
+  >({
     extractRequest,
     handleResult,
   }: {
