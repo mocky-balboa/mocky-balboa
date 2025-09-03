@@ -54,7 +54,14 @@ const config: Config = {
     ],
   ],
 
-  plugins: [require.resolve("docusaurus-lunr-search")],
+  plugins: [
+    [
+      require.resolve("docusaurus-lunr-search"),
+      {
+        excludeRoutes: ["/docs/changelogs/*"],
+      },
+    ],
+  ],
 
   themeConfig: {
     navbar: {
