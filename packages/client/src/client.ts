@@ -568,12 +568,14 @@ export class Client {
         // Execute the handler
         const routeResponse = await handler(route);
         let finalResponse: TResult | undefined;
+        let handledRoute = false;
         if (routeResponse.type !== "fallback") {
+          handledRoute = true;
           finalResponse = await handleResult(routeResponse, ...args);
         }
 
         this.incrementRouteHandlerCallCount(routeHandlerId, routeMeta);
-        if (finalResponse) return finalResponse;
+        if (handledRoute) return finalResponse;
       }
 
       await handleResult(undefined, ...args);
