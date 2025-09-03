@@ -273,11 +273,12 @@ export class Client {
    */
   async waitForRequest(
     urlMatcher: UrlMatcher,
-    {
+    options: WaitForRequestOptions = {},
+  ): Promise<Request> {
+    const {
       timeout: timeoutDuration = DefaultWaitForRequestTimeout,
       type = RouteType.Both,
-    }: WaitForRequestOptions = {},
-  ): Promise<Request> {
+    } = options;
     return new Promise<Request>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error("Timed out waiting for request"));

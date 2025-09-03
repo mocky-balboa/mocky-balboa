@@ -110,12 +110,9 @@ describe("when the data is loaded successfully", () => {
   });
 
   it("it loads the data for the next fight with the correct custom X-Public-Api-Key header value", () => {
-    let requestPromise: Promise<Request>;
-    cy.mocky((mocky) => {
-      requestPromise = mocky.waitForRequest(nextFightEndpoint);
-      cy.visit("/");
-      return requestPromise;
-    }).then((request) => {
+    cy.mockyWaitForRequest(() => {
+      return cy.visit("/");
+    }, nextFightEndpoint).then((request) => {
       expect(request.headers.get("X-Public-Api-Key")).to.equal(
         "public-api-key",
       );
