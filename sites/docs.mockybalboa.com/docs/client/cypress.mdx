@@ -178,6 +178,10 @@ If you want to assert on a request made on the server you can use the `mockyWait
   </TabItem>
 </Tabs>
 
+## Limitations
+
+- There is no support for using `path` on `route.fulfill`. This is due to the difficulties of integrating chainable commands to the asynchronous internal request interception. Instead you can read the file contents and pass it as a string to the `body`. `cy.intercept` doesn't support stubbing binary responses which would be the only thing files can offer over declarative mocks. Trying to use `path` on `route.fulfill` will result in an error being thrown.
+
 ## Further usage
 
 1. See [the client guide](../client-guide/client) for more information on how you can setup routes via the mocky client.

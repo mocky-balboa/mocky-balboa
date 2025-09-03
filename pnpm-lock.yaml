@@ -366,6 +366,9 @@ importers:
         specifier: ^7.7.1
         version: 7.8.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     devDependencies:
+      '@mocky-balboa/cypress':
+        specifier: workspace:*
+        version: link:../../packages/cypress
       '@mocky-balboa/playwright':
         specifier: workspace:*
         version: link:../../packages/playwright

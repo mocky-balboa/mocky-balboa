@@ -46,14 +46,10 @@ export const createClient = async (
 ): Promise<Client> => {
   const client = new Client();
 
-  cy.intercept(/.*/, (req) => {
-    req.headers[ClientIdentityStorageHeader] = client.clientIdentifier;
-  });
-
   cy.intercept(
     /.*/,
     client.attachExternalClientSideRouteHandler({
-      extractRequest,
+      extractRequest: extractRequest(client.clientIdentifier),
       handleResult,
     }),
   );

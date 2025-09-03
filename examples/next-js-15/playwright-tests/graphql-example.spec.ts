@@ -1,13 +1,8 @@
-import { test, expect } from "@playwright/test";
-import { createClient, Client } from "@mocky-balboa/playwright";
+import { expect } from "@playwright/test";
+import test from "@mocky-balboa/playwright/test";
 import { type Profile, type UserSettings } from "@/lib/graphql";
 
 const graphqlEndpoint = "http://localhost:9082/api/graphql";
-
-let client: Client;
-test.beforeEach(async ({ context }) => {
-  client = await createClient(context);
-});
 
 const profile: Profile = {
   user: {
@@ -24,8 +19,11 @@ const userSettings: UserSettings = {
   },
 };
 
-test("when the data loads for both queries successfully", async ({ page }) => {
-  client.route(graphqlEndpoint, async (route) => {
+test("when the data loads for both queries successfully", async ({
+  page,
+  mocky,
+}) => {
+  mocky.route(graphqlEndpoint, async (route) => {
     const { operationName } = await route.request.json();
     switch (operationName) {
       case "getProfile":

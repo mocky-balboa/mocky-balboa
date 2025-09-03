@@ -1,6 +1,8 @@
 import { getNextFight, getTrainingRegime } from "$lib/data";
 import type { PageLoad } from "./$types";
 
+export const ssr = false;
+
 export const load: PageLoad = async () => {
   const [trainingRegimeResult, nextFightResult] = await Promise.allSettled([
     getTrainingRegime(),

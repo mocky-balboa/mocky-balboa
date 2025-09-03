@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
-import { createClient, Client } from "@mocky-balboa/playwright";
+import { expect } from "@playwright/test";
+import test from "@mocky-balboa/playwright/test";
 import path from "path";
 import {
   type Fight,
@@ -10,11 +10,6 @@ import {
 
 const nextFightEndpoint = "http://localhost:58157/api/next-fight";
 const trainingRegimeEndpoint = "http://localhost:58157/api/training-regime";
-
-let client: Client;
-test.beforeEach(async ({ context }) => {
-  client = await createClient(context);
-});
 
 const nextFight: Fight = {
   id: "fight-id",
@@ -50,12 +45,13 @@ const trainingRegime: TrainingRegime = {
 
 test("when there's a network error loading the next fight data", async ({
   page,
+  mocky,
 }) => {
-  client.route(nextFightEndpoint, (route) => {
+  mocky.route(nextFightEndpoint, (route) => {
     return route.error();
   });
 
-  client.route(trainingRegimeEndpoint, (route) => {
+  mocky.route(trainingRegimeEndpoint, (route) => {
     return route.fulfill({
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -69,8 +65,9 @@ test("when there's a network error loading the next fight data", async ({
 
 test("when there's a network error loading the training regime data", async ({
   page,
+  mocky,
 }) => {
-  client.route(nextFightEndpoint, (route) => {
+  mocky.route(nextFightEndpoint, (route) => {
     return route.fulfill({
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -78,7 +75,7 @@ test("when there's a network error loading the training regime data", async ({
     });
   });
 
-  client.route(trainingRegimeEndpoint, (route) => {
+  mocky.route(trainingRegimeEndpoint, (route) => {
     return route.error();
   });
 
@@ -89,8 +86,8 @@ test("when there's a network error loading the training regime data", async ({
 });
 
 test.describe("when the data is loaded successfully", () => {
-  test.beforeEach(() => {
-    client.route(nextFightEndpoint, (route) => {
+  test.beforeEach(({ mocky }) => {
+    mocky.route(nextFightEndpoint, (route) => {
       return route.fulfill({
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -98,7 +95,7 @@ test.describe("when the data is loaded successfully", () => {
       });
     });
 
-    client.route(trainingRegimeEndpoint, (route) => {
+    mocky.route(trainingRegimeEndpoint, (route) => {
       return route.fulfill({
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -119,26 +116,24 @@ test.describe("when the data is loaded successfully", () => {
 
   test("it loads the data for the next fight with the correct custom X-Public-Api-Key header value", async ({
     page,
+    mocky,
   }) => {
-    const requestPromise = client.waitForRequest(nextFightEndpoint);
+    const requestPromise = mocky.waitForRequest(nextFightEndpoint);
     await page.goto("http://localhost:3000");
     const request = await requestPromise;
     expect(request.headers.get("X-Public-Api-Key")).toBe("public-api-key");
   });
 });
 
-test("loading fight data using file path", async ({ page }) => {
-  client.route(nextFightEndpoint, (route) => {
+test("loading fight data using file path", async ({ page, mocky }) => {
+  mocky.route(nextFightEndpoint, (route) => {
     return route.fulfill({
       status: 200,
-      path: path.resolve(
-        import.meta.dirname,
-        "james-clubber-lang.next-fight.json",
-      ),
+      path: path.resolve(__dirname, "james-clubber-lang.next-fight.json"),
     });
   });
 
-  client.route(trainingRegimeEndpoint, (route) => {
+  mocky.route(trainingRegimeEndpoint, (route) => {
     return route.fulfill({
       status: 200,
       headers: { "Content-Type": "application/json" },

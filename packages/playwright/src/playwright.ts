@@ -11,7 +11,7 @@ import { logger } from "./logger.js";
 import { extractRequest, handleResult } from "./route.js";
 
 /**
- * Creates a Mocky Balboa client used to mock server-side network requests at runtime defined by your test suite.
+ * Creates a Mocky Balboa client used to mock full-stack network requests at runtime defined by your test suite.
  *
  * @param {BrowserContext} context - The Playwright browser context
  * @param {ConnectOptions} [options={}] - Optional connection options {@link ConnectOptions}

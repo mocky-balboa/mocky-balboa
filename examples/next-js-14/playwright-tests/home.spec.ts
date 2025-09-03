@@ -1,5 +1,5 @@
-import { type Client, createClient } from "@mocky-balboa/playwright";
-import { expect, test } from "@playwright/test";
+import test from "@mocky-balboa/playwright/test";
+import { expect } from "@playwright/test";
 import getPort from "get-port";
 import { detect } from "detect-port";
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
@@ -29,10 +29,9 @@ const waitForPortToBeOccupied = async (port: number) => {
   throw new Error(`Timed out waiting for port ${port} to be occupied`);
 };
 
-let client: Client;
 let applicationPort: number;
 let serverProcess: ChildProcessWithoutNullStreams;
-test.beforeEach(async ({ context }) => {
+test.beforeEach(async ({ context, mockyConnectOptions }) => {
   applicationPort = await getPort();
   const websocketServerPort = await getPort();
   console.log(
@@ -59,9 +58,7 @@ test.beforeEach(async ({ context }) => {
     waitForPortToBeOccupied(websocketServerPort),
   ]);
 
-  client = await createClient(context, {
-    port: websocketServerPort,
-  });
+  mockyConnectOptions.port = websocketServerPort;
 });
 
 test.afterEach(async () => {
@@ -102,12 +99,13 @@ const trainingRegime: TrainingRegime = {
 
 test("when there's a network error loading the next fight data", async ({
   page,
+  mocky,
 }) => {
-  client.route(nextFightEndpoint, (route) => {
+  mocky.route(nextFightEndpoint, (route) => {
     return route.error();
   });
 
-  client.route(trainingRegimeEndpoint, (route) => {
+  mocky.route(trainingRegimeEndpoint, (route) => {
     return route.fulfill({
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -121,8 +119,9 @@ test("when there's a network error loading the next fight data", async ({
 
 test("when there's a network error loading the training regime data", async ({
   page,
+  mocky,
 }) => {
-  client.route(nextFightEndpoint, (route) => {
+  mocky.route(nextFightEndpoint, (route) => {
     return route.fulfill({
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -130,7 +129,7 @@ test("when there's a network error loading the training regime data", async ({
     });
   });
 
-  client.route(trainingRegimeEndpoint, (route) => {
+  mocky.route(trainingRegimeEndpoint, (route) => {
     return route.error();
   });
 
@@ -141,8 +140,8 @@ test("when there's a network error loading the training regime data", async ({
 });
 
 test.describe("when the data is loaded successfully", () => {
-  test.beforeEach(() => {
-    client.route(nextFightEndpoint, (route) => {
+  test.beforeEach(({ mocky }) => {
+    mocky.route(nextFightEndpoint, (route) => {
       return route.fulfill({
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -150,7 +149,7 @@ test.describe("when the data is loaded successfully", () => {
       });
     });
 
-    client.route(trainingRegimeEndpoint, (route) => {
+    mocky.route(trainingRegimeEndpoint, (route) => {
       return route.fulfill({
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -171,8 +170,9 @@ test.describe("when the data is loaded successfully", () => {
 
   test("it loads the data for the next fight with the correct custom X-Public-Api-Key header value", async ({
     page,
+    mocky,
   }) => {
-    const requestPromise = client.waitForRequest(nextFightEndpoint);
+    const requestPromise = mocky.waitForRequest(nextFightEndpoint);
     await page.goto(`http://localhost:${applicationPort}`);
     const request = await requestPromise;
     expect(request.headers.get("X-Public-Api-Key")).toBe("public-api-key");

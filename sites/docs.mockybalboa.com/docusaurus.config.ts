@@ -6,7 +6,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
   title: "Mocky Balboa",
-  tagline: "Knock out server-side test headaches",
+  tagline: "Knock out server-side rendering test headaches",
   favicon: "img/favicon.ico",
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future

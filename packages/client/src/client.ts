@@ -613,6 +613,10 @@ export class Client {
       const url = new URL(request.url);
       const route = new Route(request);
 
+      for (const awaitingRequestHandler of this.clientWaitForRequestHandlers) {
+        await awaitingRequestHandler(request);
+      }
+
       for (const [routeHandlerId, [urlMatcher, handler, routeMeta]] of this
         .routeHandlers) {
         // Skip the handler if the URL does not match

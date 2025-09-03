@@ -1,7 +1,7 @@
 {
   "name": "@mocky-balboa/nuxt",
   "version": "1.0.8",
-  "description": "Nuxt integration for Mocky Balboa. Mock your server-side network requests in your test suites.",
+  "description": "Nuxt integration for Mocky Balboa. Mock your full-stack network requests in your test suites.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",
   "bugs": {
