@@ -1,5 +1,5 @@
 {
-  "name": "@mocky-balboa/example-sveltekit-2",
+  "name": "@mocky-balboa/example-sveltekit-2-csr",
   "private": true,
   "version": "0.0.1",
   "type": "module",
