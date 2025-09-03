@@ -11,7 +11,7 @@ import { logger } from "./logger.js";
 import { extractRequest, handleResult } from "./intercept.js";
 
 /**
- * Creates a Mocky Balboa client used to mock server-side network requests at runtime defined by your test suite.
+ * Creates a Mocky Balboa client used to mock network requests at runtime defined by your test suite.
  *
  * @param {Cypress.Chainable} cy - The instance of Cypress i.e. `cy`
  * @param {ConnectOptions} [options={}] - Optional connection options {@link ConnectOptions}

@@ -1,7 +1,7 @@
 {
   "name": "@mocky-balboa/mocky-balboa",
   "version": "1.0.0",
-  "description": "Knock out server-side test headaches",
+  "description": "Knock out server-side rendering test headaches",
   "author": {
     "name": "Lewis Nelson",
     "url": "https://lewnelson.com"
@@ -16,9 +16,7 @@
     "prepare-release": "pnpm changeset",
     "package-post-cjs-build": "node ./scripts/package-post-cjs-build.cjs"
   },
-  "keywords": [
-    
-  ],
+  "keywords": [],
   "license": "MIT",
   "packageManager": "pnpm@10.14.0",
   "devDependencies": {
