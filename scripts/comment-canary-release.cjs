@@ -130,7 +130,7 @@ ${changedPackageVersions.map(({ name, version }) => `| ${name} | ${version} | \`
     await octokit.rest.issues.updateComment({
       owner: "mocky-balboa",
       repo: "mocky-balboa",
-      comment_id: docsComment.id,
+      comment_id: releaseComment.id,
       body: getCommentBody(),
     });
   } else {
