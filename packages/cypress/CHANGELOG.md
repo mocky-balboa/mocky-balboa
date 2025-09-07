@@ -1,13 +1,5 @@
 # @mocky-balboa/cypress
 
-## 2.0.1-canary.0
-
-### Patch Changes
-
-- Updated dependencies [[9fe84bf](https://github.com/mocky-balboa/mocky-balboa/commit/9fe84bf2975389fd77a8d213fc936f6ee7f89032)]
-  - [@mocky-balboa/client@2.0.1-canary.0](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fclient%402.0.1-canary.0)
-  - [@mocky-balboa/logger@1.0.8-canary.0](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Flogger%401.0.8-canary.0)
-
 ## 2.0.0
 
 ### Major Changes

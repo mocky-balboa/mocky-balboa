@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/cli-utils",
-  "version": "1.0.4-canary.b519826",
+  "version": "1.0.3",
   "description": "Mocky Balboa CLI utilities for server integrations with CLI's.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

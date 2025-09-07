@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/nuxt",
-  "version": "1.0.10-canary.b519826",
+  "version": "1.0.9",
   "description": "Nuxt integration for Mocky Balboa. Mock your full-stack network requests in your test suites.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

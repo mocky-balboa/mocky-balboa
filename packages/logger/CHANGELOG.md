@@ -1,11 +1,5 @@
 # @mocky-balboa/logger
 
-## 1.0.8-canary.0
-
-### Patch Changes
-
-- [9fe84bf](https://github.com/mocky-balboa/mocky-balboa/commit/9fe84bf2975389fd77a8d213fc936f6ee7f89032): Simulated release
-
 ## 1.0.7
 
 ### Patch Changes
