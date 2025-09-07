@@ -16,8 +16,7 @@ jobs:
       - build_and_test
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -61,16 +60,15 @@ jobs:
       - name: Update PR
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.COMMENTS_GH_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
-        run: node scripts/update-canary-release-pr-body.cjs
+        run: node scripts/comment-canary-release.cjs
 
   build_and_deploy_docs:
     name: 📖 Build and deploy docs
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      deployments: write
+      contents: read
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

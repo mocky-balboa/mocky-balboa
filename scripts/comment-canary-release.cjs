@@ -3,6 +3,8 @@ const fs = require("fs");
 const path = require("path");
 const { Octokit } = require("octokit");
 
+const canaryReleaseCommentIdentifier = "<!-- DO_NOT_REMOVE canary release comment identifier -->"
+
 const main = async () => {
   const rootDir = path.resolve(__dirname, "..");
   const releaseJson = fs.readFileSync(
@@ -94,43 +96,42 @@ const main = async () => {
 
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-  const response = await octokit.rest.pulls.get({
+  const { data: comments } = await octokit.rest.issues.listComments({
     owner: "mocky-balboa",
     repo: "mocky-balboa",
-    pull_number: process.env.PR_NUMBER,
+    issue_number: process.env.PR_NUMBER,
+  })
+
+  const releaseComment = comments.find(comment => {
+    return comment.body.startsWith(canaryReleaseCommentIdentifier);
   });
 
-  let prBody = response.data.body ?? "";
+  const getCommentBody = () => {
+    return `${canaryReleaseCommentIdentifier}
+    
+## 🐥 Canary releases
 
-  const releaseSectionDelimiter = "mocky_balboa_pr_release_description";
-  const start = `<!--${releaseSectionDelimiter}_start-->`;
-  const end = `<!--${releaseSectionDelimiter}_end-->`;
+| Package | Version | Install command |
+| ------- | ------- | --------------- |
+${changedPackageVersions.map(({ name, version }) => `| ${name} | ${version} | \`pnpm i -D ${name}@${version}\``).join("\n")}
+    `
+  };
 
-  const releaseDescription = `${start}
-  ### Canary release${changedPackageVersions.length > 1 ? "s" : ""}
-
-  \`\`\`
-  ${changedPackageVersions.map(({ name, version }) => `pnpm i ${name}@${version}`).join("\n")}
-  \`\`\`
-  ${end}`;
-
-  console.log("releaseDescription", releaseDescription);
-
-  if (prBody.match(new RegExp(start))) {
-    prBody = prBody.replace(
-      new RegExp(`${start}.*?${end}`, "s"),
-      releaseDescription,
-    );
+  if (releaseComment) {
+    await octokit.rest.issues.updateComment({
+      owner: "mocky-balboa",
+      repo: "mocky-balboa",
+      comment_id: docsComment.id,
+      body: getCommentBody(),
+    });
   } else {
-    prBody = `${prBody}\n\n${releaseDescription}`;
+    await octokit.rest.issues.createComment({
+      owner: "mocky-balboa",
+      repo: "mocky-balboa",
+      issue_number: process.env.PR_NUMBER,
+      body: getCommentBody(),
+    })
   }
-
-  await octokit.rest.pulls.update({
-    owner: "mocky-balboa",
-    repo: "mocky-balboa",
-    pull_number: process.env.PR_NUMBER,
-    body: prBody,
-  });
 };
 
 void main();
