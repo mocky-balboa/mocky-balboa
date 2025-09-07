@@ -83,3 +83,43 @@ jobs:
           if [ "$STAGED_FILE_COUNT" -eq 0 ]; then exit 0; fi
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
           git push origin main
+
+  build_and_deploy_docs:
+    name: 📖 Build and deploy docs
+    needs:
+      - build_and_test
+      - release
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          fetch-depth: 0
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Build packages
+        run: pnpm build:packages
+
+      - name: Build docs
+        run: pnpm --filter "@mocky-balboa/docs-mockybalboa-com" --filter "@mocky-balboa/docs-api-reference.mockybalboa.com" run build
+
+      - name: Deploy docs.mockybalboa.com
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./sites/docs.mockybalboa.com/build --project-name=mocky-balboa
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy api-reference.mockybalboa.com
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./sites/api-reference.mockybalboa.com/docs --project-name=mocky-balboa-api-reference
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
