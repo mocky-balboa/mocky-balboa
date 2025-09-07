@@ -89,6 +89,7 @@ jobs:
 
       - name: Deploy docs.mockybalboa.com
         uses: cloudflare/wrangler-action@v3
+        id: docs-deploy
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -96,6 +97,7 @@ jobs:
 
       - name: Deploy api-reference.mockybalboa.com
         uses: cloudflare/wrangler-action@v3
+        id: api-reference-docs-deploy
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -105,6 +107,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.COMMENTS_GH_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
+          DOCS_DEPLOYMENT_URL: ${{ steps.docs-deploy.outputs.deployment-url }}
+          API_REFERENCE_DOCS_DEPLOYMENT_URL: ${{ steps.api-reference-docs-deploy.outputs.deployment-url }}
         run: node scripts/comment-docs-preview-urls.cjs $(git rev-parse HEAD)
 
   pr_checks_passed:
