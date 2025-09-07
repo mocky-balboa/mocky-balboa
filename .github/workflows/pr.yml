@@ -105,7 +105,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
-        run: node scripts/comment-docs-preview-urls.cjs
+        run: node scripts/comment-docs-preview-urls.cjs $(git rev-parse --short HEAD)
 
   pr_checks_passed:
     name: ✅ PR checks passed
