@@ -103,7 +103,7 @@ jobs:
 
       - name: Comment docs deployment preview
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.COMMENTS_GH_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
         run: node scripts/comment-docs-preview-urls.cjs $(git rev-parse HEAD)
 
