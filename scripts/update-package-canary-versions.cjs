@@ -37,6 +37,5 @@ for (const item of items) {
   const changlogPath = path.join(packageDir, "CHANGELOG.md");
   if (!fs.existsSync(changlogPath)) continue;
   const changelog = fs.readFileSync(changlogPath, "utf8");
-  changelog = changelog.replace(/-canary\.0/gm, `-canary.${commitHash}`);
-  fs.writeFileSync(changlogPath, changelog);
+  fs.writeFileSync(changlogPath, changelog.replace(/-canary\.0/gm, `-canary.${commitHash}`));
 }
