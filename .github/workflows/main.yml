@@ -115,7 +115,6 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy ./sites/docs.mockybalboa.com/build --project-name=mocky-balboa
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy api-reference.mockybalboa.com
         uses: cloudflare/wrangler-action@v3
@@ -123,4 +122,3 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy ./sites/api-reference.mockybalboa.com/docs --project-name=mocky-balboa-api-reference
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
