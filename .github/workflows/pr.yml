@@ -3,6 +3,10 @@ name: Pull request workflow
 on:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build_and_test:
     name: 🛠️ Build and test
@@ -57,7 +61,7 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Update PR
+      - name: Comment canary releases back to PR
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.COMMENTS_GH_TOKEN }}

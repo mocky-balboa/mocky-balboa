@@ -5,6 +5,15 @@ const { Octokit } = require("octokit");
 
 const canaryReleaseCommentIdentifier = "<!-- DO_NOT_REMOVE canary release comment identifier -->"
 
+const commitHash = process.argv[2];
+
+if (typeof commitHash !== "string" || commitHash.length !== 40) {
+  console.error("Invalid commit hash");
+  process.exit(1);
+}
+
+const shortCommit = commitHash.substring(0, 7);
+
 const main = async () => {
   const rootDir = path.resolve(__dirname, "..");
   const releaseJson = fs.readFileSync(
@@ -109,7 +118,7 @@ const main = async () => {
   const getCommentBody = () => {
     return `${canaryReleaseCommentIdentifier}
     
-## 🐥 Canary releases
+## 🐥 Canary releases ([${shortCommit}](https://github.com/mocky-balboa/mocky-balboa/commit/${commitHash}))
 
 | Package | Version | Install command |
 | ------- | ------- | --------------- |
