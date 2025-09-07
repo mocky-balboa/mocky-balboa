@@ -3,6 +3,10 @@ name: Pull request workflow
 on:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build_and_test:
     name: 🛠️ Build and test
@@ -16,8 +20,7 @@ jobs:
       - build_and_test
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -58,16 +61,63 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Update PR
+      - name: Comment canary releases back to PR
         if: ${{ steps.release_status.outputs.has-changeset == 'true' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.COMMENTS_GH_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
-        run: node scripts/update-canary-release-pr-body.cjs
+        run: node scripts/comment-canary-release.cjs $(git rev-parse HEAD)
+
+  build_and_deploy_docs:
+    name: 📖 Build and deploy docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          fetch-depth: 0
+
+      - name: Setup monorepo
+        uses: ./.github/actions/setup-monorepo
+
+      - name: Build packages
+        run: pnpm build:packages
+
+      - name: Build docs
+        run: pnpm --filter "@mocky-balboa/docs-mockybalboa-com" --filter "@mocky-balboa/docs-api-reference.mockybalboa.com" run build
+
+      - name: Deploy docs.mockybalboa.com
+        uses: cloudflare/wrangler-action@v3
+        id: docs-deploy
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./sites/docs.mockybalboa.com/build --project-name=mocky-balboa
+
+      - name: Deploy api-reference.mockybalboa.com
+        uses: cloudflare/wrangler-action@v3
+        id: api-reference-docs-deploy
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./sites/api-reference.mockybalboa.com/docs --project-name=mocky-balboa-api-reference
+
+      - name: Comment docs deployment preview
+        env:
+          GITHUB_TOKEN: ${{ secrets.COMMENTS_GH_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+          DOCS_DEPLOYMENT_URL: ${{ steps.docs-deploy.outputs.deployment-url }}
+          API_REFERENCE_DOCS_DEPLOYMENT_URL: ${{ steps.api-reference-docs-deploy.outputs.deployment-url }}
+        run: node scripts/comment-docs-preview-urls.cjs $(git rev-parse HEAD)
 
   pr_checks_passed:
     name: ✅ PR checks passed
-    needs: canary_release
+    needs:
+      - canary_release
+      - build_and_deploy_docs
     runs-on: ubuntu-latest
     permissions: {}
     steps:

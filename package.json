@@ -25,7 +25,8 @@
     "@types/recursive-readdir": "^2.2.4",
     "octokit": "^5.0.3",
     "oxlint": "^1.14.0",
-    "recursive-readdir": "^2.2.3"
+    "recursive-readdir": "^2.2.3",
+    "wrangler": "^4.34.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
