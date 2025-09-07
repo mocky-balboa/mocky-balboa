@@ -26,10 +26,10 @@ if (!apiReferenceDocsDeploymentUrl) {
 const getCommentBody = () => {
   return `${docsCommentIdentifier}
 
-📖 Docs deploy preview ready
+## 📖 Docs deploy preview ready
 
-|- Name -|- Link -|
-|--------|--------|
+| Name | Link |
+| ---- | ---- |
 | Latest commit | [${shortCommit}](https://github.com/mocky-balboa/mocky-balboa/commit/${commitHash}) |
 | Docs preview | [${docsDeploymentUrl}](${docsDeploymentUrl}) |
 | API reference docs preview | [${apiReferenceDocsDeploymentUrl}](${apiReferenceDocsDeploymentUrl}) |
