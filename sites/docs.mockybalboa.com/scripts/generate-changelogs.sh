@@ -13,5 +13,5 @@ else
   echo "Generating changelogs for branch $BRANCH"
   pnpm -w exec changeset pre enter canary
   pnpm -w exec changeset version
-  node ../../scripts/update-package-canary-versions.cjs $(git rev-parse --short HEAD)
+  pnpm -w exec node scripts/update-package-canary-versions.cjs $(git rev-parse --short HEAD)
 fi
