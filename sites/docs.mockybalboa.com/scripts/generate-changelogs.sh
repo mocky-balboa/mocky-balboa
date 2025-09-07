@@ -8,11 +8,6 @@ fi
 
 if [ "$BRANCH" == "main" ]; then
   echo "Generating changelogs for main branch"
-            
-          pnpm changeset version
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> .npmrc
-          pnpm changeset publish --no-git-tag
-          rm .npmrc
   pnpm -w exec changeset version
 else
   echo "Generating changelogs for branch $BRANCH"
