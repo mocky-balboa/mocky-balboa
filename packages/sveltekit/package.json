@@ -1,6 +1,6 @@
 {
   "name": "@mocky-balboa/sveltekit",
-  "version": "1.0.3",
+  "version": "1.0.4-canary.b519826",
   "description": "Mocky Balboa integration for SvelteKit.",
   "type": "module",
   "homepage": "https://docs.mockybalboa.com",

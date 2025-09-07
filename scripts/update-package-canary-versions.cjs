@@ -33,4 +33,10 @@ for (const item of items) {
     packageJsonPath,
     `${JSON.stringify(packageJson, null, 2)}\n`,
   );
+
+  const changlogPath = path.join(packageDir, "CHANGELOG.md");
+  if (!fs.existsSync(changlogPath)) continue;
+  const changelog = JSON.parse(fs.readFileSync(changlogPath, "utf8"));
+  changelog = changelog.replace(/-canary\.0/gm, `-canary.${commitHash}`);
+  fs.writeFileSync(changlogPath, changelog);
 }

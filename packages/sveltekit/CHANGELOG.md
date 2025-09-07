@@ -1,5 +1,14 @@
 # @mocky-balboa/sveltekit
 
+## 1.0.4-canary.0
+
+### Patch Changes
+
+- Updated dependencies [[9fe84bf](https://github.com/mocky-balboa/mocky-balboa/commit/9fe84bf2975389fd77a8d213fc936f6ee7f89032)]
+  - [@mocky-balboa/logger@1.0.8-canary.0](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Flogger%401.0.8-canary.0)
+  - [@mocky-balboa/cli-utils@1.0.4-canary.0](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fcli-utils%401.0.4-canary.0)
+  - [@mocky-balboa/vite@1.0.4-canary.0](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fvite%401.0.4-canary.0)
+
 ## 1.0.3
 
 ### Patch Changes
