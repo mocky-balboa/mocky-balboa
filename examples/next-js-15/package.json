@@ -21,7 +21,7 @@
   "devDependencies": {
     "@mocky-balboa/cypress": "workspace:*",
     "@mocky-balboa/playwright": "workspace:*",
-    "@playwright/test": "^1.54.2",
+    "@playwright/test": "^1.55.0",
     "typescript": "catalog:",
     "cypress": "^15.0.0",
     "@types/node": "catalog:",
