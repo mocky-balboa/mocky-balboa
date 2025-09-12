@@ -1,0 +1,109 @@
+---
+sidebar_position: 40
+title: Vite
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# Mocky Balboa and Vite
+
+How to use Mocky Balboa with [Vite](https://vitejs.dev/).
+
+:::info[Supported versions]
+
+**≥ 6.0.0**
+
+:::
+
+## Installation
+
+<Tabs groupId="package-manager">
+  <TabItem value="pnpm" label="pnpm" default>
+    ```bash pnpm add -D @mocky-balboa/vite ```
+  </TabItem>
+  <TabItem value="npm" label="npm">
+    ```bash npm install -D @mocky-balboa/vite ```
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+    ```bash yarn add -D @mocky-balboa/vite ```
+  </TabItem>
+</Tabs>
+
+## Usage
+
+### Dev mode
+
+In dev mode, all you need to do is enable the Vite plugin in your `vite.config.{ts,js}`
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        // vite.config.ts
+        import { defineConfig } from "vite";
+        import mockyBalboa from "@mocky-balboa/vite";
+
+        export default defineConfig({
+          plugins: [mockyBalboa()],
+        });
+        ```
+
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      // vite.config.js
+      import { defineConfig } from "vite";
+      import mockyBalboa from "@mocky-balboa/vite";
+
+      export default defineConfig({
+        plugins: [mockyBalboa()],
+      });
+      ```
+
+  </TabItem>
+</Tabs>
+
+For plugin options, see the [API reference](https://api-reference.mockybalboa.com/interfaces/_mocky-balboa_vite.MockyBalboaVitePluginOptions).
+
+### Build mode
+
+It's up to you to integrate the Mocky Balboa server into your built application. See the following guides for common server integrations:
+
+- [Express](./express)
+- [Fastify](./fastify)
+- [Koa](./koa)
+
+## API reference
+
+[API reference](https://api-reference.mockybalboa.com/modules/_mocky-balboa_vite)
+
+## Vitest compatibility
+
+If you are sharing your Vite configuration with [Vitest](https://vitest.dev/), you will need to disable the Mocky Balboa plugin when running in `test` mode. You can do this in your `vite.config.{ts,js}` by setting the `enabled` option to `false` conditionally.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+        ```TypeScript
+        // vite.config.ts
+        import { defineConfig } from "vite";
+        import mockyBalboa from "@mocky-balboa/vite";
+
+        export default defineConfig(({ mode }) => ({
+          plugins: [mockyBalboa({ enabled: mode !== "test" })],
+        }));
+        ```
+
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+      ```JavaScript
+      // vite.config.js
+      import { defineConfig } from "vite";
+      import mockyBalboa from "@mocky-balboa/vite";
+
+      export default defineConfig(({ mode }) => ({
+        plugins: [mockyBalboa({ enabled: mode !== "test" })],
+      }));
+      ```
+
+  </TabItem>
+</Tabs>
