@@ -23,7 +23,7 @@
     "test": "echo \"No tests\""
   },
   "devDependencies": {
-    "serve": "^14.2.4",
+    "serve": "^14.2.5",
     "typedoc": "^0.28.12",
     "typedoc-github-theme": "^0.3.1"
   }
