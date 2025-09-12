@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@primeuix/themes": "^1.2.3",
-    "nuxt": "^4.0.3",
+    "nuxt": "^4.1.1",
     "primevue": "^4.3.7",
     "tailwindcss-primeui": "^0.6.1",
     "vue": "^3.5.19",
@@ -26,9 +26,9 @@
     "@mocky-balboa/cypress": "workspace:*",
     "@mocky-balboa/nuxt": "workspace:*",
     "@mocky-balboa/playwright": "workspace:*",
-    "@playwright/test": "^1.54.2",
+    "@playwright/test": "^1.55.0",
     "@primevue/nuxt-module": "^4.3.7",
     "cypress": "^15.0.0",
-    "playwright": "^1.54.2"
+    "playwright": "^1.55.0"
   }
 }
