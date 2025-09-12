@@ -4,3 +4,4 @@ dist
 test-results
 .npmrc
 release.json
+.vscode
