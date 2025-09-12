@@ -26,6 +26,6 @@
     "@mocky-balboa/playwright": "workspace:*",
     "@playwright/test": "^1.55.0",
     "cypress": "^15.0.0",
-    "playwright": "^1.54.2"
+    "playwright": "^1.55.0"
   }
 }
