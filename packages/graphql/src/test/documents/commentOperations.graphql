@@ -1,0 +1,108 @@
+query GetComments($postId: ID!, $includeReplies: Boolean = false) {
+  getComments(postId: $postId) {
+    id
+    content
+    author {
+      id
+      username
+      avatar
+    }
+    post {
+      id
+      title
+    }
+    parentComment {
+      id
+    }
+    replies @include(if: $includeReplies) {
+      id
+      content
+      author {
+        username
+      }
+      createdAt
+    }
+    createdAt
+    updatedAt
+    likes
+    isEdited
+  }
+}
+
+query GetComment($commentId: ID!) {
+  getComment(id: $commentId) {
+    id
+    content
+    author {
+      id
+      username
+      avatar
+    }
+    post {
+      id
+      title
+    }
+    parentComment {
+      id
+      content
+      author {
+        username
+      }
+    }
+    replies {
+      id
+      content
+      author {
+        username
+      }
+      createdAt
+    }
+    createdAt
+    updatedAt
+    likes
+    isEdited
+  }
+}
+
+mutation CreateComment($input: CreateCommentInput!) {
+  createComment(input: $input) {
+    id
+    content
+    author {
+      id
+      username
+    }
+    post {
+      id
+      title
+    }
+    parentComment {
+      id
+    }
+    createdAt
+    updatedAt
+    likes
+    isEdited
+  }
+}
+
+mutation UpdateComment($commentId: ID!, $input: UpdateCommentInput!) {
+  updateComment(id: $commentId, input: $input) {
+    id
+    content
+    updatedAt
+    isEdited
+  }
+}
+
+mutation DeleteComment($commentId: ID!) {
+  deleteComment(id: $commentId)
+}
+
+mutation LikeComment($commentId: ID!) {
+  likeComment(commentId: $commentId)
+}
+
+mutation UnlikeComment($commentId: ID!) {
+  unlikeComment(commentId: $commentId)
+}

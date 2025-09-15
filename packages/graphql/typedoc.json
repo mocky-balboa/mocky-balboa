@@ -1,0 +1,3 @@
+{
+  "entryPoints": ["src/graphql.ts", "src/codegen-plugin.ts"]
+}

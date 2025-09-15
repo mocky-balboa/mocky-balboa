@@ -1,0 +1,113 @@
+query ComplexDirectivesQuery(
+  $userId: ID!
+  $includeUserDetails: Boolean = true
+  $includeUserPosts: Boolean = false
+  $includeUserStats: Boolean = true
+  $skipUserPreferences: Boolean = false
+  $includePostComments: Boolean = false
+  $skipPostTags: Boolean = true
+) {
+  getUser(id: $userId) {
+    id
+    username
+    email @include(if: $includeUserDetails)
+    firstName @include(if: $includeUserDetails)
+    lastName @include(if: $includeUserDetails)
+    bio @include(if: $includeUserDetails)
+    avatar @include(if: $includeUserDetails)
+    createdAt
+    updatedAt
+    isVerified
+    preferences @skip(if: $skipUserPreferences) {
+      theme
+      language
+      notifications {
+        email
+        push
+        comments
+        likes
+        follows
+      }
+      privacy {
+        profileVisibility
+        showEmail
+        showFollowers
+        allowDirectMessages
+      }
+    }
+    posts @include(if: $includeUserPosts) {
+      id
+      title
+      content
+      excerpt
+      slug
+      category
+      tags @skip(if: $skipPostTags)
+      publishedAt
+      createdAt
+      likes
+      views
+      isPublished
+      featuredImage
+      readingTime
+      comments @include(if: $includePostComments) {
+        id
+        content
+        author {
+          username
+        }
+        createdAt
+        likes
+      }
+    }
+  }
+  
+  getUserStats(userId: $userId) @include(if: $includeUserStats) {
+    totalPosts
+    totalComments
+    totalLikes
+    followersCount
+    followingCount
+    joinDate
+    lastActiveAt
+  }
+}
+
+mutation ComplexDirectivesMutation(
+  $userId: ID!
+  $postInput: CreatePostInput!
+  $postId: ID!
+  $likePost: Boolean = true
+  $publishPost: Boolean = false
+  $includePostDetails: Boolean = true
+) {
+  createPost(input: $postInput) {
+    id
+    title
+    content @include(if: $includePostDetails)
+    excerpt @include(if: $includePostDetails)
+    slug
+    author {
+      id
+      username
+    }
+    category
+    tags
+    publishedAt
+    createdAt
+    likes
+    views
+    isPublished
+    featuredImage
+    readingTime
+  }
+  
+  likePost(postId: $postId) @include(if: $likePost)
+  
+  publishPost(id: $postId) @include(if: $publishPost) {
+    id
+    title
+    publishedAt
+    isPublished
+  }
+}

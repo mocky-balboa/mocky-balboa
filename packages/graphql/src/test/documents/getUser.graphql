@@ -1,0 +1,25 @@
+query GetUser($id: ID!) {
+  getUser(id: $id) {
+    id
+    username
+    email
+    firstName
+    lastName
+    bio
+    avatar
+    createdAt
+    updatedAt
+    isVerified
+    preferences {
+      theme
+      language
+      notifications {
+        email
+        push
+        comments
+        likes
+        follows
+      }
+    }
+  }
+}
