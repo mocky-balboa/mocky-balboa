@@ -34,7 +34,7 @@ export interface WaitForRequestOptions {
    *
    * @default {@link DefaultWaitForRequestTimeout}
    */
-  timeout?: number;
+  timeout?: number | undefined;
   /**
    * Determines where to expect the request to be executed from
    *

@@ -12,7 +12,7 @@ import {
   MessageType,
   parseMessage,
 } from "@mocky-balboa/websocket-messages";
-import { Client, type ExternalRouteHandlerRouteResponse } from "./client.js";
+import { Client, type ExternalRouteHandlerRouteResponse, GraphQL } from "./client.js";
 import { type RawData, type WebSocketServer } from "ws";
 import WebSocket from "isomorphic-ws";
 import {
@@ -75,6 +75,548 @@ describe("Client", () => {
     test("disconnecting a client not connected throws a `Client is not connected` error", () => {
       const client = new Client();
       expect(() => client.disconnect()).toThrowError("Client is not connected");
+    });
+  });
+
+  describe("waitForRequest", () => {
+    let wss: WebSocketServer;
+    let serverWs: WebSocket;
+    let port: number;
+    let client: Client;
+
+    beforeEach(async () => {
+      ({ wss, port } = await startWebSocketServer());
+
+      wss.on("connection", (ws) => {
+        serverWs = ws;
+        ws.on("message", (message: RawData) => {
+          const parsedMessage = parseMessage(message.toString());
+          if (parsedMessage.type !== MessageType.ACK) {
+            const ackMessage = new Message(
+              MessageType.ACK,
+              {},
+              parsedMessage.messageId,
+            );
+            ws.send(ackMessage.toString());
+          }
+        });
+      });
+
+      client = new Client();
+      await client.connect({ port, timeout: 200 });
+    });
+
+    afterEach(async () => {
+      await closeWebSocketServer(wss);
+    });
+
+    describe("URL matching", () => {
+      test("should match requests using string glob patterns", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint");
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint",
+            headers: { Accept: "application/json" },
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+
+        expect(request.url).toBe("http://example.com/api/test-endpoint");
+        expect(request.method).toBe("GET");
+      });
+
+      test("should match requests using RegExp patterns", async () => {
+        const waitPromise = client.waitForRequest(/test-endpoint$/);
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "POST",
+            url: "http://example.com/api/test-endpoint",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: "test" }),
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+
+        expect(request.url).toBe("http://example.com/api/test-endpoint");
+        expect(request.method).toBe("POST");
+        expect(await request.text()).toBe(JSON.stringify({ data: "test" }));
+      });
+
+      test("should match requests using callback function", async () => {
+        const waitPromise = client.waitForRequest((url: URL) => {
+          return url.pathname.includes("test");
+        });
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "PUT",
+            url: "http://example.com/api/test-endpoint",
+            headers: { "Content-Type": "application/json" },
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+
+        expect(request.url).toBe("http://example.com/api/test-endpoint");
+        expect(request.method).toBe("PUT");
+      });
+
+      test("should match requests using async callback function", async () => {
+        const waitPromise = client.waitForRequest(async (url: URL) => {
+          await new Promise(resolve => setTimeout(resolve, 10));
+          return url.pathname.includes("async-test");
+        });
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/async-test",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+
+        expect(request.url).toBe("http://example.com/api/async-test");
+      });
+
+      test("should not match requests that don't match the pattern", async () => {
+        const waitPromise = client.waitForRequest("**/different-endpoint", { timeout: 100 });
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        await expect(waitPromise).rejects.toThrowError("Timed out waiting for request");
+      });
+    });
+
+    describe("timeout functionality", () => {
+      test("should timeout with default timeout when no request matches", async () => {
+        const waitPromise = client.waitForRequest("**/non-existent", { timeout: 100 });
+        await expect(waitPromise).rejects.toThrowError("Timed out waiting for request");
+      }, 200);
+
+      test("should timeout with custom timeout when no request matches", async () => {
+        const start = Date.now();
+        const waitPromise = client.waitForRequest("**/non-existent", { timeout: 100 });
+        
+        await expect(waitPromise).rejects.toThrowError("Timed out waiting for request");
+      }, 300);
+
+      test("should resolve before timeout when matching request arrives", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint", { timeout: 1000 });
+
+        setTimeout(() => {
+          const requestMessage = new Message(MessageType.REQUEST, {
+            id: "request-id",
+            request: {
+              method: "GET",
+              url: "http://example.com/api/test-endpoint",
+              headers: {},
+            },
+          });
+          serverWs.send(requestMessage.toString());
+        }, 50);
+
+        const request = await waitPromise;
+        expect(request.url).toBe("http://example.com/api/test-endpoint");
+      });
+
+      test("should use default timeout when timeout is undefined", async () => {
+        const waitPromise = client.waitForRequest("**/non-existent", { timeout: 100 });
+        await expect(waitPromise).rejects.toThrowError("Timed out waiting for request");
+      }, 200);
+    });
+
+    describe("request type filtering", () => {
+      test("should handle server-only requests when type is server-only", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint", { type: "server-only" });
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+        expect(request.url).toBe("http://example.com/api/test-endpoint");
+      });
+
+      test("should handle both server and client requests when type is both", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint", { type: "both" });
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+        expect(request.url).toBe("http://example.com/api/test-endpoint");
+      });
+
+      test("should default to both when type is not specified", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint");
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+        expect(request.url).toBe("http://example.com/api/test-endpoint");
+      });
+
+      test("should handle client-only requests when external handler is attached", async () => {
+        const externalHandler = client.attachExternalClientSideRouteHandler({
+          extractRequest: (request: Request) => request,
+          handleResult: (response) => response,
+        });
+
+        const waitPromise = client.waitForRequest("**/test-endpoint", { type: "client-only" });
+
+        // Simulate a client request
+        const clientRequest = new Request("http://example.com/api/test-endpoint");
+        const handlerPromise = externalHandler(clientRequest);
+
+        const request = await waitPromise;
+        expect(request.url).toBe("http://example.com/api/test-endpoint");
+
+        await handlerPromise;
+      });
+
+      test("should not handle server requests when type is client-only", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint", { 
+          type: "client-only",
+          timeout: 100 
+        });
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        await expect(waitPromise).rejects.toThrowError("Timed out waiting for request");
+      });
+    });
+
+    describe("request construction", () => {
+      test("should construct proper Request object for GET request", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint*");
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint?param=value",
+            headers: { 
+              Accept: "application/json",
+              Authorization: "Bearer token"
+            },
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+
+        expect(request.url).toBe("http://example.com/api/test-endpoint?param=value");
+        expect(request.method).toBe("GET");
+        expect(request.headers.get("Accept")).toBe("application/json");
+        expect(request.headers.get("Authorization")).toBe("Bearer token");
+        expect(request.body).toBeNull();
+      });
+
+      test("should construct proper Request object for HEAD request", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint");
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "HEAD",
+            url: "http://example.com/api/test-endpoint",
+            headers: { Accept: "application/json" },
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+
+        expect(request.method).toBe("HEAD");
+        expect(request.body).toBeNull();
+      });
+
+      test("should construct proper Request object for POST request with body", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint");
+
+        const requestBody = JSON.stringify({ test: "data" });
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "POST",
+            url: "http://example.com/api/test-endpoint",
+            headers: { "Content-Type": "application/json" },
+            body: requestBody,
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+
+        expect(request.method).toBe("POST");
+        expect(request.headers.get("Content-Type")).toBe("application/json");
+        expect(await request.text()).toBe(requestBody);
+      });
+
+      test("should construct proper Request object for PUT request with body", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint");
+
+        const requestBody = JSON.stringify({ update: "data" });
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "PUT",
+            url: "http://example.com/api/test-endpoint",
+            headers: { "Content-Type": "application/json" },
+            body: requestBody,
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+
+        expect(request.method).toBe("PUT");
+        expect(await request.text()).toBe(requestBody);
+      });
+
+      test("should handle request with no body property", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint");
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "POST",
+            url: "http://example.com/api/test-endpoint",
+            headers: { "Content-Type": "application/json" },
+            // body property omitted
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+
+        expect(request.method).toBe("POST");
+        expect(await request.text()).toBe("");
+      });
+    });
+
+    describe("multiple concurrent waits", () => {
+      test("should handle multiple waitForRequest calls for different patterns", async () => {
+        const wait1 = client.waitForRequest("**/endpoint1");
+        const wait2 = client.waitForRequest("**/endpoint2");
+
+        const request1Message = new Message(MessageType.REQUEST, {
+          id: "request-1",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/endpoint1",
+            headers: {},
+          },
+        });
+
+        const request2Message = new Message(MessageType.REQUEST, {
+          id: "request-2",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/endpoint2",
+            headers: {},
+          },
+        });
+
+        serverWs.send(request1Message.toString());
+        serverWs.send(request2Message.toString());
+
+        const [req1, req2] = await Promise.all([wait1, wait2]);
+        
+        expect(req1.url).toBe("http://example.com/api/endpoint1");
+        expect(req2.url).toBe("http://example.com/api/endpoint2");
+      });
+
+      test("should handle multiple waitForRequest calls for same pattern (first match wins)", async () => {
+        const wait1 = client.waitForRequest("**/test-endpoint");
+        const wait2 = client.waitForRequest("**/test-endpoint");
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+
+        // Both should resolve with the same request
+        const [req1, req2] = await Promise.all([wait1, wait2]);
+        
+        expect(req1.url).toBe("http://example.com/api/test-endpoint");
+        expect(req2.url).toBe("http://example.com/api/test-endpoint");
+      });
+    });
+
+    describe("cleanup behavior", () => {
+      test("should cleanup handlers when request is matched", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint");
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        await waitPromise;
+
+        // Send another matching request - it should not be caught by the previous waitForRequest
+        const wait2Promise = client.waitForRequest("**/different-endpoint", { timeout: 100 });
+        
+        const requestMessage2 = new Message(MessageType.REQUEST, {
+          id: "request-id-2",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage2.toString());
+        
+        // This should timeout since the handler was cleaned up
+        await expect(wait2Promise).rejects.toThrowError("Timed out waiting for request");
+      });
+
+      test("should cleanup handlers when timeout occurs", async () => {
+        const waitPromise = client.waitForRequest("**/non-existent", { timeout: 50 });
+        
+        await expect(waitPromise).rejects.toThrowError("Timed out waiting for request");
+
+        // Handler should be cleaned up, so subsequent matching requests won't be caught
+        const wait2Promise = client.waitForRequest("**/different-endpoint", { timeout: 100 });
+        
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/non-existent",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        
+        await expect(wait2Promise).rejects.toThrowError("Timed out waiting for request");
+      });
+    });
+
+    describe("edge cases", () => {
+      test("should handle empty options object", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint", {});
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: "http://example.com/api/test-endpoint",
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+        expect(request.url).toBe("http://example.com/api/test-endpoint");
+      });
+
+      test("should handle zero timeout", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint", { timeout: 0 });
+        await expect(waitPromise).rejects.toThrowError("Timed out waiting for request");
+      });
+
+      test("should handle requests with complex URLs", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint*");
+
+        const complexUrl = "http://example.com:8080/api/v1/test-endpoint?param1=value1&param2=value2#fragment";
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: complexUrl,
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+        expect(request.url).toBe(complexUrl);
+      });
+
+      test("should handle requests with special characters in URL", async () => {
+        const waitPromise = client.waitForRequest("**/test-endpoint*");
+
+        const urlWithSpecialChars = "http://example.com/api/test-endpoint?query=hello%20world&special=%26%3D%3F";
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "GET",
+            url: urlWithSpecialChars,
+            headers: {},
+          },
+        });
+
+        serverWs.send(requestMessage.toString());
+        const request = await waitPromise;
+        expect(request.url).toBe(urlWithSpecialChars);
+      });
     });
   });
 
@@ -926,6 +1468,423 @@ describe("Client", () => {
             },
           },
         });
+      });
+    });
+  });
+
+  describe("graphql", () => {
+    let wss: WebSocketServer;
+    let serverWs: WebSocket;
+    let port: number;
+    let client: Client;
+
+    beforeEach(async () => {
+      ({ wss, port } = await startWebSocketServer());
+
+      wss.on("connection", (ws) => {
+        serverWs = ws;
+        ws.on("message", (message: RawData) => {
+          const parsedMessage = parseMessage(message.toString());
+          if (parsedMessage.type !== MessageType.ACK) {
+            const ackMessage = new Message(
+              MessageType.ACK,
+              {},
+              parsedMessage.messageId,
+            );
+            ws.send(ackMessage.toString());
+          }
+        });
+      });
+
+      client = new Client();
+      await client.connect({ port, timeout: 200 });
+    });
+
+    afterEach(async () => {
+      await closeWebSocketServer(wss);
+    });
+
+    describe("instance creation and configuration", () => {
+      test("should create a GraphQL instance", () => {
+        const graphql = client.graphql("**/graphql");
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+        expect(typeof graphql.handlerId).toBe("string");
+      });
+
+      test("should create different GraphQL instances for different calls", () => {
+        const graphql1 = client.graphql("**/graphql");
+        const graphql2 = client.graphql("**/api/graphql");
+        
+        expect(graphql1).not.toBe(graphql2);
+        expect(graphql1.handlerId).not.toBe(graphql2.handlerId);
+      });
+
+      test("should assign unique handler IDs", () => {
+        const graphql1 = client.graphql("**/graphql");
+        const graphql2 = client.graphql("**/graphql");
+        
+        expect(graphql1.handlerId).toBeDefined();
+        expect(graphql2.handlerId).toBeDefined();
+        expect(graphql1.handlerId).not.toBe(graphql2.handlerId);
+      });
+    });
+
+    describe("URL matching", () => {
+      test("should work with string glob patterns", () => {
+        const graphql = client.graphql("**/graphql");
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+      });
+
+      test("should work with RegExp patterns", () => {
+        const graphql = client.graphql(/\/graphql$/);
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+      });
+
+      test("should work with callback function patterns", () => {
+        const graphql = client.graphql((url: URL) => url.pathname.includes("graphql"));
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+      });
+    });
+
+    describe("options parameter", () => {
+      test("should work with default options", () => {
+        const graphql = client.graphql("**/graphql");
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+      });
+
+      test("should work with empty options object", () => {
+        const graphql = client.graphql("**/graphql", {});
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+      });
+
+      test("should work with times option", () => {
+        const graphql = client.graphql("**/graphql", { times: 1 });
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+      });
+
+      test("should work with type option - server-only", () => {
+        const graphql = client.graphql("**/graphql", { type: "server-only" });
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+      });
+
+      test("should work with type option - client-only", () => {
+        const graphql = client.graphql("**/graphql", { type: "client-only" });
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+      });
+
+      test("should work with type option - both", () => {
+        const graphql = client.graphql("**/graphql", { type: "both" });
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+      });
+
+      test("should work with all options combined", () => {
+        const graphql = client.graphql("**/graphql", { 
+          times: 3,
+          type: "server-only"
+        });
+        
+        expect(graphql).toBeInstanceOf(GraphQL);
+        expect(graphql.handlerId).toBeDefined();
+      });
+    });
+
+    describe("route registration integration", () => {
+      test("should register a route handler internally", () => {
+        const routeHandlersSizeBefore = (client as any).routeHandlers.size;
+        
+        const graphql = client.graphql("**/graphql");
+        
+        const routeHandlersSizeAfter = (client as any).routeHandlers.size;
+        expect(routeHandlersSizeAfter).toBe(routeHandlersSizeBefore + 1);
+        
+        // Check that the handler ID exists in the route handlers map
+        expect((client as any).routeHandlers.has(graphql.handlerId)).toBe(true);
+      });
+
+      test("should register multiple route handlers for multiple graphql instances", () => {
+        const routeHandlersSizeBefore = (client as any).routeHandlers.size;
+        
+        const graphql1 = client.graphql("**/graphql");
+        const graphql2 = client.graphql("**/api/graphql");
+        
+        const routeHandlersSizeAfter = (client as any).routeHandlers.size;
+        expect(routeHandlersSizeAfter).toBe(routeHandlersSizeBefore + 2);
+        
+        expect((client as any).routeHandlers.has(graphql1.handlerId)).toBe(true);
+        expect((client as any).routeHandlers.has(graphql2.handlerId)).toBe(true);
+      });
+
+      test("should unregister route handler when unrouting by handler ID", () => {
+        const graphql = client.graphql("**/graphql");
+        const handlerId = graphql.handlerId!;
+        
+        // Verify it's registered
+        expect((client as any).routeHandlers.has(handlerId)).toBe(true);
+        
+        // Unregister it
+        client.unroute(handlerId);
+        
+        // Verify it's unregistered
+        expect((client as any).routeHandlers.has(handlerId)).toBe(false);
+      });
+    });
+
+    describe("route handler execution with mocked GraphQL.handleRoute", () => {
+      test("should call GraphQL.handleRoute when a matching request is received", async () => {
+        const graphql = client.graphql("**/graphql");
+        
+        // Mock the handleRoute method
+        const mockHandleRoute = vi.fn().mockReturnValue({ type: "fulfill", response: new Response("{}") });
+        graphql.handleRoute = mockHandleRoute;
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "POST",
+            url: "http://example.com/graphql",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query: "{ hello }",
+              variables: {},
+            }),
+          },
+        });
+
+        const idlePromise = waitForAckIdle(serverWs);
+        serverWs.send(requestMessage.toString());
+        await idlePromise;
+
+        expect(mockHandleRoute).toHaveBeenCalledOnce();
+        expect(mockHandleRoute).toHaveBeenCalledWith(expect.objectContaining({
+          request: expect.objectContaining({
+            url: "http://example.com/graphql",
+            method: "POST"
+          })
+        }));
+      });
+
+      test("should not call GraphQL.handleRoute for non-matching requests", async () => {
+        const graphql = client.graphql("**/graphql");
+        
+        // Mock the handleRoute method
+        const mockHandleRoute = vi.fn().mockReturnValue({ type: "fallback" });
+        graphql.handleRoute = mockHandleRoute;
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "POST",
+            url: "http://example.com/api/rest",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: "test" }),
+          },
+        });
+
+        const idlePromise = waitForAckIdle(serverWs);
+        serverWs.send(requestMessage.toString());
+        await idlePromise;
+
+        expect(mockHandleRoute).not.toHaveBeenCalled();
+      });
+
+      test("should handle GraphQL.handleRoute returning different response types", async () => {
+        const graphql = client.graphql("**/graphql");
+        
+        // Test fallback response
+        const mockHandleRoute = vi.fn().mockReturnValue({ type: "fallback" });
+        graphql.handleRoute = mockHandleRoute;
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "POST",
+            url: "http://example.com/graphql",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "{ hello }" }),
+          },
+        });
+
+        const idlePromise = waitForAckIdle(serverWs);
+        serverWs.send(requestMessage.toString());
+        await idlePromise;
+
+        expect(mockHandleRoute).toHaveBeenCalledOnce();
+      });
+
+      test("should respect route options like times", async () => {
+        const graphql = client.graphql("**/graphql", { times: 1 });
+        
+        // Mock the handleRoute method
+        const mockHandleRoute = vi.fn().mockReturnValue({ 
+          type: "fulfill", 
+          response: new Response("{}") 
+        });
+        graphql.handleRoute = mockHandleRoute;
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "POST",
+            url: "http://example.com/graphql",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "{ hello }" }),
+          },
+        });
+
+        // Send first request
+        const firstIdlePromise = waitForAckIdle(serverWs);
+        serverWs.send(requestMessage.toString());
+        await firstIdlePromise;
+
+        expect(mockHandleRoute).toHaveBeenCalledOnce();
+
+        // Reset mock and send second request
+        mockHandleRoute.mockClear();
+        
+        const secondRequestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id-2",
+          request: {
+            method: "POST",
+            url: "http://example.com/graphql",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "{ world }" }),
+          },
+        });
+
+        const secondIdlePromise = waitForAckIdle(serverWs);
+        serverWs.send(secondRequestMessage.toString());
+        await secondIdlePromise;
+
+        // Should not be called again because times: 1
+        expect(mockHandleRoute).not.toHaveBeenCalled();
+      });
+
+      test("should respect route type options", async () => {
+        const graphql = client.graphql("**/graphql", { type: "client-only" });
+        
+        // Mock the handleRoute method
+        const mockHandleRoute = vi.fn().mockReturnValue({ type: "fulfill", response: new Response("{}") });
+        graphql.handleRoute = mockHandleRoute;
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "POST",
+            url: "http://example.com/graphql",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "{ hello }" }),
+          },
+        });
+
+        // This is a server request, but the route is client-only
+        const idlePromise = waitForAckIdle(serverWs);
+        serverWs.send(requestMessage.toString());
+        await idlePromise;
+
+        // Should not be called because it's a server request but route is client-only
+        expect(mockHandleRoute).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("multiple GraphQL instances", () => {
+      test("should handle multiple GraphQL instances with different URL patterns", async () => {
+        const graphql1 = client.graphql("**/api/v1/graphql");
+        const graphql2 = client.graphql("**/api/v2/graphql");
+        
+        const mockHandleRoute1 = vi.fn().mockReturnValue({ type: "fulfill", response: new Response("{}") });
+        const mockHandleRoute2 = vi.fn().mockReturnValue({ type: "fulfill", response: new Response("{}") });
+        
+        graphql1.handleRoute = mockHandleRoute1;
+        graphql2.handleRoute = mockHandleRoute2;
+
+        // Send request matching first pattern
+        const request1 = new Message(MessageType.REQUEST, {
+          id: "request-1",
+          request: {
+            method: "POST",
+            url: "http://example.com/api/v1/graphql",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "{ hello }" }),
+          },
+        });
+
+        const firstIdlePromise = waitForAckIdle(serverWs);
+        serverWs.send(request1.toString());
+        await firstIdlePromise;
+
+        expect(mockHandleRoute1).toHaveBeenCalledOnce();
+        expect(mockHandleRoute2).not.toHaveBeenCalled();
+
+        // Reset mocks
+        mockHandleRoute1.mockClear();
+        mockHandleRoute2.mockClear();
+
+        // Send request matching second pattern
+        const request2 = new Message(MessageType.REQUEST, {
+          id: "request-2",
+          request: {
+            method: "POST",
+            url: "http://example.com/api/v2/graphql",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "{ world }" }),
+          },
+        });
+
+        const secondIdlePromise = waitForAckIdle(serverWs);
+        serverWs.send(request2.toString());
+        await secondIdlePromise;
+
+        expect(mockHandleRoute1).not.toHaveBeenCalled();
+        expect(mockHandleRoute2).toHaveBeenCalledOnce();
+      });
+
+      test("should handle multiple GraphQL instances with same URL pattern (first wins)", async () => {
+        const graphql1 = client.graphql("**/graphql");
+        const graphql2 = client.graphql("**/graphql");
+        
+        const mockHandleRoute1 = vi.fn().mockReturnValue({ type: "fulfill", response: new Response("{}") });
+        const mockHandleRoute2 = vi.fn().mockReturnValue({ type: "fulfill", response: new Response("{}") });
+        
+        graphql1.handleRoute = mockHandleRoute1;
+        graphql2.handleRoute = mockHandleRoute2;
+
+        const requestMessage = new Message(MessageType.REQUEST, {
+          id: "request-id",
+          request: {
+            method: "POST",
+            url: "http://example.com/graphql",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: "{ hello }" }),
+          },
+        });
+
+        const idlePromise = waitForAckIdle(serverWs);
+        serverWs.send(requestMessage.toString());
+        await idlePromise;
+
+        // First registered handler should be called
+        expect(mockHandleRoute1).toHaveBeenCalledOnce();
+        expect(mockHandleRoute2).not.toHaveBeenCalled();
       });
     });
   });
