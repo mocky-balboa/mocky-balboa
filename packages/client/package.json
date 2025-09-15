@@ -54,9 +54,11 @@
     "@mocky-balboa/logger": "workspace:*",
     "@mocky-balboa/shared-config": "workspace:*",
     "@mocky-balboa/websocket-messages": "workspace:*",
+    "graphql": "^16.11.0",
     "minimatch": "^10.0.3",
     "uuid": "catalog:",
-    "isomorphic-ws": "^5.0.0"
+    "isomorphic-ws": "^5.0.0",
+    "zod": "^4.1.8"
   },
   "devDependencies": {
     "@swc/cli": "catalog:",

@@ -10,9 +10,11 @@ import { v4 as uuid } from "uuid";
 import { minimatch } from "minimatch";
 import WebSocket from "isomorphic-ws";
 import { waitForAck } from "./utils.js";
-import { Route, type RouteResponse } from "./route.js";
+import { Route } from "./route.js";
 import { DefaultWebSocketServerPort } from "@mocky-balboa/shared-config";
 import { logger } from "./logger.js";
+import { GraphQL } from "./graphql.js";
+import { RouteType, type RouteOptions, type RouteMeta, type RouteResponse } from "./shared-types.js";
 
 /** Default timeout duration in milliseconds for establishing an identified connection with the WebSocket server */
 export const DefaultWebSocketServerTimeout = 5000;
@@ -25,39 +27,6 @@ export type UrlMatcher =
   | string
   | RegExp
   | ((url: URL) => boolean | Promise<boolean>);
-
-/** Possible values for route type */
-export type RouteType = "server-only" | "client-only" | "both";
-export const RouteType = {
-  ServerOnly: "server-only",
-  ClientOnly: "client-only",
-  Both: "both",
-} as const;
-
-/** Options when configuring a route */
-export interface RouteOptions {
-  /**
-   * Total number of times that a route handler will be run when the URL pattern matcher is a hit.
-   *
-   * @remarks
-   * When `undefined`, the route handler will be run indefinitely.
-   */
-  times?: number;
-  /**
-   * Defines the behaviour of the route handler.
-   *
-   * - `server-only` - The route handler will only be called if the request is executed on the server.
-   * - `client-only` - The route handler will only be called if the request is executed on the client.
-   * - `both` - The route handler will be called regardless of whether the request is executed on the server or client.
-   *
-   * @default "both"
-   */
-  type?: RouteType;
-}
-
-type RouteMeta = RouteOptions & {
-  calls: number;
-};
 
 export interface WaitForRequestOptions {
   /**
@@ -563,6 +532,23 @@ export class Client {
   }
 
   /**
+   * Used to register a route handler for a GraphQL server endpoint using http transport.
+   * 
+   * @param url - the URL pattern to match against the incoming request URL
+   * @param options - optional options for the route handler
+   * @returns a GraphQL instance that can be used to register mocks for GraphQL operations
+   */
+  graphql(url: UrlMatcher, options: RouteOptions = {}) {
+    const graphql = new GraphQL();
+    const handlerId = this.route(url, (route) => {
+      return graphql.handleRoute(route);
+    }, options);
+
+    graphql.handlerId = handlerId;
+    return graphql;
+  }
+
+  /**
    * Used to unregister a route handler.
    * @param routeHandlerId - the route handler ID returned from {@link Client.route}
    */
@@ -656,16 +642,9 @@ export class Client {
 }
 
 export { Route } from "./route.js";
-export type {
-  FetchOptions,
-  FulfillOptions,
-  ModifyResponseOptions,
-  FallbackRouteResponse,
-  PassthroughRouteResponse,
-  ErrorRouteResponse,
-  FulfillRouteResponse,
-  RouteResponse,
-} from "./route.js";
+export type { FulfillOptions } from "./route.js";
+export { GraphQLRoute } from "./graphql-route.js";
+export type { GraphQLFulfillOptions } from "./graphql-route.js";
 export { ClientIdentityStorageHeader } from "@mocky-balboa/shared-config";
 export {
   MessageType,
@@ -673,3 +652,14 @@ export {
   type ParsedMessage,
   type ParsedMessageType,
 } from "@mocky-balboa/websocket-messages";
+export type {
+  FallbackRouteResponse,
+  PassthroughRouteResponse,
+  ErrorRouteResponse,
+  RouteOptions,
+  FulfillRouteResponse,
+  RouteResponse,
+} from "./shared-types.js";
+export { RouteType } from "./shared-types.js";
+export { GraphQL, GraphQLQueryParseError } from "./graphql.js";
+export type { GraphQLRouteHandler, GraphQLRouteOptions } from "./graphql.js";
