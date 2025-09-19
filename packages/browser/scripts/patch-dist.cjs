@@ -5,7 +5,7 @@ const main = async () => {
   const distDir = path.join(__dirname, "..", "dist");
   const files = await readdir(distDir);
   for (const file of files) {
-    if (!file.endsWith(".js")) {
+    if (!file.endsWith(".cjs")) {
       continue;
     }
 
@@ -17,6 +17,9 @@ const main = async () => {
 
     const newFileContent = `module.exports = '${fileContent.replace(/'/g, "\\'").replace(/\n/g, "\\n")}';`;
     await writeFile(filePath, newFileContent, "utf8");
+
+    const rawFilePath = path.join(distDir, `${file.replace(".cjs", "-raw.js")}`);
+    await writeFile(rawFilePath, fileContent, "utf8");
   }
 };
 

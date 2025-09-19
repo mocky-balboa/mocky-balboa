@@ -19,23 +19,31 @@
   },
   "license": "MIT",
   "packageManager": "pnpm@10.14.0",
-  "main": "./dist/event-source-stub.js",
+  "main": "./dist/event-source-stub.cjs",
   "types": "./dist/types/playwright.d.ts",
   "exports": {
     "./event-source-stub": {
-      "import": "./dist/event-source-stub.js",
-      "require": "./dist/event-source-stub.js",
+      "import": "./dist/event-source-stub.cjs",
+      "require": "./dist/event-source-stub.cjs",
       "types": "./dist/types/event-source-stub.d.ts"
     },
     "./fetch-stub": {
-      "import": "./dist/fetch-stub.js",
-      "require": "./dist/fetch-stub.js",
+      "import": "./dist/fetch-stub.cjs",
+      "require": "./dist/fetch-stub.cjs",
       "types": "./dist/types/fetch-stub.d.ts"
+    },
+    "./event-source-stub-raw": {
+      "import": "./dist/event-source-stub-raw.js",
+      "require": "./dist/event-source-stub-raw.js"
+    },
+    "./fetch-stub-raw": {
+      "import": "./dist/fetch-stub-raw.js",
+      "require": "./dist/fetch-stub-raw.js"
     }
   },
   "scripts": {
-    "build:event-source-stub": "esbuild src/event-source-stub.ts --bundle --minify --outfile=dist/event-source-stub.js --log-level=error",
-    "build:fetch-stub": "esbuild src/fetch-stub.ts --bundle --minify --outfile=dist/fetch-stub.js --log-level=error",
+    "build:event-source-stub": "esbuild src/event-source-stub.ts --bundle --minify --outfile=dist/event-source-stub.cjs --log-level=error",
+    "build:fetch-stub": "esbuild src/fetch-stub.ts --bundle --minify --outfile=dist/fetch-stub.cjs --log-level=error",
     "build": "pnpm clean && pnpm run build:event-source-stub && pnpm run build:fetch-stub && pnpm run build:types && pnpm run post:build",
     "build:watch": "concurrently \"pnpm run build:event-source-stub --watch\" \"pnpm run build:fetch-stub --watch\" \"pnpm run build:types --watch\" \"pnpm run post:build:watch\"",
     "build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json",
