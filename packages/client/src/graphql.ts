@@ -1,7 +1,7 @@
 import { Kind, parse } from "graphql";
 import { v4 as uuid } from "uuid";
 import * as z from "zod";
-import { FallbackRouteResponse, type RouteMeta, type RouteOptions, type RouteResponse } from "./shared-types.js";
+import { FallbackRouteResponse, type GraphQLRouteMeta, type RouteOptions, type RouteResponse } from "./shared-types.js";
 import type { Route } from "./route.js";
 import { logger } from "./logger.js";
 import { GraphQLRoute } from "./graphql-route.js";
@@ -50,7 +50,7 @@ export class GraphQL {
     GraphQLRouteHandlerId,
     [
       GraphQLRouteOptions<any, any>,
-      RouteMeta,
+      GraphQLRouteMeta,
     ]
   > = new Map();
 
@@ -78,7 +78,7 @@ export class GraphQL {
    */
   private incrementRouteHandlerCallCount = (
     routeHandlerId: string,
-    routeMeta: RouteMeta,
+    routeMeta: GraphQLRouteMeta,
   ) => {
     routeMeta.calls++;
     if (routeMeta.times === routeMeta.calls) {

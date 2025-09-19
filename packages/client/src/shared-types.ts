@@ -6,6 +6,15 @@ export const RouteType = {
   Both: "both",
 } as const;
 
+/** Default timeout duration in milliseconds for establishing an identified connection with the WebSocket server */
+export const DefaultWebSocketServerTimeout = 5000;
+
+/** Default timeout duration in milliseconds for waiting on a request to be sent */
+export const DefaultWaitForRequestTimeout = 5000;
+
+/** Default timeout duration in milliseconds for waiting for the SSE connection to be ready */
+export const DefaultSSERouteTimeout = 5000;
+
 /** Options when configuring a route */
 export interface RouteOptions {
   /**
@@ -27,9 +36,25 @@ export interface RouteOptions {
   type?: RouteType;
 }
 
+/**
+ * Server-sent events route options
+ */
+export interface SSERouteOptions {
+  /**
+   * How long to wait for the SSE connection to be ready before timing out
+   * 
+   * @default {@link DefaultSSERouteTimeout}
+   */
+  timeout?: number;
+};
+
 export type RouteMeta = RouteOptions & {
   calls: number;
+  transport: "http" | "sse";
 };
+
+/** Metadata for a GraphQL route */
+export type GraphQLRouteMeta = Omit<RouteMeta, "transport">;
 
 /** Response type for fallback behaviour on a route */
 export type FallbackRouteResponse = {

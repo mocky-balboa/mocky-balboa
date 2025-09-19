@@ -90,7 +90,7 @@ export class BaseRoute {
   }
 
   /**
-   * When you want the server to process the request as is over the network, i.e. ignore the request and do not mock/modify it in any way
+   * When you want to process the request as is over the network, i.e. ignore the request and do not mock/modify it in any way
    *
    * @remarks
    * This is the default fallback behaviour when there are no route handlers found for a given request URL.
@@ -141,10 +141,10 @@ export class BaseRoute {
   }
 
   /**
-   * When you want to execute the request from the client process and send the response back to the server
+   * When you want to execute the request from the test process and send the response back the originating process
    *
    * @example
-   * Execute the request as is from the client and send the response back to the server
+   * Execute the request as is from the client and send the response back
    *
    * ```ts
    * client.route("**\/api", (route) => {
@@ -153,7 +153,7 @@ export class BaseRoute {
    * ```
    *
    * @example
-   * Override the request headers and send the response back to the server
+   * Override the request headers and send the response back
    *
    * ```ts
    * client.route("**\/api", (route) => {
@@ -176,7 +176,7 @@ export class BaseRoute {
   }
 
   /**
-   * Utility method to help with modifying responses, intended to be used in conjunction with {@link Route.fetch} for modifying responses before sending them back to the server
+   * Utility method to help with modifying responses, intended to be used in conjunction with {@link Route.fetch} for modifying responses before sending them back
    *
    * @param response - The response to modify.
    * @param options - Options for the modification.
@@ -241,17 +241,18 @@ export class BaseRoute {
     const body = postData ?? (await this.getRequestBodyString());
 
     let requestInit: RequestInit;
-    if (method === "GET" || method === "HEAD") {
+    const requestMethod = method ?? request.method;
+    if (requestMethod === "GET" || requestMethod === "HEAD") {
       requestInit = {
         headers: headers ? new Headers(headers) : request.headers,
-        method: method ?? request.method,
+        method: requestMethod,
         body: null,
         keepalive,
       };
     } else {
       requestInit = {
         headers: headers ? new Headers(headers) : request.headers,
-        method: method ?? request.method,
+        method: requestMethod,
         body,
         keepalive,
       };

@@ -11,16 +11,11 @@ import { minimatch } from "minimatch";
 import WebSocket from "isomorphic-ws";
 import { waitForAck } from "./utils.js";
 import { Route } from "./route.js";
-import { DefaultWebSocketServerPort } from "@mocky-balboa/shared-config";
+import { DefaultWebSocketServerPort, SSEProxyRequestIdParam, DefaultProxyServerPort, SSEProxyOriginalUrlParam, ClientIdentityStorageHeader, SSEProxyEndpoint } from "@mocky-balboa/shared-config";
 import { logger } from "./logger.js";
 import { GraphQL } from "./graphql.js";
-import { RouteType, type RouteOptions, type RouteMeta, type RouteResponse } from "./shared-types.js";
-
-/** Default timeout duration in milliseconds for establishing an identified connection with the WebSocket server */
-export const DefaultWebSocketServerTimeout = 5000;
-
-/** Default timeout duration in milliseconds for waiting on a request to be sent */
-export const DefaultWaitForRequestTimeout = 5000;
+import { RouteType, type RouteOptions, type RouteMeta, type RouteResponse, type SSERouteOptions, DefaultSSERouteTimeout, DefaultWaitForRequestTimeout, DefaultWebSocketServerTimeout } from "./shared-types.js";
+import { SSE } from "./sse.js";
 
 /** Possible values for URL pattern matching */
 export type UrlMatcher =
@@ -58,6 +53,12 @@ export interface ConnectOptions {
    */
   port?: number;
   /**
+   * Port number to connect to the proxy server on
+   * 
+   * @default {@link DefaultProxyServerPort}
+   */
+  proxyPort?: number;
+  /**
    * Timeout duration in milliseconds for establishing an identified connection with the WebSocket server
    *
    * @default {@link DefaultWebSocketServerTimeout}
@@ -87,6 +88,16 @@ export type ExternalRouteHandlerRouteResponse = Exclude<
   { type: "fallback" }
 >;
 
+export type ClientSSEResponse = {
+  shouldProxy: true;
+  proxyUrl: string;
+  requestId: string;
+} | {
+  shouldProxy: false;
+  proxyUrl?: never;
+  requestId?: never;
+}
+
 /**
  * Client used to interface with the WebSocket server for mocking server-side network requests. And
  * optionally integrating for mocking client-side network requests.
@@ -109,6 +120,10 @@ export class Client {
   private clientWaitForRequestHandlers: Set<
     (request: Request) => Promise<void>
   > = new Set();
+  /** The port number of the proxy server */
+  private proxyPort?: number;
+  /** Callback handlers for waiting on client-side SSE requests */
+  private clientSideSSERouteHandlers: Map<string, [UrlMatcher, () => void]> = new Map();
 
   /** Convenient access to route types */
   public readonly RouteType = RouteType;
@@ -127,6 +142,7 @@ export class Client {
     this.clientIdentifier = uuid();
     this.onMessage = this.onMessage.bind(this);
     this.onRequest = this.onRequest.bind(this);
+    this.sendMessage = this.sendMessage.bind(this);
 
     this.on(MessageType.REQUEST, this.onRequest);
   }
@@ -185,10 +201,13 @@ export class Client {
    * @param error - optional error flag to simulate a network level error
    */
   private async respondWithResponse(
-    ws: WebSocket,
     requestId: string,
     responseData: ResponseData = {},
   ) {
+    if (!this._ws) {
+      throw new Error("WebSocket is not connected");
+    }
+
     const { response, error, path } = responseData;
     const message = new Message(MessageType.RESPONSE, {
       id: requestId,
@@ -203,8 +222,8 @@ export class Client {
         : undefined,
     });
 
-    const ackPromise = waitForAck(ws, message.messageId, 2000);
-    ws.send(message.toString());
+    const ackPromise = waitForAck(this._ws, message.messageId, 2000);
+    this.sendMessage(message);
     await ackPromise;
   }
 
@@ -364,17 +383,17 @@ export class Client {
       switch (routeResponse.type) {
         // Finite result. Terminates the route with a simulated network error.
         case "error":
-          await this.respondWithResponse(this._ws, id, { error: true });
+          await this.respondWithResponse(id, { error: true });
           responded = true;
           break;
         // Finite result. Terminates the route telling the server to execute the request without mocking.
         case "passthrough":
-          await this.respondWithResponse(this._ws, id);
+          await this.respondWithResponse(id);
           responded = true;
           break;
         // Finite result. Terminates the route, passing the response to the server.
         case "fulfill":
-          await this.respondWithResponse(this._ws, id, {
+          await this.respondWithResponse(id, {
             response: routeResponse.response,
             path: routeResponse.path,
           });
@@ -391,7 +410,22 @@ export class Client {
     }
 
     // Fallback to passthrough behaviour
-    await this.respondWithResponse(this._ws, id);
+    await this.respondWithResponse(id);
+  }
+
+  /**
+   * Abstraction for sending messages to the WebSocket server
+   * 
+   * @internal
+   * 
+   * @param message - The message to send to the WebSocket server
+   */
+  private sendMessage(message: Message<MessageType, Extract<ParsedMessage, { type: MessageType }>["payload"]>) {
+    if (!this._ws) {
+      throw new Error("WebSocket is not connected");
+    }
+
+    this._ws.send(message.toString());
   }
 
   /**
@@ -405,9 +439,7 @@ export class Client {
     }
 
     const parsedMessage = parseMessage(data.toString());
-    this._ws.send(
-      new Message(MessageType.ACK, {}, parsedMessage.messageId).toString(),
-    );
+    this.sendMessage(new Message(MessageType.ACK, {}, parsedMessage.messageId));
 
     const handlers = this.messageHandlers.get(parsedMessage.type);
     if (handlers) {
@@ -437,6 +469,7 @@ export class Client {
    */
   async connect({
     port = DefaultWebSocketServerPort,
+    proxyPort = DefaultProxyServerPort,
     timeout: timeoutDuration = DefaultWebSocketServerTimeout,
   }: ConnectOptions) {
     this._ws = new WebSocket(`ws://localhost:${port}`);
@@ -455,12 +488,13 @@ export class Client {
       identifyMessage.messageId,
       timeoutDuration - elapsedTime,
     );
-    this._ws.send(JSON.stringify(identifyMessage));
+    this.sendMessage(identifyMessage);
 
     // Wait until the server has acknowledged the identification message.
     await identifyAckPromise;
 
     this._ws.addEventListener("message", this.onMessage);
+    this.proxyPort = proxyPort;
   }
 
   /**
@@ -510,6 +544,27 @@ export class Client {
   }
 
   /**
+   * Abstraction for registering a route handler
+   * 
+   * @internal
+   * 
+   * @param url - The URL pattern to match against the incoming request URL
+   * @param handler - The function to handle the request
+   * @param routeMeta - The metadata for the route handler
+   * @returns The route handler ID
+   */
+  private internalRoute(url: UrlMatcher, handler: (route: Route) => RouteResponse | Promise<RouteResponse>, routeMeta: RouteMeta) {
+    const routeHandlerId = uuid();
+    this.routeHandlers.set(routeHandlerId, [
+      url,
+      handler,
+      routeMeta,
+    ]);
+
+    return routeHandlerId;
+  }
+
+  /**
    * Registers a route handler, when the client receives a request message.
    * @param url - the URL pattern to match against the incoming request URL
    * @param handler - the function to handle the request
@@ -521,14 +576,7 @@ export class Client {
     handler: (route: Route) => RouteResponse | Promise<RouteResponse>,
     options: RouteOptions = {},
   ) {
-    const routeHandlerId = uuid();
-    this.routeHandlers.set(routeHandlerId, [
-      url,
-      handler,
-      { ...options, calls: 0 },
-    ]);
-
-    return routeHandlerId;
+    return this.internalRoute(url, handler, { ...options, calls: 0, transport: "http" });
   }
 
   /**
@@ -546,6 +594,121 @@ export class Client {
 
     graphql.handlerId = handlerId;
     return graphql;
+  }
+
+  /**
+   * Resolves the SSE proxy URL for a given request ID and original URL
+   * 
+   * @param requestId - The request ID
+   * @param originalUrl - The original URL
+   * @returns The SSE proxy URL
+   */
+  private getSSEProxyUrl(requestId: string, originalUrl: string) {
+    const proxyUrl = new URL(`http://localhost:${this.proxyPort}${SSEProxyEndpoint}`);
+    proxyUrl.searchParams.set(SSEProxyRequestIdParam, requestId);
+    proxyUrl.searchParams.set(SSEProxyOriginalUrlParam, encodeURIComponent(originalUrl));
+    proxyUrl.searchParams.set(ClientIdentityStorageHeader, this.clientIdentifier);
+    return proxyUrl.toString();
+  }
+
+  /**
+   * Used to register a route handler for a SSE server endpoint.
+   * 
+   * Works for both server-side and client-side requests.
+   * 
+   * Uses the SSE proxy server to proxy the request to the server.
+   * 
+   * @param url - the URL pattern to match against the incoming request URL
+   * @param options - optional options for the route handler
+   * @returns a SSE instance that can be used to stream data to the client
+   */
+  async sse(url: UrlMatcher, options: SSERouteOptions = {}) {
+    return new Promise<SSE>((resolve, reject) => {
+      let timedOut = false;
+      const timeout = setTimeout(() => {
+        reject(new Error("Timed out waiting for SSE connection to be ready"));
+      }, options.timeout ?? DefaultSSERouteTimeout)
+      
+      const requestId = uuid();
+
+      /**
+       * Callback handler when an SSE connection is ready
+       */
+      const listenForConnectionReady = (onReady: (sse: SSE) => void) => {
+        const sse = new SSE(requestId, this.sendMessage);
+
+        const onConnectionReady = (message: ParsedMessageType<MessageTypes["SSE_CONNECTION_READY"]>) => {
+          if (timedOut) {
+            this.off(MessageType.SSE_CONNECTION_READY, onConnectionReady);
+            return;
+          }
+
+          if (message.payload.id === requestId) {
+            clearTimeout(timeout);
+            this.off(MessageType.SSE_CONNECTION_READY, onConnectionReady);
+            this.clientSideSSERouteHandlers.delete(requestId);
+            onReady(sse);
+          }
+        }
+
+        this.on(MessageType.SSE_CONNECTION_READY, onConnectionReady);
+      };
+
+      /**
+       * Route handler for server-side requests
+       */
+      const routeHandlerId = this.internalRoute(url, (route) => {
+        if (!this.proxyPort) {
+          throw new Error("Did you forget to call Client.connect()?");
+        }
+
+        listenForConnectionReady((sse) => {
+          resolve(sse);
+        });
+
+        return route.continue({
+          url: this.getSSEProxyUrl(requestId, route.request.url),
+        });
+      }, { times: 1, calls: 0, type: "server-only", transport: "sse" });
+
+      /**
+       * Route handler for client-side requests
+       */
+      this.clientSideSSERouteHandlers.set(requestId, [url, () => {
+        listenForConnectionReady((sse) => {
+          this.unroute(routeHandlerId);
+          resolve(sse);
+        });
+      }]);
+    });
+  }
+
+  /**
+   * Resolves the SSE proxy parameters for a given URL
+   * 
+   * This is used by the browser stubs to get the required parameters to proxy the request to the server.
+   * 
+   * @internal
+   * 
+   * @param urlString - The URL to resolve the SSE proxy parameters for
+   * @returns The SSE proxy parameters
+   */
+  async getClientSSEProxyParams(urlString: string): Promise<ClientSSEResponse> {
+    const url = new URL(urlString);
+    for (const [requestId, [urlMatcher, handler]] of this.clientSideSSERouteHandlers) {
+      if (await this.doesUrlMatch(urlMatcher, url)) {
+        handler();
+        return {
+          shouldProxy: true,
+          requestId,
+          proxyUrl: this.getSSEProxyUrl(requestId, urlString),
+        };
+      }
+    }
+
+    return {
+      shouldProxy: false,
+    };
   }
 
   /**
@@ -605,6 +768,8 @@ export class Client {
 
       for (const [routeHandlerId, [urlMatcher, handler, routeMeta]] of this
         .routeHandlers) {
+        // Need to handle SSE mocking separately on the client
+        if (routeMeta.transport !== "http") continue;
         // Skip the handler if the URL does not match
         if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
         // Skip the handler if it should not be handled by the client
@@ -645,7 +810,7 @@ export { Route } from "./route.js";
 export type { FulfillOptions } from "./route.js";
 export { GraphQLRoute } from "./graphql-route.js";
 export type { GraphQLFulfillOptions } from "./graphql-route.js";
-export { ClientIdentityStorageHeader } from "@mocky-balboa/shared-config";
+export { ClientIdentityStorageHeader, DefaultProxyServerPort, SSEProxyEndpoint, BrowserGetSSEProxyParamsFunctionName } from "@mocky-balboa/shared-config";
 export {
   MessageType,
   type MessageTypes,
@@ -660,6 +825,7 @@ export type {
   FulfillRouteResponse,
   RouteResponse,
 } from "./shared-types.js";
-export { RouteType } from "./shared-types.js";
+export { RouteType, DefaultSSERouteTimeout, DefaultWaitForRequestTimeout, DefaultWebSocketServerTimeout } from "./shared-types.js";
 export { GraphQL, GraphQLQueryParseError } from "./graphql.js";
 export type { GraphQLRouteHandler, GraphQLRouteOptions } from "./graphql.js";
+export { SSE } from "./sse.js";
