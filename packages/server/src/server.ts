@@ -8,6 +8,7 @@ import {
   type MockServerOptions,
 } from "./mock-server.js";
 import { logger } from "./logger.js";
+import { startProxyServer, type ProxyServerOptions } from "./proxy-server.js";
 
 export interface ServerOptions {
   /**
@@ -18,6 +19,10 @@ export interface ServerOptions {
    * Options for the mock server
    */
   mockServerOptions?: MockServerOptions;
+  /**
+   * Options for the proxy server
+   */
+  proxyServerOptions?: ProxyServerOptions;
 }
 
 /**
@@ -27,11 +32,14 @@ export interface ServerOptions {
  */
 export const startServer = async ({
   webSocketServerOptions = {},
+  mockServerOptions = {},
+  proxyServerOptions = {},
 }: ServerOptions = {}): Promise<CloseWebSocketServer> => {
   logger.info("Starting Mocky Balboa server");
   const [closeWebSocketServer] = await Promise.all([
     startWebSocketServer(webSocketServerOptions),
-    bindMockServiceWorker(),
+    bindMockServiceWorker(mockServerOptions),
+    startProxyServer(proxyServerOptions),
   ]);
   logger.info("Mocky Balboa server started");
 
