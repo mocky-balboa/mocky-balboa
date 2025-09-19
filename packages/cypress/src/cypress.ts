@@ -1,14 +1,22 @@
 import {
+  BrowserGetSSEProxyParamsFunctionName,
   Client,
   MessageType,
+  SSEProxyEndpoint,
+  type ClientSSEResponse,
   type ConnectOptions,
-  ClientIdentityStorageHeader,
   type MessageTypes,
   type ParsedMessageType,
 } from "@mocky-balboa/client";
 import type Cypress from "cypress";
 import { logger } from "./logger.js";
 import { extractRequest, handleResult } from "./intercept.js";
+
+declare global {
+  interface Window {
+    [BrowserGetSSEProxyParamsFunctionName]?: (url: string) => Promise<ClientSSEResponse>;
+  }
+}
 
 /**
  * Creates a Mocky Balboa client used to mock network requests at runtime defined by your test suite.
@@ -46,8 +54,23 @@ export const createClient = async (
 ): Promise<Client> => {
   const client = new Client();
 
+  cy.on("window:before:load", (window) => {
+    if (window[BrowserGetSSEProxyParamsFunctionName]) {
+      return;
+    }
+
+    const eventSourceStub = require("@mocky-balboa/browser/event-source-stub");
+    const fetchStub = require("@mocky-balboa/browser/fetch-stub");
+    window.eval(eventSourceStub);
+    window.eval(fetchStub);
+
+    window[BrowserGetSSEProxyParamsFunctionName] = (url: string) => {
+      return client.getClientSSEProxyParams(url);
+    };
+  });
+
   cy.intercept(
-    /.*/,
+    `!**/${SSEProxyEndpoint}**`,
     client.attachExternalClientSideRouteHandler({
       extractRequest: extractRequest(client.clientIdentifier),
       handleResult,
@@ -73,4 +96,4 @@ export const createClient = async (
   return client;
 };
 
-export { Client } from "@mocky-balboa/client";
+export { Client, SSE } from "@mocky-balboa/client";

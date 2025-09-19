@@ -1,6 +1,7 @@
 import {
   Client,
   Route,
+  SSE,
   type ConnectOptions,
   type FulfillOptions,
   type FulfillRouteResponse,
@@ -75,7 +76,25 @@ declare global {
       mockyWaitForRequest: (
         action: () => Chainable,
         ...args: Parameters<Client["waitForRequest"]>
-      ) => Chainable;
+      ) => Chainable<Request>;
+      /**
+       * Waits for an SSE connection to be established, enables dispatching events on the SSE connection
+       *
+       * @example
+       * cy
+       *   .mockySSE(() => {
+       *     // The action that triggers the SSE connection to be established
+       *     return cy.visit("/");
+       *   }, "**\/api\/users-stream")
+       *   .then((sse) => {
+       *     // Dispatch events on the SSE connection
+       *     sse.dispatchEvent("message", "This is a message from the server");
+       *   });
+       */
+      mockySSE: (
+        action: () => Chainable,
+        ...args: Parameters<Client["sse"]>
+      ) => Chainable<SSE>;
     }
   }
 }
@@ -129,4 +148,15 @@ Cypress.Commands.add("mockyWaitForRequest", (action, ...args) => {
         });
       });
     });
+});
+
+Cypress.Commands.add("mockySSE", (action, ...args) => {
+  return cy
+    .mocky((mocky) => mocky)
+    .then((mocky) => {
+      const ssePromise = mocky.sse(...args);
+      return action().then(() => {
+        return ssePromise;
+      });
+    })
 });
