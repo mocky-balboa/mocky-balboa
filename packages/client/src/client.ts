@@ -11,7 +11,7 @@ import { minimatch } from "minimatch";
 import WebSocket from "isomorphic-ws";
 import { waitForAck } from "./utils.js";
 import { Route } from "./route.js";
-import { DefaultWebSocketServerPort, SSEProxyRequestIdParam, DefaultProxyServerPort, SSEProxyOriginalUrlParam, ClientIdentityStorageHeader, SSEProxyEndpoint } from "@mocky-balboa/shared-config";
+import { DefaultWebSocketServerPort, SSEProxyRequestIdParam, DefaultProxyServerPort, SSEProxyOriginalUrlParam, ClientIdentityStorageHeader, SSEProxyEndpoint, FileProxyPathParam, FileProxyEndpoint } from "@mocky-balboa/shared-config";
 import { logger } from "./logger.js";
 import { GraphQL } from "./graphql.js";
 import { RouteType, type RouteOptions, type RouteMeta, type RouteResponse, type SSERouteOptions, DefaultSSERouteTimeout, DefaultWaitForRequestTimeout, DefaultWebSocketServerTimeout } from "./shared-types.js";
@@ -46,6 +46,12 @@ export interface WaitForRequestOptions {
  * Connection options for the WebSocket server client connection
  */
 export interface ConnectOptions {
+  /**
+   * Whether to connect to the WebSocket server over WSS and proxy server over HTTPS
+   *
+   * @default false
+   */
+  https?: boolean;
   /**
    * Hostname to connect to the WebSocket server and proxy server on
    *
@@ -128,6 +134,10 @@ export class Client {
   > = new Set();
   /** The port number of the proxy server */
   private proxyPort?: number;
+  /** Whether to connect to the WebSocket server over WSS and proxy server over HTTPS */
+  private https?: boolean;
+  /** The hostname of the WebSocket server */
+  private hostname?: string;
   /** Callback handlers for waiting on client-side SSE requests */
   private clientSideSSERouteHandlers: Map<string, [UrlMatcher, () => void]> = new Map();
 
@@ -474,12 +484,15 @@ export class Client {
    * @param options - Options for the connection.
    */
   async connect({
+    https = false,
     hostname = "localhost",
     port = DefaultWebSocketServerPort,
     proxyPort = DefaultProxyServerPort,
     timeout: timeoutDuration = DefaultWebSocketServerTimeout,
   }: ConnectOptions) {
-    this._ws = new WebSocket(`ws://${hostname}:${port}`);
+    this.https = https;
+    this.hostname = hostname;
+    this._ws = new WebSocket(`${https ? "wss" : "ws"}://${hostname}:${port}`);
     const startTime = Date.now();
     await this.waitForConnection(this._ws, timeoutDuration);
 
@@ -611,10 +624,24 @@ export class Client {
    * @returns The SSE proxy URL
    */
   private getSSEProxyUrl(requestId: string, originalUrl: string) {
-    const proxyUrl = new URL(`http://localhost:${this.proxyPort}${SSEProxyEndpoint}`);
+    const proxyUrl = new URL(`${this.https ? "https" : "http"}://${this.hostname}:${this.proxyPort}${SSEProxyEndpoint}`);
     proxyUrl.searchParams.set(SSEProxyRequestIdParam, requestId);
     proxyUrl.searchParams.set(SSEProxyOriginalUrlParam, encodeURIComponent(originalUrl));
     proxyUrl.searchParams.set(ClientIdentityStorageHeader, this.clientIdentifier);
+    return proxyUrl.toString();
+  }
+
+  /**
+   * Resolves the file proxy URL for a given file path
+   * 
+   * @internal
+   * 
+   * @param filePath - The file path to proxy
+   * @returns The file proxy URL
+   */
+  public getFileProxyUrl(filePath: string) {
+    const proxyUrl = new URL(`${this.https ? "https" : "http"}://${this.hostname}:${this.proxyPort}${FileProxyEndpoint}`);
+    proxyUrl.searchParams.set(FileProxyPathParam, filePath);
     return proxyUrl.toString();
   }
 

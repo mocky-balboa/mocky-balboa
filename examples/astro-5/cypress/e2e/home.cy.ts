@@ -4,7 +4,6 @@ import {
   TrainingIntensity,
   type TrainingRegime,
 } from "../../src/lib/data";
-import { type Client, createClient } from "@mocky-balboa/cypress";
 
 const nextFightEndpoint = "http://localhost:58157/api/next-fight";
 const trainingRegimeEndpoint = "http://localhost:58157/api/training-regime";
@@ -119,4 +118,26 @@ describe("when the data is loaded successfully", () => {
       );
     });
   });
+});
+
+it("loads the data for the next fight using file path", () => {
+  cy.mocky((mocky) => {
+    mocky.route(nextFightEndpoint, (route) => {
+      return route.fulfill({
+        status: 200,
+        path: "cypress/fixtures/james-clubber-lang.next-fight.json",
+      });
+    });
+  
+    mocky.route(trainingRegimeEndpoint, (route) => {
+      return route.fulfill({
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(trainingRegime),
+      });
+    });
+  });
+
+  cy.visit("/");
+  cy.contains('James "Clubber" Lang');
 });

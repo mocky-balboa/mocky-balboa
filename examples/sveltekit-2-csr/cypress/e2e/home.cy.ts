@@ -119,3 +119,25 @@ describe("when the data is loaded successfully", () => {
     });
   });
 });
+
+it("loads the data for the next fight using file path", () => {
+  cy.mocky((mocky) => {
+    mocky.route(nextFightEndpoint, (route) => {
+      return route.fulfill({
+        status: 200,
+        path: "cypress/fixtures/james-clubber-lang.next-fight.json",
+      });
+    });
+  
+    mocky.route(trainingRegimeEndpoint, (route) => {
+      return route.fulfill({
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(trainingRegime),
+      });
+    });
+  });
+
+  cy.visit("/");
+  cy.contains('James "Clubber" Lang');
+});

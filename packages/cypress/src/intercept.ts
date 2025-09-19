@@ -1,4 +1,5 @@
 import {
+  Client,
   ClientIdentityStorageHeader,
   type ExternalRouteHandlerRouteResponse,
 } from "@mocky-balboa/client";
@@ -44,7 +45,7 @@ export const extractRequest =
  * Handles the result from the internal route handler allowing it to be dealt
  * with inside the Cypress intercept handler.
  */
-export const handleResult = async (
+export const handleResult = (client: Client) => async (
   result: ExternalRouteHandlerRouteResponse | undefined,
   req: CyRequest,
 ) => {
@@ -59,9 +60,8 @@ export const handleResult = async (
 
     case "fulfill":
       if (result.path) {
-        throw new Error(
-          "@mocky-balboa/cypress: 'path' option not supported on route.fulfill for Cypress. Use cy.readFile and pass contents as body instead.",
-        );
+        req.url = client.getFileProxyUrl(result.path);
+        req.continue();
       } else {
         const responseText = await result.response.text();
         req.reply(

@@ -9,7 +9,7 @@ import {
   connections,
   type WebSocketConnectionState,
 } from "./connection-state.js";
-import { DefaultWebSocketServerPort } from "@mocky-balboa/shared-config";
+import { DefaultWebSocketServerPort, type SelfSignedCertificate } from "@mocky-balboa/shared-config";
 
 /**
  * Options for the WebSocket server
@@ -20,11 +20,11 @@ export interface WebSocketServerOptions {
    *
    * @default {@link DefaultWebSocketServerPort}
    */
-  port?: number;
+  port?: number | undefined;
   /**
    * WebSocket server hostname
    */
-  hostname?: string;
+  hostname?: string | undefined;
 }
 
 /**

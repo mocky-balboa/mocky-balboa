@@ -39,6 +39,7 @@ const getContentType = (filePath: string) => {
 const getFileContents = async (filePath: string) => {
   const fileStats = await fs.stat(filePath);
   if (!fileStats.isFile()) {
+    logger.error("Path is not a file", { filePath });
     throw new Error(`Path ${filePath} is not a file`);
   }
 

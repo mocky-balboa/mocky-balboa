@@ -3,13 +3,12 @@ import http, { Server } from "node:http";
 import https from "node:https";
 import path from "node:path";
 import { Command } from "commander";
-import { DefaultWebSocketServerPort } from "@mocky-balboa/shared-config";
+import { DefaultWebSocketServerPort, type SelfSignedCertificate } from "@mocky-balboa/shared-config";
 import express from "express";
 import { mockyBalboaMiddleware, startServer } from "@mocky-balboa/server";
 import { logger } from "./logger.js";
 import {
   createSelfSignedCertificate,
-  type SelfSignedCertificate,
 } from "./mkcert.js";
 
 interface CommonCLIOptions {
@@ -162,6 +161,7 @@ export const startServers = async <TCLIOptions extends CommonCLIOptions>(
 
   // Start Mocky Balboa server
   await startServer({
+    certificate,
     hostname: cliOptions.hostname,
     webSocketServerOptions: {
       port: parseInt(cliOptions.websocketPort, 10),
@@ -262,5 +262,5 @@ export const getServerEntryHandler = async (
   return handler;
 };
 
-export type { SelfSignedCertificate } from "./mkcert.js";
+export type { SelfSignedCertificate } from "@mocky-balboa/shared-config";
 export { default as express } from "express";

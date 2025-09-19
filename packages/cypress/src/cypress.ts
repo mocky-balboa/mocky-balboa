@@ -75,7 +75,7 @@ export const createClient = async (
     `!**/${SSEProxyEndpoint}**`,
     client.attachExternalClientSideRouteHandler({
       extractRequest: extractRequest(client.clientIdentifier),
-      handleResult,
+      handleResult: handleResult(client),
     }),
   );
 

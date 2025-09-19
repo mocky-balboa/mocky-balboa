@@ -9,26 +9,31 @@ import {
 } from "./mock-server.js";
 import { logger } from "./logger.js";
 import { startProxyServer, type ProxyServerOptions } from "./proxy-server.js";
+import type { SelfSignedCertificate } from "@mocky-balboa/shared-config";
 
 export interface ServerOptions {
+  /**
+   * Self-signed certificate for the server. Used to serve the server over HTTPS.
+   */
+  certificate?: SelfSignedCertificate | undefined;
   /**
    * Server hostname
    *
    * @default "localhost"
    */
-  hostname?: string;
+  hostname?: string | undefined;
   /**
    * Options for the WebSocket server
    */
-  webSocketServerOptions?: Omit<WebSocketServerOptions, "hostname">;
+  webSocketServerOptions?: Omit<WebSocketServerOptions, "hostname"> | undefined;
   /**
    * Options for the mock server
    */
-  mockServerOptions?: MockServerOptions;
+  mockServerOptions?: MockServerOptions | undefined;
   /**
    * Options for the proxy server
    */
-  proxyServerOptions?: Omit<ProxyServerOptions, "hostname">;
+  proxyServerOptions?: Omit<ProxyServerOptions, "hostname" | "certificate"> | undefined;
 }
 
 /**
@@ -37,6 +42,7 @@ export interface ServerOptions {
  * @param options - Options for the server.
  */
 export const startServer = async ({
+  certificate,
   hostname = "localhost",
   webSocketServerOptions = {},
   mockServerOptions = {},
@@ -46,7 +52,7 @@ export const startServer = async ({
   const [closeWebSocketServer] = await Promise.all([
     startWebSocketServer({ ...webSocketServerOptions, hostname }),
     bindMockServiceWorker(mockServerOptions),
-    startProxyServer({ ...proxyServerOptions, hostname }),
+    startProxyServer({ ...proxyServerOptions, hostname, certificate }),
   ]);
   logger.info("Mocky Balboa server started");
 

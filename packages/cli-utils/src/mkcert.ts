@@ -5,14 +5,9 @@ import { execSync } from "node:child_process";
 import { getCacheDirectory } from "./get-cache-directory.js";
 import { logger } from "./logger.js";
 import { WritableStream } from "node:stream/web";
+import type { SelfSignedCertificate } from "@mocky-balboa/shared-config";
 
 const MKCERT_VERSION = "v1.4.4";
-
-export interface SelfSignedCertificate {
-  key: string;
-  cert: string;
-  rootCA?: string;
-}
 
 function getBinaryName() {
   const platform = process.platform;
