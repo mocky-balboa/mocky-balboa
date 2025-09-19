@@ -56,6 +56,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@mocky-balboa/browser": "workspace:*",
     "@mocky-balboa/client": "workspace:*",
     "@mocky-balboa/logger": "workspace:*"
   },

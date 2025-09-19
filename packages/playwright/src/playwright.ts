@@ -5,10 +5,14 @@ import {
   ClientIdentityStorageHeader,
   type MessageTypes,
   type ParsedMessageType,
+  BrowserGetSSEProxyParamsFunctionName,
 } from "@mocky-balboa/client";
 import type { BrowserContext } from "@playwright/test";
 import { logger } from "./logger.js";
 import { extractRequest, handleResult } from "./route.js";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
 
 /**
  * Creates a Mocky Balboa client used to mock full-stack network requests at runtime defined by your test suite.
@@ -55,6 +59,12 @@ export const createClient = async (
       handleResult,
     }),
   );
+
+  await context.addInitScript({ path: require.resolve("@mocky-balboa/browser/event-source-stub") });
+  await context.addInitScript({ path: require.resolve("@mocky-balboa/browser/fetch-stub") });
+  await context.exposeFunction(BrowserGetSSEProxyParamsFunctionName, (url: string) => {
+    return client.getClientSSEProxyParams(url);
+  });
 
   // When the client receives an error message from the server we should log the error and close the context. This can help prevent false positives in test cases.
   client.on(
