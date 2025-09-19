@@ -7,13 +7,13 @@ catalog:
   '@fastify/express': ^4.0.2
   '@swc/cli': ^0.7.8
   '@swc/core': ^1.13.4
-  '@types/express': ^5.0.3
+  '@types/express': 5.0.3
   '@types/koa': ^3.0.0
   '@types/node': 24.3.0
   '@types/ws': ^8.18.1
   chokidar-cli: ^3.0.0
   concurrently: ^9.2.1
-  express: ^5.1.0
+  express: 5.1.0
   fastify: ^5.5.0
   get-port: ^7.1.0
   koa: ^3.0.1
