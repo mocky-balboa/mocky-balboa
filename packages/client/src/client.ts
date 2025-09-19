@@ -47,6 +47,12 @@ export interface WaitForRequestOptions {
  */
 export interface ConnectOptions {
   /**
+   * Hostname to connect to the WebSocket server and proxy server on
+   *
+   * @default "localhost"
+   */
+  hostname?: string;
+  /**
    * Port number to connect to the WebSocket server on
    *
    * @default {@link DefaultWebSocketServerPort}
@@ -468,11 +474,12 @@ export class Client {
    * @param options - Options for the connection.
    */
   async connect({
+    hostname = "localhost",
     port = DefaultWebSocketServerPort,
     proxyPort = DefaultProxyServerPort,
     timeout: timeoutDuration = DefaultWebSocketServerTimeout,
   }: ConnectOptions) {
-    this._ws = new WebSocket(`ws://localhost:${port}`);
+    this._ws = new WebSocket(`wss://${hostname}:${port}`);
     const startTime = Date.now();
     await this.waitForConnection(this._ws, timeoutDuration);
 

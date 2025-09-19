@@ -12,9 +12,15 @@ import { startProxyServer, type ProxyServerOptions } from "./proxy-server.js";
 
 export interface ServerOptions {
   /**
+   * Server hostname
+   *
+   * @default "localhost"
+   */
+  hostname?: string;
+  /**
    * Options for the WebSocket server
    */
-  webSocketServerOptions?: WebSocketServerOptions;
+  webSocketServerOptions?: Omit<WebSocketServerOptions, "hostname">;
   /**
    * Options for the mock server
    */
@@ -22,7 +28,7 @@ export interface ServerOptions {
   /**
    * Options for the proxy server
    */
-  proxyServerOptions?: ProxyServerOptions;
+  proxyServerOptions?: Omit<ProxyServerOptions, "hostname">;
 }
 
 /**
@@ -31,15 +37,16 @@ export interface ServerOptions {
  * @param options - Options for the server.
  */
 export const startServer = async ({
+  hostname = "localhost",
   webSocketServerOptions = {},
   mockServerOptions = {},
   proxyServerOptions = {},
 }: ServerOptions = {}): Promise<CloseWebSocketServer> => {
   logger.info("Starting Mocky Balboa server");
   const [closeWebSocketServer] = await Promise.all([
-    startWebSocketServer(webSocketServerOptions),
+    startWebSocketServer({ ...webSocketServerOptions, hostname }),
     bindMockServiceWorker(mockServerOptions),
-    startProxyServer(proxyServerOptions),
+    startProxyServer({ ...proxyServerOptions, hostname }),
   ]);
   logger.info("Mocky Balboa server started");
 

@@ -21,6 +21,10 @@ export interface WebSocketServerOptions {
    * @default {@link DefaultWebSocketServerPort}
    */
   port?: number;
+  /**
+   * WebSocket server hostname
+   */
+  hostname?: string;
 }
 
 /**

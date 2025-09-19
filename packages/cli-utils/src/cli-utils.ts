@@ -162,6 +162,7 @@ export const startServers = async <TCLIOptions extends CommonCLIOptions>(
 
   // Start Mocky Balboa server
   await startServer({
+    hostname: cliOptions.hostname,
     webSocketServerOptions: {
       port: parseInt(cliOptions.websocketPort, 10),
     },

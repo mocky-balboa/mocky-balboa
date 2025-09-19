@@ -15,6 +15,12 @@ export interface ProxyServerOptions {
    * @default {@link DefaultProxyServerPort}
    */
   port?: number;
+  /**
+   * Proxy server hostname
+   *
+   * @default "localhost"
+   */
+  hostname?: string;
 }
 
 /**
