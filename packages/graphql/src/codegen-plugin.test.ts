@@ -2,7 +2,6 @@ import { describe, it, beforeAll, expect, vi } from "vitest";
 import { rimraf } from "rimraf";
 import { exec } from "child_process";
 import path from "path";
-import fs from "fs";
 
 vi.mock("@mocky-balboa/graphql", () => {
   return import(path.resolve(packageRoot, "src/graphql.ts"));
