@@ -60,8 +60,8 @@ export const createClient = async (
     }),
   );
 
-  await context.addInitScript({ path: require.resolve("@mocky-balboa/browser/event-source-stub-raw") });
-  await context.addInitScript({ path: require.resolve("@mocky-balboa/browser/fetch-stub-raw") });
+  await context.addInitScript({ path: require.resolve("@mocky-balboa/browser/event-source-stub") });
+  await context.addInitScript({ path: require.resolve("@mocky-balboa/browser/fetch-stub") });
   await context.exposeFunction(BrowserGetSSEProxyParamsFunctionName, (url: string) => {
     return client.getClientSSEProxyParams(url);
   });

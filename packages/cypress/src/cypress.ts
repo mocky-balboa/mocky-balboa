@@ -59,10 +59,12 @@ export const createClient = async (
       return;
     }
 
-    const eventSourceStub = require("@mocky-balboa/browser/event-source-stub");
-    const fetchStub = require("@mocky-balboa/browser/fetch-stub");
-    window.eval(eventSourceStub);
-    window.eval(fetchStub);
+    cy.readFile(require.resolve("@mocky-balboa/browser/event-source-stub")).then((eventSourceStub) => {
+      cy.readFile(require.resolve("@mocky-balboa/browser/fetch-stub")).then((fetchStub) => {
+        window.eval(eventSourceStub);
+        window.eval(fetchStub);
+      });
+    });
 
     window[BrowserGetSSEProxyParamsFunctionName] = (url: string) => {
       return client.getClientSSEProxyParams(url);
