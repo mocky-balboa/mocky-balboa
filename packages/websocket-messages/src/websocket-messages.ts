@@ -2,11 +2,25 @@ import * as z from "zod";
 import { v4 as uuid } from "uuid";
 
 export const MessageType = {
+  /** Acknowledge the message has been received */
   ACK: "ack",
+  /** Identify the client */
   IDENTIFY: "identify",
+  /** When a network request is being made from the server */
   REQUEST: "request",
+  /** When the client sends the response back to the server to tell it how to respond */
   RESPONSE: "response",
+  /** When an error occurs */
   ERROR: "error",
+  /** Tell the SSE proxy server to send an event to the client */
+  SSE_EVENT: "sse-event",
+  /** Tell the SSE proxy server to close the connection */
+  SSE_CLOSE: "sse-close",
+  /** Tell the SSE proxy server to send an error to the client */
+  SSE_ERROR: "sse-error",
+  /** When an SSE connection is ready, sent from server to client */
+  SSE_CONNECTION_READY: "sse-connection-ready",
+  /** Catch all for unknown messages */
   UNKNOWN: "unknown",
 } as const;
 
@@ -66,6 +80,38 @@ export const Messages = z.discriminatedUnion("type", [
     payload: z.object({
       id: z.string(),
       message: z.string(),
+    }),
+  }),
+  z.object({
+    type: z.literal(MessageType.SSE_EVENT),
+    messageId: z.string(),
+    payload: z.object({
+      id: z.string(),
+      event: z.string(),
+      data: z.string(),
+    }),
+  }),
+  z.object({
+    type: z.literal(MessageType.SSE_CLOSE),
+    messageId: z.string(),
+    payload: z.object({
+      id: z.string(),
+    }),
+  }),
+  z.object({
+    type: z.literal(MessageType.SSE_ERROR),
+    messageId: z.string(),
+    payload: z.object({
+      id: z.string(),
+      status: z.number(),
+      body: z.string(),
+    }),
+  }),
+  z.object({
+    type: z.literal(MessageType.SSE_CONNECTION_READY),
+    messageId: z.string(),
+    payload: z.object({
+      id: z.string(),
     }),
   }),
 ]);
