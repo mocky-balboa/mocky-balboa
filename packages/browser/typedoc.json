@@ -1,0 +1,3 @@
+{
+  "entryPoints": ["src/event-source-stub.ts", "src/fetch-stub.ts"]
+}
