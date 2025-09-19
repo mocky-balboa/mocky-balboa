@@ -1,0 +1,37 @@
+{
+  "name": "server-side-events",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "swc src --out-dir dist -C module.type=es6 --strip-leading-paths",
+    "build:watch": "pnpm build --watch",
+    "build:tests": "pnpm build",
+    "start": "node dist/server.js",
+    "start:tests": "pnpm start",
+    "start:tests-dev": "pnpm start",
+    "test:cypress": "pnpm cypress run",
+    "test:playwright": "pnpm playwright test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.14.0",
+  "dependencies": {
+    "express": "catalog:"
+  },
+  "devDependencies": {
+    "@mocky-balboa/cypress": "workspace:*",
+    "@mocky-balboa/playwright": "workspace:*",
+    "@mocky-balboa/server": "workspace:*",
+    "@playwright/test": "^1.55.0",
+    "@swc/cli": "catalog:",
+    "@swc/core": "catalog:",
+    "@types/express": "catalog:",
+    "@types/node": "^20",
+    "cypress": "^15.2.0",
+    "playwright": "^1.55.0",
+    "typescript": "^5.8.3"
+  }
+}

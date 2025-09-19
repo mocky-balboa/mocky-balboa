@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server-Side Events</title>
+  </head>
+  <body>
+    <h1>Server-Side Events</h1>
+    <p>This is a server-side events example.</p>
+    <p>Latest message: <span id="latest-message">None</span></p>
+    <p>Endpoint message: <span id="endpoint-message">None</span></p>
+    <button id="start">Start EventSource</button>
+    <button id="stop">Stop EventSource</button>
+    <button id="start-fetch">Start Fetch</button>
+    <button id="stop-fetch">Stop Fetch</button>
+    <button id="start-endpoint">Get from Endpoint</button>
+  </body>
+  <script>
+    let eventSource;
+    document.getElementById("start").addEventListener("click", () => {
+      eventSource?.close();
+      eventSource = new EventSource("/sse");
+      eventSource.addEventListener("message", (event) => {
+        document.getElementById("latest-message").textContent = event.data;
+      });
+
+      // eventSource.addEventListener("fin", (event) => {
+      //   eventSource.close();
+      // });
+    });
+    document.getElementById("stop").addEventListener("click", () => {
+      eventSource.close();
+    });
+
+    const fetchData = async () => {
+      await fetchEventSource("/sse", {
+        method: "POST",
+        headers: {
+          Accept: "text/event-stream",
+        },
+        onopen(res) {
+          if (res.ok && res.status === 200) {
+            console.log("Connection made ", res);
+          } else if (
+            res.status >= 400 &&
+            res.status < 500 &&
+            res.status !== 429
+          ) {
+            console.log("Client side error ", res);
+          }
+        },
+        onmessage(event) {
+          console.log(event);
+          document.getElementById("latest-message").textContent = event.data;
+        },
+        onclose() {
+          console.log("Connection closed by the server");
+        },
+        onerror(err) {
+          console.log("There was an error from server", err);
+        },
+      });
+    };
+
+    document.getElementById("start-fetch").addEventListener("click", () => {
+      fetchData();
+    });
+    document.getElementById("stop-fetch").addEventListener("click", () => {
+      fetch("/sse");
+    });
+
+    document.getElementById("start-endpoint").addEventListener("click", () => {
+      fetch("/endpoint").then((res) => {
+        res.json().then((data) => {
+          document.getElementById("endpoint-message").textContent = data.message;
+        });
+      });
+    });
+  </script>
+</html>
