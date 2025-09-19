@@ -479,7 +479,7 @@ export class Client {
     proxyPort = DefaultProxyServerPort,
     timeout: timeoutDuration = DefaultWebSocketServerTimeout,
   }: ConnectOptions) {
-    this._ws = new WebSocket(`wss://${hostname}:${port}`);
+    this._ws = new WebSocket(`ws://${hostname}:${port}`);
     const startTime = Date.now();
     await this.waitForConnection(this._ws, timeoutDuration);
 
