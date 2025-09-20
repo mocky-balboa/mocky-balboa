@@ -1922,27 +1922,6 @@ describe("Client ", () => {
     });
   });
 
-  describe("connect with proxyPort option", () => {
-    let wss: WebSocketServer;
-    let port: number;
-
-    beforeEach(async () => {
-      ({ wss, port } = await startWebSocketServer());
-
-      wss.on("connection", (ws) => {
-        ws.on("message", (message: RawData) => {
-          const { messageId } = parseMessage(message.toString());
-          const ackMessage = new Message(MessageType.ACK, {}, messageId);
-          ws.send(ackMessage.toString());
-        });
-      });
-    });
-
-    afterEach(async () => {
-      await closeWebSocketServer(wss);
-    });
-  });
-
   describe("attachExternalClientSideRouteHandler transport logic", () => {
     let client: Client;
 
