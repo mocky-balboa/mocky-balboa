@@ -12,16 +12,21 @@ import { GraphQLRoute } from "./graphql-route.js";
 export type GraphQLRouteHandler<TVariables, TResponse> = (route: GraphQLRoute<TVariables, TResponse>) => RouteResponse | Promise<RouteResponse>;
 
 /**
+ * Type for the GraphQL operation name
+ */
+export type GraphQLOperationName = string;
+
+/**
  * Supported operation types
  */
-type OperationType = "query" | "mutation";
+export type GraphQLOperationType = "query" | "mutation";
 
 /**
  * Options for the GraphQL route handler
  */
 export interface GraphQLRouteOptions<TVariables, TResponse> {
-  operationName: string;
-  operationType: OperationType;
+  operationName: GraphQLOperationName;
+  operationType: GraphQLOperationType;
   handler: GraphQLRouteHandler<TVariables, TResponse>;
 }
 
@@ -148,7 +153,7 @@ export class GraphQL {
    * @param operationName - the operation name
    * @returns the operation type (query or mutation)
    */
-  private getOperationType(request: GraphQLRequest, operationName: string): OperationType {
+  private getOperationType(request: GraphQLRequest, operationName: string): GraphQLOperationType {
     try {
       const document = parse(request.query);
       const operationDefinition = document.definitions.filter(

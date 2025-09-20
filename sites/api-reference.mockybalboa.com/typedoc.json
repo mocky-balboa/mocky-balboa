@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["../../packages/!(cli-utils)"],
+  "entryPoints": ["../../packages/!(cli-utils|browser)"],
   "name": "Mocky Balboa API Reference",
   "readme": "./API_REFERENCE.md",
   "entryPointStrategy": "packages",

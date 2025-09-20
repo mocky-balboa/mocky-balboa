@@ -842,6 +842,7 @@ export class Client {
 
 export { Route } from "./route.js";
 export type { FulfillOptions } from "./route.js";
+export type { FetchOptions, ModifyResponseOptions } from "./base-route.js";
 export { GraphQLRoute } from "./graphql-route.js";
 export type { GraphQLFulfillOptions } from "./graphql-route.js";
 export { ClientIdentityStorageHeader, DefaultProxyServerPort, SSEProxyEndpoint, BrowserGetSSEProxyParamsFunctionName } from "@mocky-balboa/shared-config";
@@ -858,8 +859,9 @@ export type {
   RouteOptions,
   FulfillRouteResponse,
   RouteResponse,
+  SSERouteOptions,
 } from "./shared-types.js";
 export { RouteType, DefaultSSERouteTimeout, DefaultWaitForRequestTimeout, DefaultWebSocketServerTimeout } from "./shared-types.js";
 export { GraphQL, GraphQLQueryParseError } from "./graphql.js";
-export type { GraphQLRouteHandler, GraphQLRouteOptions } from "./graphql.js";
+export type { GraphQLRouteHandler, GraphQLRouteOptions, GraphQLOperationName, GraphQLOperationType } from "./graphql.js";
 export { SSE } from "./sse.js";

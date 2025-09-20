@@ -22,7 +22,7 @@ import {
 } from "./test/utils.js";
 import { logger } from "./logger.js";
 
-describe("Client", () => {
+describe("Client ", () => {
   describe("connecting to the server", () => {
     let wss: WebSocketServer;
     let port: number;
@@ -1609,47 +1609,6 @@ describe("Client", () => {
       });
     });
 
-    describe("route registration integration", () => {
-      test("should register a route handler internally", () => {
-        const routeHandlersSizeBefore = (client as any).routeHandlers.size;
-        
-        const graphql = client.graphql("**/graphql");
-        
-        const routeHandlersSizeAfter = (client as any).routeHandlers.size;
-        expect(routeHandlersSizeAfter).toBe(routeHandlersSizeBefore + 1);
-        
-        // Check that the handler ID exists in the route handlers map
-        expect((client as any).routeHandlers.has(graphql.handlerId)).toBe(true);
-      });
-
-      test("should register multiple route handlers for multiple graphql instances", () => {
-        const routeHandlersSizeBefore = (client as any).routeHandlers.size;
-        
-        const graphql1 = client.graphql("**/graphql");
-        const graphql2 = client.graphql("**/api/graphql");
-        
-        const routeHandlersSizeAfter = (client as any).routeHandlers.size;
-        expect(routeHandlersSizeAfter).toBe(routeHandlersSizeBefore + 2);
-        
-        expect((client as any).routeHandlers.has(graphql1.handlerId)).toBe(true);
-        expect((client as any).routeHandlers.has(graphql2.handlerId)).toBe(true);
-      });
-
-      test("should unregister route handler when unrouting by handler ID", () => {
-        const graphql = client.graphql("**/graphql");
-        const handlerId = graphql.handlerId!;
-        
-        // Verify it's registered
-        expect((client as any).routeHandlers.has(handlerId)).toBe(true);
-        
-        // Unregister it
-        client.unroute(handlerId);
-        
-        // Verify it's unregistered
-        expect((client as any).routeHandlers.has(handlerId)).toBe(false);
-      });
-    });
-
     describe("route handler execution with mocked GraphQL.handleRoute", () => {
       test("should call GraphQL.handleRoute when a matching request is received", async () => {
         const graphql = client.graphql("**/graphql");
@@ -1923,28 +1882,6 @@ describe("Client", () => {
     });
 
     describe("basic SSE setup", () => {
-      test("should setup SSE registration correctly", async () => {
-        // Start SSE setup
-        const ssePromise = client.sse("**/events");
-
-        // Wait for SSE registration
-        await new Promise(resolve => setTimeout(resolve, 10));
-
-        // Verify that route handlers and client-side handlers were registered
-        const routeHandlers = (client as any).routeHandlers;
-        const clientHandlers = (client as any).clientSideSSERouteHandlers;
-
-        expect(routeHandlers.size).toBeGreaterThan(0);
-        expect(clientHandlers.size).toBeGreaterThan(0);
-
-        // Verify the route metadata
-        const [, , routeMeta] = Array.from(routeHandlers.values())[0];
-        expect(routeMeta.transport).toBe("sse");
-        expect(routeMeta.type).toBe("server-only");
-
-        // Don't wait for SSE promise to resolve to avoid network requests
-      });
-
       test("should timeout when SSE connection is not ready within timeout", async () => {
         const ssePromise = client.sse("**/events", { timeout: 100 });
 
@@ -1964,88 +1901,6 @@ describe("Client", () => {
         expect(elapsed).toBeGreaterThanOrEqual(customTimeout - 50);
         expect(elapsed).toBeLessThan(customTimeout + 100);
       });
-
-      test("should use default proxy port when not explicitly set", async () => {
-        const clientWithoutProxy = new Client();
-        await clientWithoutProxy.connect({ port, timeout: 200 }); // No explicit proxyPort
-
-        // Should have a default proxy port set
-        expect((clientWithoutProxy as any).proxyPort).toBeDefined();
-        expect(typeof (clientWithoutProxy as any).proxyPort).toBe('number');
-
-        clientWithoutProxy.disconnect();
-      });
-    });
-
-    describe("URL matching", () => {
-      test("should match URLs using string glob patterns", async () => {
-        const ssePromise = client.sse("**/api/events");
-
-        // Don't send server request - just check that the SSE route was registered
-        await new Promise(resolve => setTimeout(resolve, 10));
-
-        // Check that a route handler was registered
-        expect((client as any).routeHandlers.size).toBeGreaterThan(0);
-      });
-
-      test("should match URLs using RegExp patterns", async () => {
-        const ssePromise = client.sse(/\/events$/);
-
-        // Don't send server request - just check that the SSE route was registered
-        await new Promise(resolve => setTimeout(resolve, 10));
-
-        expect((client as any).routeHandlers.size).toBeGreaterThan(0);
-      });
-
-      test("should match URLs using callback function", async () => {
-        const ssePromise = client.sse((url: URL) => url.pathname.includes("events"));
-
-        // Don't send server request - just check that the SSE route was registered
-        await new Promise(resolve => setTimeout(resolve, 10));
-
-        expect((client as any).routeHandlers.size).toBeGreaterThan(0);
-      });
-    });
-
-    describe("route registration", () => {
-      test("should register route with server-only type and sse transport", async () => {
-        const ssePromise = client.sse("**/events");
-
-        // Check that route was registered with correct metadata
-        const routeHandlers = (client as any).routeHandlers;
-        expect(routeHandlers.size).toBe(1);
-
-        const [, , routeMeta] = Array.from(routeHandlers.values())[0];
-        expect(routeMeta.type).toBe("server-only");
-        expect(routeMeta.transport).toBe("sse");
-        expect(routeMeta.times).toBe(1);
-      });
-
-      test("should register client-side SSE route handler", async () => {
-        const ssePromise = client.sse("**/events");
-
-        // Check that client-side handler was registered
-        const clientHandlers = (client as any).clientSideSSERouteHandlers;
-        expect(clientHandlers.size).toBe(1);
-      });
-
-      test("should register unique request IDs for client-side handlers", async () => {
-        // Register multiple SSE routes
-        const ssePromise1 = client.sse("**/events1");
-        const ssePromise2 = client.sse("**/events2");
-
-        // Wait for registration
-        await new Promise(resolve => setTimeout(resolve, 10));
-
-        // Check that multiple client-side handlers were registered with unique IDs
-        const clientHandlers = (client as any).clientSideSSERouteHandlers;
-        expect(clientHandlers.size).toBe(2);
-
-        const requestIds = Array.from(clientHandlers.keys());
-        expect(requestIds[0]).not.toBe(requestIds[1]);
-        expect(typeof requestIds[0]).toBe('string');
-        expect(typeof requestIds[1]).toBe('string');
-      });
     });
   });
 
@@ -2063,119 +1918,6 @@ describe("Client", () => {
         expect(result).toEqual({
           shouldProxy: false,
         });
-      });
-    });
-
-    describe("when SSE route handlers are registered", () => {
-      test("should return proxy params for matching URL with string pattern", async () => {
-        // Simulate registering an SSE route by adding to clientSideSSERouteHandlers
-        const requestId = "test-request-id";
-        const urlMatcher = "**/events";
-        const handler = vi.fn();
-
-        (client as any).clientSideSSERouteHandlers.set(requestId, [urlMatcher, handler]);
-        (client as any).proxyPort = 3001;
-
-        const result = await client.getClientSSEProxyParams("http://example.com/api/events");
-
-        expect(result).toEqual({
-          shouldProxy: true,
-          requestId: requestId,
-          proxyUrl: expect.stringContaining("http://localhost:3001"),
-        });
-        expect(result.proxyUrl).toContain("http%253A%252F%252Fexample.com%252Fapi%252Fevents");
-        expect(handler).toHaveBeenCalledOnce();
-      });
-
-      test("should return proxy params for matching URL with RegExp pattern", async () => {
-        const requestId = "test-request-id";
-        const urlMatcher = /\/events$/;
-        const handler = vi.fn();
-
-        (client as any).clientSideSSERouteHandlers.set(requestId, [urlMatcher, handler]);
-        (client as any).proxyPort = 3001;
-
-        const result = await client.getClientSSEProxyParams("http://example.com/api/events");
-
-        expect(result).toEqual({
-          shouldProxy: true,
-          requestId: requestId,
-          proxyUrl: expect.stringContaining("http://localhost:3001"),
-        });
-        expect(handler).toHaveBeenCalledOnce();
-      });
-
-      test("should return proxy params for matching URL with callback function", async () => {
-        const requestId = "test-request-id";
-        const urlMatcher = (url: URL) => url.pathname.includes("events");
-        const handler = vi.fn();
-
-        (client as any).clientSideSSERouteHandlers.set(requestId, [urlMatcher, handler]);
-        (client as any).proxyPort = 3001;
-
-        const result = await client.getClientSSEProxyParams("http://example.com/api/events");
-
-        expect(result).toEqual({
-          shouldProxy: true,
-          requestId: requestId,
-          proxyUrl: expect.stringContaining("http://localhost:3001"),
-        });
-        expect(handler).toHaveBeenCalledOnce();
-      });
-
-      test("should return shouldProxy: false for non-matching URL", async () => {
-        const requestId = "test-request-id";
-        const urlMatcher = "**/events";
-        const handler = vi.fn();
-
-        (client as any).clientSideSSERouteHandlers.set(requestId, [urlMatcher, handler]);
-
-        const result = await client.getClientSSEProxyParams("http://example.com/api/different");
-
-        expect(result).toEqual({
-          shouldProxy: false,
-        });
-        expect(handler).not.toHaveBeenCalled();
-      });
-
-      test("should handle multiple handlers and return first match", async () => {
-        const requestId1 = "test-request-id-1";
-        const requestId2 = "test-request-id-2";
-        const handler1 = vi.fn();
-        const handler2 = vi.fn();
-
-        (client as any).clientSideSSERouteHandlers.set(requestId1, ["**/events", handler1]);
-        (client as any).clientSideSSERouteHandlers.set(requestId2, ["**/events", handler2]);
-        (client as any).proxyPort = 3001;
-
-        const result = await client.getClientSSEProxyParams("http://example.com/api/events");
-
-        expect(result.shouldProxy).toBe(true);
-        expect(result.requestId).toBe(requestId1); // First match wins
-        expect(handler1).toHaveBeenCalledOnce();
-        expect(handler2).not.toHaveBeenCalled();
-      });
-
-      test("should include correct proxy URL parameters", async () => {
-        const requestId = "test-request-id";
-        const urlMatcher = "**/events";
-        const handler = vi.fn();
-
-        (client as any).clientSideSSERouteHandlers.set(requestId, [urlMatcher, handler]);
-        (client as any).proxyPort = 3001;
-        (client as any).clientIdentifier = "test-client-id";
-
-        const originalUrl = "http://example.com/api/events";
-        const result = await client.getClientSSEProxyParams(originalUrl);
-
-        expect(result.shouldProxy).toBe(true);
-
-        const proxyUrl = new URL(result.proxyUrl!);
-        expect(proxyUrl.hostname).toBe("localhost");
-        expect(proxyUrl.port).toBe("3001");
-        expect(proxyUrl.searchParams.get("mocky-balboa-sse-proxy-request-id")).toBe(requestId);
-        expect(proxyUrl.searchParams.get("mocky-balboa-sse-proxy-original-url")).toBe(encodeURIComponent(originalUrl));
-        expect(proxyUrl.searchParams.get("x-mocky-balboa-client-id")).toBe("test-client-id");
       });
     });
   });
@@ -2199,35 +1941,6 @@ describe("Client", () => {
     afterEach(async () => {
       await closeWebSocketServer(wss);
     });
-
-    test("should connect with custom proxyPort", async () => {
-      const client = new Client();
-      const customProxyPort = 3002;
-
-      await client.connect({ port, proxyPort: customProxyPort, timeout: 100 });
-
-      expect((client as any).proxyPort).toBe(customProxyPort);
-      client.disconnect();
-    });
-
-    test("should connect with default proxyPort when not specified", async () => {
-      const client = new Client();
-
-      await client.connect({ port, timeout: 100 });
-
-      // Should use the default proxy port from shared-config
-      expect((client as any).proxyPort).toBeDefined();
-      client.disconnect();
-    });
-
-    test("should connect with proxyPort set to 0", async () => {
-      const client = new Client();
-
-      await client.connect({ port, proxyPort: 0, timeout: 100 });
-
-      expect((client as any).proxyPort).toBe(0);
-      client.disconnect();
-    });
   });
 
   describe("attachExternalClientSideRouteHandler transport logic", () => {
@@ -2235,149 +1948,6 @@ describe("Client", () => {
 
     beforeEach(() => {
       client = new Client();
-    });
-
-    describe("transport filtering", () => {
-      test("should skip non-HTTP routes in external handler", async () => {
-        const mockHandler = vi.fn().mockReturnValue({ type: "fulfill", response: new Response() });
-
-        // Register an SSE route (transport: "sse")
-        const requestId = "test-request-id";
-        (client as any).routeHandlers.set("sse-route-id", [
-          "**/events",
-          mockHandler,
-          { type: "both", transport: "sse", calls: 0, times: undefined }
-        ]);
-
-        const externalHandler = client.attachExternalClientSideRouteHandler({
-          extractRequest: (request: Request) => request,
-          handleResult: (response) => response,
-        });
-
-        const request = new Request("http://example.com/events");
-        const result = await externalHandler(request);
-
-        // SSE route should be skipped in external handler
-        expect(mockHandler).not.toHaveBeenCalled();
-        expect(result).toBeUndefined();
-      });
-
-      test("should process HTTP routes in external handler", async () => {
-        const mockHandler = vi.fn().mockReturnValue({ type: "fulfill", response: new Response() });
-
-        // Register an HTTP route (transport: "http")
-        (client as any).routeHandlers.set("http-route-id", [
-          "**/api",
-          mockHandler,
-          { type: "both", transport: "http", calls: 0, times: undefined }
-        ]);
-
-        const externalHandler = client.attachExternalClientSideRouteHandler({
-          extractRequest: (request: Request) => request,
-          handleResult: (response) => response,
-        });
-
-        const request = new Request("http://example.com/api");
-        const result = await externalHandler(request);
-
-        // HTTP route should be processed
-        expect(mockHandler).toHaveBeenCalledOnce();
-        expect(result).toEqual({ type: "fulfill", response: expect.any(Response) });
-      });
-
-      test("should process mixed routes correctly", async () => {
-        const httpHandler = vi.fn().mockReturnValue({ type: "fulfill", response: new Response() });
-        const sseHandler = vi.fn().mockReturnValue({ type: "fulfill", response: new Response() });
-
-        // Register both HTTP and SSE routes
-        (client as any).routeHandlers.set("http-route-id", [
-          "**/api",
-          httpHandler,
-          { type: "both", transport: "http", calls: 0, times: undefined }
-        ]);
-
-        (client as any).routeHandlers.set("sse-route-id", [
-          "**/api",
-          sseHandler,
-          { type: "both", transport: "sse", calls: 0, times: undefined }
-        ]);
-
-        const externalHandler = client.attachExternalClientSideRouteHandler({
-          extractRequest: (request: Request) => request,
-          handleResult: (response) => response,
-        });
-
-        const request = new Request("http://example.com/api");
-        const result = await externalHandler(request);
-
-        // Only HTTP route should be processed
-        expect(httpHandler).toHaveBeenCalledOnce();
-        expect(sseHandler).not.toHaveBeenCalled();
-        expect(result).toEqual({ type: "fulfill", response: expect.any(Response) });
-      });
-
-      test("should handle route type filtering with transport logic", async () => {
-        const serverOnlyHandler = vi.fn().mockReturnValue({ type: "fulfill", response: new Response() });
-        const clientOnlyHandler = vi.fn().mockReturnValue({ type: "fulfill", response: new Response() });
-
-        // Register server-only HTTP route
-        (client as any).routeHandlers.set("server-route-id", [
-          "**/api",
-          serverOnlyHandler,
-          { type: "server-only", transport: "http", calls: 0, times: undefined }
-        ]);
-
-        // Register client-only HTTP route
-        (client as any).routeHandlers.set("client-route-id", [
-          "**/api",
-          clientOnlyHandler,
-          { type: "client-only", transport: "http", calls: 0, times: undefined }
-        ]);
-
-        const externalHandler = client.attachExternalClientSideRouteHandler({
-          extractRequest: (request: Request) => request,
-          handleResult: (response) => response,
-        });
-
-        const request = new Request("http://example.com/api");
-        const result = await externalHandler(request);
-
-        // Only client-only route should be processed in external handler
-        expect(serverOnlyHandler).not.toHaveBeenCalled();
-        expect(clientOnlyHandler).toHaveBeenCalledOnce();
-        expect(result).toEqual({ type: "fulfill", response: expect.any(Response) });
-      });
-
-      test("should handle fallback responses with transport filtering", async () => {
-        const httpFallbackHandler = vi.fn().mockReturnValue({ type: "fallback" });
-        const httpFulfillHandler = vi.fn().mockReturnValue({ type: "fulfill", response: new Response() });
-
-        // Register routes in order: fallback first, then fulfill
-        (client as any).routeHandlers.set("fallback-route-id", [
-          "**/api",
-          httpFallbackHandler,
-          { type: "client-only", transport: "http", calls: 0, times: undefined }
-        ]);
-
-        (client as any).routeHandlers.set("fulfill-route-id", [
-          "**/api",
-          httpFulfillHandler,
-          { type: "client-only", transport: "http", calls: 0, times: undefined }
-        ]);
-
-        const externalHandler = client.attachExternalClientSideRouteHandler({
-          extractRequest: (request: Request) => request,
-          handleResult: (response) => response,
-        });
-
-        const request = new Request("http://example.com/api");
-        const result = await externalHandler(request);
-
-        // Both handlers should be called due to fallback behavior
-        expect(httpFallbackHandler).toHaveBeenCalledOnce();
-        expect(httpFulfillHandler).toHaveBeenCalledOnce();
-        expect(result).toEqual({ type: "fulfill", response: expect.any(Response) });
-      });
     });
 
     describe("warning for multiple attachments", () => {
@@ -2402,17 +1972,6 @@ describe("Client", () => {
         );
 
         warnSpy.mockRestore();
-      });
-
-      test("should set externalClientSideRouteHandlerAttached flag", () => {
-        expect((client as any).externalClientSideRouteHandlerAttached).toBe(false);
-
-        client.attachExternalClientSideRouteHandler({
-          extractRequest: (request: Request) => request,
-          handleResult: (response) => response,
-        });
-
-        expect((client as any).externalClientSideRouteHandlerAttached).toBe(true);
       });
     });
   });

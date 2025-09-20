@@ -1,18 +1,11 @@
-import type { GraphQLFulfillOptions, GraphQLRouteHandler, GraphQLRouteOptions, GraphQLRoute, GraphQL } from "@mocky-balboa/client";
-
-type OperationName = string;
-
-/**
- * Supported GraphQL operations
- */
-type OperationType = "query" | "mutation";
+import type { GraphQLFulfillOptions, GraphQLRouteHandler, GraphQLRouteOptions, GraphQLRoute, GraphQL, GraphQLOperationName, GraphQLOperationType } from "@mocky-balboa/client";
 
 /**
  * GraphQL operation including the name and type of the operation
  */
 export type Operation = {
-  name: OperationName;
-  type: OperationType;
+  name: GraphQLOperationName;
+  type: GraphQLOperationType;
 }
 
 /**

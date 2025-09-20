@@ -71,3 +71,4 @@ export type {
 export type { MockServerOptions } from "./mock-server.js";
 export type { Request, NextFunction } from "./middleware.js";
 export { default as mockyBalboaMiddleware } from "./middleware.js";
+export type { ProxyServerOptions } from "./proxy-server.js";
