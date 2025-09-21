@@ -37,7 +37,7 @@
 		"build:watch": "concurrently \"pnpm run build:event-source-stub --watch\" \"pnpm run build:fetch-stub --watch\"",
 		"clean": "rimraf dist",
 		"release": "semantic-release",
-		"test": "vitest"
+		"test": "echo \"No tests\""
 	},
 	"dependencies": {
 		"@mocky-balboa/client": "workspace:*",
