@@ -14,7 +14,7 @@
 		"test:packages": "pnpm --filter \"./packages/*\" test",
 		"prepare-release": "pnpm changeset",
 		"package-post-cjs-build": "node ./scripts/package-post-cjs-build.cjs",
-		"type:check:filter": "pnpm --filter \"./examples/!(nuxt-*)\" --filter \"./packages/*\"",
+		"type:check:filter": "pnpm --filter \"./packages/*\"",
 		"type:check": "pnpm type:check:filter exec pwd && pnpm type:check:filter exec pnpm tsc --noEmit"
 	},
 	"keywords": [],
