@@ -44,6 +44,8 @@ export interface ProxyServerOptions {
 	certificate?: SelfSignedCertificate | undefined;
 }
 
+type CloseProxyServer = () => Promise<void>;
+
 /**
  * Proxy server for serving SSE (server-sent events) requests and file proxy requests.
  *
@@ -180,7 +182,7 @@ export const startProxyServer = async (options: ProxyServerOptions = {}) => {
 		server = http.createServer(app);
 	}
 
-	return new Promise<void>((resolve, reject) => {
+	return new Promise<CloseProxyServer>((resolve, reject) => {
 		const timeout = setTimeout(() => {
 			reject(new Error("Proxy server failed to start"));
 		}, 5000);
@@ -188,7 +190,17 @@ export const startProxyServer = async (options: ProxyServerOptions = {}) => {
 		server.listen(port, hostname, () => {
 			clearTimeout(timeout);
 			logger.info(`Proxy server is running on port ${port}`);
-			resolve();
+			resolve(() => {
+				return new Promise<void>((resolve, reject) => {
+					server.close((err) => {
+						if (err) {
+							reject(err);
+						} else {
+							resolve();
+						}
+					});
+				});
+			});
 		});
 	});
 };

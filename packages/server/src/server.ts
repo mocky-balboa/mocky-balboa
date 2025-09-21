@@ -51,14 +51,16 @@ export const startServer = async ({
 	proxyServerOptions = {},
 }: ServerOptions = {}): Promise<CloseWebSocketServer> => {
 	logger.info("Starting Mocky Balboa server");
-	const [closeWebSocketServer] = await Promise.all([
+	const [closeWebSocketServer, , closeProxyServer] = await Promise.all([
 		startWebSocketServer({ ...webSocketServerOptions, hostname }),
 		bindMockServiceWorker(mockServerOptions),
 		startProxyServer({ ...proxyServerOptions, hostname, certificate }),
 	]);
 	logger.info("Mocky Balboa server started");
 
-	return closeWebSocketServer;
+	return async () => {
+		await Promise.all([closeWebSocketServer(), closeProxyServer()]);
+	};
 };
 
 export {

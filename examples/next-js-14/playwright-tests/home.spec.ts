@@ -34,6 +34,7 @@ let serverProcess: ChildProcessWithoutNullStreams;
 test.beforeEach(async ({ mockyConnectOptions }) => {
 	applicationPort = await getPort();
 	const websocketServerPort = await getPort();
+	const proxyServerPort = await getPort();
 	console.log(
 		`Starting server on port ${applicationPort} and websocket port ${websocketServerPort}`,
 	);
@@ -43,6 +44,8 @@ test.beforeEach(async ({ mockyConnectOptions }) => {
 		applicationPort.toString(),
 		"--websocket-port",
 		websocketServerPort.toString(),
+		"--proxy-port",
+		proxyServerPort.toString(),
 	]);
 
 	serverProcess.stdout.on("data", (data) => {
@@ -56,6 +59,7 @@ test.beforeEach(async ({ mockyConnectOptions }) => {
 	await Promise.all([
 		waitForPortToBeOccupied(applicationPort),
 		waitForPortToBeOccupied(websocketServerPort),
+		waitForPortToBeOccupied(proxyServerPort),
 	]);
 
 	mockyConnectOptions.port = websocketServerPort;

@@ -104,9 +104,14 @@ const main = async () => {
 				webSocketServerOptions: {
 					port: parseInt(cliOptions.websocketPort, 10),
 				},
+				proxyServerOptions: {
+					port: parseInt(cliOptions.proxyPort, 10),
+				},
 				mockServerOptions: {
 					timeout: parseInt(cliOptions.timeout, 10),
 				},
+				hostname: cliOptions.hostname,
+				certificate,
 			},
 			certificate,
 		},

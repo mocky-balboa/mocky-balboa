@@ -4,6 +4,7 @@ import https from "node:https";
 import path from "node:path";
 import { mockyBalboaMiddleware, startServer } from "@mocky-balboa/server";
 import {
+	DefaultProxyServerPort,
 	DefaultWebSocketServerPort,
 	type SelfSignedCertificate,
 } from "@mocky-balboa/shared-config";
@@ -15,6 +16,7 @@ import { createSelfSignedCertificate } from "./mkcert.js";
 interface CommonCLIOptions {
 	port: string;
 	websocketPort: string;
+	proxyPort: string;
 	hostname: string;
 	timeout: string;
 	https: boolean;
@@ -35,6 +37,11 @@ export const createCommand = (name: string, description: string) => {
 		"--websocket-port [websocketPort]",
 		"Port to run the WebSocket server on",
 		`${DefaultWebSocketServerPort}`,
+	);
+	cli.option(
+		"--proxy-port [proxyPort]",
+		"Port to run the proxy server on",
+		`${DefaultProxyServerPort}`,
 	);
 	cli.option(
 		"-h, --hostname [hostname]",
@@ -166,6 +173,9 @@ export const startServers = async <TCLIOptions extends CommonCLIOptions>(
 		hostname: cliOptions.hostname,
 		webSocketServerOptions: {
 			port: parseInt(cliOptions.websocketPort, 10),
+		},
+		proxyServerOptions: {
+			port: parseInt(cliOptions.proxyPort, 10),
 		},
 		mockServerOptions: {
 			timeout: parseInt(cliOptions.timeout, 10),
