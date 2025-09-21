@@ -10,7 +10,7 @@
 	"scripts": {
 		"build:packages": "pnpm --filter \"./packages/*\" build",
 		"build:packages-watch": "pnpm --filter \"./packages/*\" --parallel build:watch",
-		"lint": "pnpm exec biome check",
+		"lint": "pnpm exec biome check --error-on-warnings",
 		"test:packages": "pnpm --filter \"./packages/*\" test",
 		"prepare-release": "pnpm changeset",
 		"package-post-cjs-build": "node ./scripts/package-post-cjs-build.cjs",
