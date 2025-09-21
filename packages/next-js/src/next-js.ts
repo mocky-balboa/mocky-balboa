@@ -1,60 +1,60 @@
-import { parse } from "node:url";
 import {
-  createServer,
-  Server,
-  type IncomingMessage,
-  type ServerResponse,
+	createServer,
+	type IncomingMessage,
+	type Server,
+	type ServerResponse,
 } from "node:http";
 import { createServer as createHttpsServer } from "node:https";
+import { parse, type UrlWithParsedQuery } from "node:url";
 import {
-  clientIdentityStorage,
-  startServer,
-  ClientIdentityStorageHeader,
-  UnsetClientIdentity,
-  type ServerOptions,
-} from "@mocky-balboa/server";
-import {
-  getServerStartedOnString,
-  loadCertificateFiles,
-  type SelfSignedCertificate,
+	getServerStartedOnString,
+	loadCertificateFiles,
+	type SelfSignedCertificate,
 } from "@mocky-balboa/cli-utils";
+import {
+	ClientIdentityStorageHeader,
+	clientIdentityStorage,
+	type ServerOptions,
+	startServer,
+	UnsetClientIdentity,
+} from "@mocky-balboa/server";
 import { logger } from "./logger.js";
 
 /** Next.js relevant create server options */
 export interface NextServerOptions<TWithConfig extends boolean = false> {
-  /**
-   * Whether to use a custom server
-   * @ignore
-   */
-  customServer?: boolean;
-  /**
-   * Whether to use development mode
-   *
-   * @default false
-   */
-  dev?: boolean;
-  /**
-   * Quiet mode for Next.js
-   *
-   * @default false
-   */
-  quiet?: boolean;
-  /**
-   * Host to bind Next.js server to
-   *
-   * @default localhost
-   */
-  hostname?: string;
-  /**
-   * Port to bind Next.js server to
-   *
-   * @default 3000
-   */
-  port?: number;
-  /**
-   * @ignore
-   */
-  conf?: TWithConfig extends true ? any : never;
+	/**
+	 * Whether to use a custom server
+	 * @ignore
+	 */
+	customServer?: boolean;
+	/**
+	 * Whether to use development mode
+	 *
+	 * @default false
+	 */
+	dev?: boolean;
+	/**
+	 * Quiet mode for Next.js
+	 *
+	 * @default false
+	 */
+	quiet?: boolean;
+	/**
+	 * Host to bind Next.js server to
+	 *
+	 * @default localhost
+	 */
+	hostname?: string;
+	/**
+	 * Port to bind Next.js server to
+	 *
+	 * @default 3000
+	 */
+	port?: number;
+	/**
+	 * @ignore
+	 */
+	conf?: TWithConfig extends true ? Record<string, unknown> : never;
 }
 
 /**
@@ -67,126 +67,121 @@ export interface NextServerOptions<TWithConfig extends boolean = false> {
  * @interface
  */
 export type NextOptions = Pick<
-  NextServerOptions,
-  "dev" | "port" | "hostname" | "quiet"
+	NextServerOptions,
+	"dev" | "port" | "hostname" | "quiet"
 >;
 
 /**
  * Non-nullable {@link NextOptions}
  */
 type RequiredNextOptions = {
-  [key in keyof NextOptions]-?: NextOptions[key];
+	[key in keyof NextOptions]-?: NextOptions[key];
 };
 
 const DefaultOptions: RequiredNextOptions = {
-  dev: false,
-  port: 3000,
-  hostname: "localhost",
-  quiet: false,
+	dev: false,
+	port: 3000,
+	hostname: "localhost",
+	quiet: false,
 };
 
 /**
  * Next.js request handler retrieved from app.getRequestHandler()
  */
 export type RequestHandler = (
-  req: IncomingMessage,
-  res: ServerResponse,
-  parsedUrl?: any,
+	req: IncomingMessage,
+	res: ServerResponse,
+	parsedUrl?: UrlWithParsedQuery,
 ) => Promise<void>;
 
 /**
  * Definition for output of {@link CreateNextServer}
  */
 export interface NextWrapperServer {
-  getRequestHandler(): RequestHandler;
-  prepare(): Promise<void>;
+	getRequestHandler(): RequestHandler;
+	prepare(): Promise<void>;
 }
 
 /**
  * Top level parameter to be passed through from consuming application to start the Next.js server programatically
  */
 export type CreateNextServer<TWithConfig extends boolean = false> = (
-  options: NextServerOptions<TWithConfig>,
+	options: NextServerOptions<TWithConfig>,
 ) => NextWrapperServer;
 
 /**
  * Creates a Next.js server programatically and uses the AsyncLocalStorage for client identity storage to run the handler with the trace of the client identity
  */
 const startNextJSServer = async (
-  createNextServer: CreateNextServer,
-  { dev, port, hostname, quiet }: RequiredNextOptions,
-  certificate?: SelfSignedCertificate | undefined,
+	createNextServer: CreateNextServer,
+	{ dev, port, hostname, quiet }: RequiredNextOptions,
+	certificate?: SelfSignedCertificate | undefined,
 ) => {
-  const app = createNextServer({ dev, quiet, customServer: true });
-  const handle = app.getRequestHandler();
+	const app = createNextServer({ dev, quiet, customServer: true });
+	const handle = app.getRequestHandler();
 
-  await app.prepare();
-  return new Promise<void>(async (resolve, reject) => {
-    let server: Server;
-    const handler = (req: IncomingMessage, res: ServerResponse) => {
-      let clientIdentity = req.headers[ClientIdentityStorageHeader];
-      if (typeof clientIdentity !== "string") {
-        clientIdentity = UnsetClientIdentity;
-      }
+	let server: Server;
+	const handler = (req: IncomingMessage, res: ServerResponse) => {
+		let clientIdentity = req.headers[ClientIdentityStorageHeader];
+		if (typeof clientIdentity !== "string") {
+			clientIdentity = UnsetClientIdentity;
+		}
 
-      return clientIdentityStorage.run(clientIdentity, () => {
-        const parsedUrl = parse(req.url ?? "", true);
-        return handle(req, res, parsedUrl);
-      });
-    };
+		return clientIdentityStorage.run(clientIdentity, () => {
+			const parsedUrl = parse(req.url ?? "", true);
+			return handle(req, res, parsedUrl);
+		});
+	};
 
-    if (certificate) {
-      try {
-        const { cert, key, ca } = await loadCertificateFiles(certificate);
-        server = createHttpsServer(
-          {
-            cert,
-            key,
-            ca,
-          },
-          handler,
-        );
-      } catch (error) {
-        reject(error);
-        return;
-      }
-    } else {
-      server = createServer(handler);
-    }
+	if (certificate) {
+		const { cert, key, ca } = await loadCertificateFiles(certificate);
+		server = createHttpsServer(
+			{
+				cert,
+				key,
+				ca,
+			},
+			handler,
+		);
+	} else {
+		server = createServer(handler);
+	}
 
-    server.once("error", reject).listen(port, hostname, () => {
-      logger.info(
-        getServerStartedOnString(
-          certificate ? "https" : "http",
-          hostname,
-          port,
-        ),
-      );
-      resolve();
-    });
-  });
+	await app.prepare();
+	return new Promise<void>((resolve, reject) => {
+		server.once("error", reject).listen(port, hostname, () => {
+			logger.info(
+				getServerStartedOnString(
+					certificate ? "https" : "http",
+					hostname,
+					port,
+				),
+			);
+			resolve();
+		});
+	});
 };
 
 /**
  * Starts the Next.js server as well as the Mocky Balboa server for the WebSocket server and mocks
  */
 export const startServers = async (
-  createNextServer: CreateNextServer,
-  options: {
-    next?: NextOptions;
-    server?: ServerOptions;
-    certificate?: SelfSignedCertificate | undefined;
-  } = {},
+	createNextServer: CreateNextServer,
+	options: {
+		next?: NextOptions;
+		server?: ServerOptions;
+		certificate?: SelfSignedCertificate | undefined;
+	} = {},
 ) => {
-  await Promise.all([
-    startServer(options.server),
-    startNextJSServer(
-      createNextServer,
-      {
-        ...DefaultOptions,
-        ...options.next,
-      },
-      options.certificate,
-    ),
-  ]);
+	await Promise.all([
+		startServer(options.server),
+		startNextJSServer(
+			createNextServer,
+			{
+				...DefaultOptions,
+				...options.next,
+			},
+			options.certificate,
+		),
+	]);
 };

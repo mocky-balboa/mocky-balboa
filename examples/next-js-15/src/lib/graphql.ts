@@ -18,16 +18,16 @@ export const getUserSettingsQuery = `
 `;
 
 export interface Profile {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
+	user: {
+		id: string;
+		email: string;
+		name: string;
+	};
 }
 
 export interface UserSettings {
-  userSettings: {
-    notificationsEnabled: boolean;
-    newsletterSubscriptionEnabled: boolean;
-  };
+	userSettings: {
+		notificationsEnabled: boolean;
+		newsletterSubscriptionEnabled: boolean;
+	};
 }

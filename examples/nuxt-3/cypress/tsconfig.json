@@ -1,5 +1,5 @@
 {
-  "compilerOptions": {
-    "types": ["cypress"]
-  }
+	"compilerOptions": {
+		"types": ["cypress"]
+	}
 }

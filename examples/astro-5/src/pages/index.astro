@@ -1,36 +1,45 @@
 ---
+/** biome-ignore-all lint/correctness/noUnusedImports: astro */
 import Layout from "../layouts/Layout.astro";
-import { getTrainingRegime, getNextFight, type CareerRecord } from "../lib/data";
+import {
+	type CareerRecord,
+	getNextFight,
+	getTrainingRegime,
+} from "../lib/data";
 
 const [trainingRegimeResult, nextFightResult] = await Promise.allSettled([
-    getTrainingRegime(),
-    getNextFight(),
+	getTrainingRegime(),
+	getNextFight(),
 ]);
 
+// biome-ignore lint/correctness/noUnusedVariables: astro
 const [trainingRegime, trainingRegimeError] =
-    trainingRegimeResult.status === "fulfilled"
-        ? trainingRegimeResult.value
-        : [null, trainingRegimeResult.reason as Error];
+	trainingRegimeResult.status === "fulfilled"
+		? trainingRegimeResult.value
+		: [null, trainingRegimeResult.reason as Error];
 
+// biome-ignore lint/correctness/noUnusedVariables: astro
 const [nextFight, nextFightError] =
-    nextFightResult.status === "fulfilled"
-        ? nextFightResult.value
-        : [null, nextFightResult.reason as Error];
+	nextFightResult.status === "fulfilled"
+		? nextFightResult.value
+		: [null, nextFightResult.reason as Error];
 
+// biome-ignore lint/correctness/noUnusedVariables: astro
 const getDataCardClasses = (error: boolean) => {
-    const classes = ["p-6", "rounded-xl", "border", "flex", "flex-col"];
+	const classes = ["p-6", "rounded-xl", "border", "flex", "flex-col"];
 
-    if (error) {
-        classes.push("bg-red-50", "border-red-200");
-    } else {
-        classes.push("bg-gray-50", "border-gray-200");
-    }
+	if (error) {
+		classes.push("bg-red-50", "border-red-200");
+	} else {
+		classes.push("bg-gray-50", "border-gray-200");
+	}
 
-    return classes.join(" ");
+	return classes.join(" ");
 };
 
+// biome-ignore lint/correctness/noUnusedVariables: astro
 const getRecordString = (record: CareerRecord) => {
-  return `${record.wins.total} wins (${record.wins.ko} KO), ${record.losses.total} losses (${record.losses.ko} KO), ${record.draws} draws`;
+	return `${record.wins.total} wins (${record.wins.ko} KO), ${record.losses.total} losses (${record.losses.ko} KO), ${record.draws} draws`;
 };
 ---
 

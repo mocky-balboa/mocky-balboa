@@ -1,12 +1,12 @@
 <script setup lang="ts">
 defineProps<{
-    title: string;
-    error?: string;
-    data?: {
-        id: string;
-        label: string;
-        value: string;
-    }[];
+	title: string;
+	error?: string;
+	data?: {
+		id: string;
+		label: string;
+		value: string;
+	}[];
 }>();
 </script>
 

@@ -1,26 +1,27 @@
 <script lang="ts">
-    import type { CareerRecord } from "$lib/data";
-    import type { PageProps } from "./$types";
+/** biome-ignore-all lint/correctness/noUnusedImports: svelte */
+import type { CareerRecord } from "$lib/data";
+import type { PageProps } from "./$types";
 
-    let { data }: PageProps = $props();
-    const { nextFight, nextFightError, trainingRegime, trainingRegimeError } =
-        data;
+const { data }: PageProps = $props();
+/** biome-ignore-all lint/correctness/noUnusedVars: svelte */
+const { nextFight, nextFightError, trainingRegime, trainingRegimeError } = data;
 
-    const getDataCardClasses = (error: boolean) => {
-        const classes = ["p-6", "rounded-xl", "border", "flex", "flex-col"];
+const getDataCardClasses = (error: boolean) => {
+	const classes = ["p-6", "rounded-xl", "border", "flex", "flex-col"];
 
-        if (error) {
-            classes.push("bg-red-50", "border-red-200");
-        } else {
-            classes.push("bg-gray-50", "border-gray-200");
-        }
+	if (error) {
+		classes.push("bg-red-50", "border-red-200");
+	} else {
+		classes.push("bg-gray-50", "border-gray-200");
+	}
 
-        return classes.join(" ");
-    };
+	return classes.join(" ");
+};
 
-    const getRecordString = (record: CareerRecord) => {
-        return `${record.wins.total} wins (${record.wins.ko} KO), ${record.losses.total} losses (${record.losses.ko} KO), ${record.draws} draws`;
-    };
+const getRecordString = (record: CareerRecord) => {
+	return `${record.wins.total} wins (${record.wins.ko} KO), ${record.losses.total} losses (${record.losses.ko} KO), ${record.draws} draws`;
+};
 </script>
 
 <div class="flex items-center justify-center min-h-screen bg-gray-100 p-4">

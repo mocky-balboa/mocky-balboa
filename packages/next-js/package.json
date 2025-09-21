@@ -1,84 +1,84 @@
 {
-  "name": "@mocky-balboa/next-js",
-  "version": "1.2.5",
-  "description": "Next.js integration for Mocky Balboa. Mock your full-stack network requests in your test suites.",
-  "type": "module",
-  "homepage": "https://docs.mockybalboa.com",
-  "bugs": {
-    "url": "https://github.com/mocky-balboa/mocky-balboa/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mocky-balboa/mocky-balboa.git",
-    "directory": "packages/next-js"
-  },
-  "keywords": [
-    "next-js",
-    "next.js",
-    "nextjs",
-    "next",
-    "mocking",
-    "network",
-    "testing",
-    "tests",
-    "integration",
-    "server"
-  ],
-  "author": {
-    "name": "Lewis Nelson",
-    "url": "https://lewnelson.com"
-  },
-  "license": "MIT",
-  "packageManager": "pnpm@10.14.0",
-  "main": "./dist/cjs/next-js.cjs",
-  "types": "./dist/types/next-js.d.ts",
-  "bin": {
-    "mocky-balboa-next-js": "./dist/esm/cli.js"
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/esm/next-js.js",
-      "require": "./dist/cjs/next-js.cjs",
-      "types": "./dist/types/next-js.d.ts"
-    },
-    "./cache-handler": {
-      "import": "./dist/esm/cache-handler.js",
-      "require": "./dist/cjs/cache-handler.cjs",
-      "types": "./dist/types/cache-handler.d.ts"
-    }
-  },
-  "scripts": {
-    "build:esm": "swc src --out-dir dist/esm -C module.type=es6 --strip-leading-paths",
-    "build:cjs": "swc src --out-dir dist/cjs -C module.type=commonjs --strip-leading-paths --out-file-extension cjs",
-    "build:esm:types": "tsc --emitDeclarationOnly --project tsconfig.build.esm.json",
-    "build:cjs:types": "tsc --emitDeclarationOnly --project tsconfig.build.cjs.json",
-    "build": "pnpm clean && pnpm run build:esm && pnpm run build:cjs && pnpm run build:types && pnpm run post:build",
-    "build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json",
-    "build:watch": "concurrently \"pnpm run build:esm --watch\" \"pnpm run build:cjs --watch\" \"pnpm run build:types --watch\" \"pnpm run post:build:watch\"",
-    "post:build": "pnpm --workspace-root package-post-cjs-build $(pwd)",
-    "post:build:watch": "chokidar \"dist/cjs/**/*.cjs\" -c \"pnpm run post:build\"",
-    "clean": "rimraf dist",
-    "release": "semantic-release",
-    "test": "echo \"No tests\""
-  },
-  "dependencies": {
-    "@mocky-balboa/cli-utils": "workspace:*",
-    "@mocky-balboa/logger": "workspace:*",
-    "@mocky-balboa/server": "workspace:*",
-    "commander": "^14.0.0",
-    "jiti": "^2.5.1"
-  },
-  "peerDependencies": {
-    "next": ">=14.0.0"
-  },
-  "devDependencies": {
-    "@swc/cli": "catalog:",
-    "@swc/core": "catalog:",
-    "chokidar-cli": "catalog:",
-    "@types/node": "catalog:",
-    "concurrently": "catalog:",
-    "next": "^15.5.0",
-    "rimraf": "catalog:",
-    "typescript": "catalog:"
-  }
+	"name": "@mocky-balboa/next-js",
+	"version": "1.2.5",
+	"description": "Next.js integration for Mocky Balboa. Mock your full-stack network requests in your test suites.",
+	"type": "module",
+	"homepage": "https://docs.mockybalboa.com",
+	"bugs": {
+		"url": "https://github.com/mocky-balboa/mocky-balboa/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mocky-balboa/mocky-balboa.git",
+		"directory": "packages/next-js"
+	},
+	"keywords": [
+		"next-js",
+		"next.js",
+		"nextjs",
+		"next",
+		"mocking",
+		"network",
+		"testing",
+		"tests",
+		"integration",
+		"server"
+	],
+	"author": {
+		"name": "Lewis Nelson",
+		"url": "https://lewnelson.com"
+	},
+	"license": "MIT",
+	"packageManager": "pnpm@10.14.0",
+	"main": "./dist/cjs/next-js.cjs",
+	"types": "./dist/types/next-js.d.ts",
+	"bin": {
+		"mocky-balboa-next-js": "./dist/esm/cli.js"
+	},
+	"exports": {
+		".": {
+			"import": "./dist/esm/next-js.js",
+			"require": "./dist/cjs/next-js.cjs",
+			"types": "./dist/types/next-js.d.ts"
+		},
+		"./cache-handler": {
+			"import": "./dist/esm/cache-handler.js",
+			"require": "./dist/cjs/cache-handler.cjs",
+			"types": "./dist/types/cache-handler.d.ts"
+		}
+	},
+	"scripts": {
+		"build:esm": "swc src --out-dir dist/esm -C module.type=es6 --strip-leading-paths",
+		"build:cjs": "swc src --out-dir dist/cjs -C module.type=commonjs --strip-leading-paths --out-file-extension cjs",
+		"build:esm:types": "tsc --emitDeclarationOnly --project tsconfig.build.esm.json",
+		"build:cjs:types": "tsc --emitDeclarationOnly --project tsconfig.build.cjs.json",
+		"build": "pnpm clean && pnpm run build:esm && pnpm run build:cjs && pnpm run build:types && pnpm run post:build",
+		"build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json",
+		"build:watch": "concurrently \"pnpm run build:esm --watch\" \"pnpm run build:cjs --watch\" \"pnpm run build:types --watch\" \"pnpm run post:build:watch\"",
+		"post:build": "pnpm --workspace-root package-post-cjs-build $(pwd)",
+		"post:build:watch": "chokidar \"dist/cjs/**/*.cjs\" -c \"pnpm run post:build\"",
+		"clean": "rimraf dist",
+		"release": "semantic-release",
+		"test": "echo \"No tests\""
+	},
+	"dependencies": {
+		"@mocky-balboa/cli-utils": "workspace:*",
+		"@mocky-balboa/logger": "workspace:*",
+		"@mocky-balboa/server": "workspace:*",
+		"commander": "^14.0.0",
+		"jiti": "^2.5.1"
+	},
+	"peerDependencies": {
+		"next": ">=14.0.0"
+	},
+	"devDependencies": {
+		"@swc/cli": "catalog:",
+		"@swc/core": "catalog:",
+		"chokidar-cli": "catalog:",
+		"@types/node": "catalog:",
+		"concurrently": "catalog:",
+		"next": "^15.5.0",
+		"rimraf": "catalog:",
+		"typescript": "catalog:"
+	}
 }

@@ -1,31 +1,31 @@
 {
-  "name": "@mocky-balboa/example-astro-4",
-  "type": "module",
-  "version": "0.0.1",
-  "private": true,
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "build:tests": "ENABLE_MOCKY_BALBOA=true pnpm build",
-    "preview": "astro preview",
-    "astro": "astro",
-    "test:cypress": "pnpm cypress run",
-    "test:playwright": "pnpm playwright test",
-    "start:tests": "mocky-balboa-astro",
-    "start:tests-dev": "ENABLE_MOCKY_BALBOA=true pnpm dev --port 3000 --host 0.0.0.0"
-  },
-  "dependencies": {
-    "@astrojs/node": "^8",
-    "@tailwindcss/vite": "^4.1.12",
-    "astro": "^4",
-    "tailwindcss": "^4.1.12"
-  },
-  "devDependencies": {
-    "@mocky-balboa/astro": "workspace:*",
-    "@mocky-balboa/cypress": "workspace:*",
-    "@mocky-balboa/playwright": "workspace:*",
-    "@playwright/test": "^1.55.0",
-    "cypress": "^15.0.0",
-    "playwright": "^1.55.0"
-  }
+	"name": "@mocky-balboa/example-astro-4",
+	"type": "module",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "astro dev",
+		"build": "astro build",
+		"build:tests": "ENABLE_MOCKY_BALBOA=true pnpm build",
+		"preview": "astro preview",
+		"astro": "astro",
+		"test:cypress": "pnpm cypress run",
+		"test:playwright": "pnpm playwright test",
+		"start:tests": "mocky-balboa-astro",
+		"start:tests-dev": "ENABLE_MOCKY_BALBOA=true pnpm dev --port 3000 --host 0.0.0.0"
+	},
+	"dependencies": {
+		"@astrojs/node": "^8",
+		"@tailwindcss/vite": "^4.1.12",
+		"astro": "^4",
+		"tailwindcss": "^4.1.12"
+	},
+	"devDependencies": {
+		"@mocky-balboa/astro": "workspace:*",
+		"@mocky-balboa/cypress": "workspace:*",
+		"@mocky-balboa/playwright": "workspace:*",
+		"@playwright/test": "^1.55.0",
+		"cypress": "^15.0.0",
+		"playwright": "^1.55.0"
+	}
 }

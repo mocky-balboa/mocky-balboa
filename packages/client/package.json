@@ -1,78 +1,78 @@
 {
-  "name": "@mocky-balboa/client",
-  "version": "2.0.0",
-  "description": "Client library for Mocky Balboa to interact with the WebSocket server for real-time network mocking in your test suites.",
-  "type": "module",
-  "homepage": "https://docs.mockybalboa.com",
-  "bugs": {
-    "url": "https://github.com/mocky-balboa/mocky-balboa/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mocky-balboa/mocky-balboa.git",
-    "directory": "packages/client"
-  },
-  "keywords": [
-    "mocking",
-    "network",
-    "testing",
-    "tests",
-    "integration",
-    "server",
-    "client"
-  ],
-  "author": {
-    "name": "Lewis Nelson",
-    "url": "https://lewnelson.com"
-  },
-  "license": "MIT",
-  "packageManager": "pnpm@10.14.0",
-  "main": "./dist/cjs/client.cjs",
-  "types": "./dist/types/client.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/esm/client.js",
-      "require": "./dist/cjs/client.cjs",
-      "types": "./dist/types/client.d.ts"
-    }
-  },
-  "scripts": {
-    "build:esm": "swc src --out-dir dist/esm -C module.type=es6 --strip-leading-paths",
-    "build:cjs": "swc src --out-dir dist/cjs -C module.type=commonjs --strip-leading-paths --out-file-extension cjs",
-    "build:esm:types": "tsc --emitDeclarationOnly --project tsconfig.build.esm.json",
-    "build:cjs:types": "tsc --emitDeclarationOnly --project tsconfig.build.cjs.json",
-    "build": "pnpm clean && pnpm run build:esm && pnpm run build:cjs && pnpm run build:types && pnpm run post:build",
-    "build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json",
-    "build:watch": "concurrently \"pnpm run build:esm --watch\" \"pnpm run build:cjs --watch\" \"pnpm run build:types --watch\" \"pnpm run post:build:watch\"",
-    "post:build": "pnpm --workspace-root package-post-cjs-build $(pwd)",
-    "post:build:watch": "chokidar \"dist/cjs/**/*.cjs\" -c \"pnpm run post:build\"",
-    "clean": "rimraf dist",
-    "release": "semantic-release",
-    "test": "vitest"
-  },
-  "dependencies": {
-    "@mocky-balboa/logger": "workspace:*",
-    "@mocky-balboa/shared-config": "workspace:*",
-    "@mocky-balboa/websocket-messages": "workspace:*",
-    "graphql": "^16.11.0",
-    "minimatch": "^10.0.3",
-    "uuid": "catalog:",
-    "isomorphic-ws": "^5.0.0",
-    "zod": "^4.1.8"
-  },
-  "devDependencies": {
-    "@swc/cli": "catalog:",
-    "@swc/core": "catalog:",
-    "chokidar-cli": "catalog:",
-    "@types/express": "catalog:",
-    "@types/node": "catalog:",
-    "@types/ws": "catalog:",
-    "concurrently": "catalog:",
-    "express": "catalog:",
-    "get-port": "catalog:",
-    "rimraf": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:",
-    "ws": "catalog:"
-  }
+	"name": "@mocky-balboa/client",
+	"version": "2.0.0",
+	"description": "Client library for Mocky Balboa to interact with the WebSocket server for real-time network mocking in your test suites.",
+	"type": "module",
+	"homepage": "https://docs.mockybalboa.com",
+	"bugs": {
+		"url": "https://github.com/mocky-balboa/mocky-balboa/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mocky-balboa/mocky-balboa.git",
+		"directory": "packages/client"
+	},
+	"keywords": [
+		"mocking",
+		"network",
+		"testing",
+		"tests",
+		"integration",
+		"server",
+		"client"
+	],
+	"author": {
+		"name": "Lewis Nelson",
+		"url": "https://lewnelson.com"
+	},
+	"license": "MIT",
+	"packageManager": "pnpm@10.14.0",
+	"main": "./dist/cjs/client.cjs",
+	"types": "./dist/types/client.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/esm/client.js",
+			"require": "./dist/cjs/client.cjs",
+			"types": "./dist/types/client.d.ts"
+		}
+	},
+	"scripts": {
+		"build:esm": "swc src --out-dir dist/esm -C module.type=es6 --strip-leading-paths",
+		"build:cjs": "swc src --out-dir dist/cjs -C module.type=commonjs --strip-leading-paths --out-file-extension cjs",
+		"build:esm:types": "tsc --emitDeclarationOnly --project tsconfig.build.esm.json",
+		"build:cjs:types": "tsc --emitDeclarationOnly --project tsconfig.build.cjs.json",
+		"build": "pnpm clean && pnpm run build:esm && pnpm run build:cjs && pnpm run build:types && pnpm run post:build",
+		"build:types": "tsc --emitDeclarationOnly --project tsconfig.types.json",
+		"build:watch": "concurrently \"pnpm run build:esm --watch\" \"pnpm run build:cjs --watch\" \"pnpm run build:types --watch\" \"pnpm run post:build:watch\"",
+		"post:build": "pnpm --workspace-root package-post-cjs-build $(pwd)",
+		"post:build:watch": "chokidar \"dist/cjs/**/*.cjs\" -c \"pnpm run post:build\"",
+		"clean": "rimraf dist",
+		"release": "semantic-release",
+		"test": "vitest"
+	},
+	"dependencies": {
+		"@mocky-balboa/logger": "workspace:*",
+		"@mocky-balboa/shared-config": "workspace:*",
+		"@mocky-balboa/websocket-messages": "workspace:*",
+		"graphql": "^16.11.0",
+		"minimatch": "^10.0.3",
+		"uuid": "catalog:",
+		"isomorphic-ws": "^5.0.0",
+		"zod": "^4.1.8"
+	},
+	"devDependencies": {
+		"@swc/cli": "catalog:",
+		"@swc/core": "catalog:",
+		"chokidar-cli": "catalog:",
+		"@types/express": "catalog:",
+		"@types/node": "catalog:",
+		"@types/ws": "catalog:",
+		"concurrently": "catalog:",
+		"express": "catalog:",
+		"get-port": "catalog:",
+		"rimraf": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:",
+		"ws": "catalog:"
+	}
 }

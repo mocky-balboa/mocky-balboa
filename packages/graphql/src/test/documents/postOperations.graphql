@@ -1,81 +1,81 @@
 query GetPostWithComments($postId: ID!, $includeReplies: Boolean = true) {
-  getPost(id: $postId) {
-    id
-    title
-    content
-    excerpt
-    slug
-    author {
-      id
-      username
-      avatar
-    }
-    category
-    tags
-    publishedAt
-    createdAt
-    updatedAt
-    likes
-    views
-    isPublished
-    featuredImage
-    readingTime
-    comments {
-      id
-      content
-      author {
-        id
-        username
-        avatar
-      }
-      parentComment {
-        id
-      }
-      replies @include(if: $includeReplies) {
-        id
-        content
-        author {
-          username
-        }
-        createdAt
-      }
-      createdAt
-      updatedAt
-      likes
-      isEdited
-    }
-  }
+	getPost(id: $postId) {
+		id
+		title
+		content
+		excerpt
+		slug
+		author {
+			id
+			username
+			avatar
+		}
+		category
+		tags
+		publishedAt
+		createdAt
+		updatedAt
+		likes
+		views
+		isPublished
+		featuredImage
+		readingTime
+		comments {
+			id
+			content
+			author {
+				id
+				username
+				avatar
+			}
+			parentComment {
+				id
+			}
+			replies @include(if: $includeReplies) {
+				id
+				content
+				author {
+					username
+				}
+				createdAt
+			}
+			createdAt
+			updatedAt
+			likes
+			isEdited
+		}
+	}
 }
 
 query GetPostAnalytics($postId: ID!) {
-  getPostAnalytics(postId: $postId) {
-    views
-    likes
-    comments
-    shares
-    avgReadTime
-    topReferrers
-  }
+	getPostAnalytics(postId: $postId) {
+		views
+		likes
+		comments
+		shares
+		avgReadTime
+		topReferrers
+	}
 }
 
 mutation PublishPost($postId: ID!) {
-  publishPost(id: $postId) {
-    id
-    title
-    publishedAt
-    isPublished
-  }
+	publishPost(id: $postId) {
+		id
+		title
+		publishedAt
+		isPublished
+	}
 }
 
 mutation UnpublishPost($postId: ID!) {
-  unpublishPost(id: $postId) {
-    id
-    title
-    publishedAt
-    isPublished
-  }
+	unpublishPost(id: $postId) {
+		id
+		title
+		publishedAt
+		isPublished
+	}
 }
 
 mutation DeletePost($postId: ID!) {
-  deletePost(id: $postId)
+	deletePost(id: $postId)
 }

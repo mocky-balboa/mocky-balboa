@@ -1,3 +1,3 @@
 {
-  "entryPoints": ["src/cypress.ts"]
+	"entryPoints": ["src/cypress.ts"]
 }

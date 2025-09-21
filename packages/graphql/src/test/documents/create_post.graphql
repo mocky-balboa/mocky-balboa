@@ -1,23 +1,23 @@
 mutation create_post($input: CreatePostInput!) {
-  createPost(input: $input) {
-    id
-    title
-    content
-    excerpt
-    slug
-    author {
-      id
-      username
-    }
-    category
-    tags
-    publishedAt
-    createdAt
-    updatedAt
-    likes
-    views
-    isPublished
-    featuredImage
-    readingTime
-  }
+	createPost(input: $input) {
+		id
+		title
+		content
+		excerpt
+		slug
+		author {
+			id
+			username
+		}
+		category
+		tags
+		publishedAt
+		createdAt
+		updatedAt
+		likes
+		views
+		isPublished
+		featuredImage
+		readingTime
+	}
 }

@@ -1,7 +1,7 @@
 {
-  "label": "Client integrations",
-  "position": 10,
-  "link": {
-    "type": "generated-index"
-  }
+	"label": "Client integrations",
+	"position": 10,
+	"link": {
+		"type": "generated-index"
+	}
 }

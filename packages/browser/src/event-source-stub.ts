@@ -2,202 +2,216 @@ import type { ClientSSEResponse } from "@mocky-balboa/client";
 import { BrowserGetSSEProxyParamsFunctionName } from "@mocky-balboa/shared-config";
 
 declare global {
-  interface Window {
-    [BrowserGetSSEProxyParamsFunctionName]: (url: string) => Promise<ClientSSEResponse>;
-  }
+	interface Window {
+		[BrowserGetSSEProxyParamsFunctionName]: (
+			url: string,
+		) => Promise<ClientSSEResponse>;
+	}
 }
 
 const OriginalEventSource = window.EventSource;
 
-type EventHandlerQueueItem = {
-  type: "addEventListener";
-  args: Parameters<EventSource["addEventListener"]>;
-} | {
-  type: "dispatchEvent";
-  args: Parameters<EventSource["dispatchEvent"]>;
-} | {
-  type: "removeEventListener";
-  args: Parameters<EventSource["removeEventListener"]>;
-}
+type EventHandlerQueueItem =
+	| {
+			type: "addEventListener";
+			args: Parameters<EventSource["addEventListener"]>;
+	  }
+	| {
+			type: "dispatchEvent";
+			args: Parameters<EventSource["dispatchEvent"]>;
+	  }
+	| {
+			type: "removeEventListener";
+			args: Parameters<EventSource["removeEventListener"]>;
+	  };
 
 class MockEventSource extends EventTarget {
-  private realEventSource?: EventSource;
+	private realEventSource?: EventSource;
 
-  static CONNECTING = EventSource.CONNECTING;
-  static OPEN = EventSource.OPEN;
-  static CLOSED = EventSource.CLOSED;
+	static CONNECTING = EventSource.CONNECTING;
+	static OPEN = EventSource.OPEN;
+	static CLOSED = EventSource.CLOSED;
 
-  private _onerror: EventSource["onerror"] = () => {};
-  private _onmessage: EventSource["onmessage"] = () => {};
-  private _onopen: EventSource["onopen"] = () => {};
-  
-  private _readyState: EventSource["CONNECTING"] | EventSource["OPEN"] | EventSource["CLOSED"] = EventSource.CONNECTING;
+	private _onerror: EventSource["onerror"] = () => {};
+	private _onmessage: EventSource["onmessage"] = () => {};
+	private _onopen: EventSource["onopen"] = () => {};
 
-  private _eventHandlerQueue: EventHandlerQueueItem[] = [];
+	private _readyState:
+		| EventSource["CONNECTING"]
+		| EventSource["OPEN"]
+		| EventSource["CLOSED"] = EventSource.CONNECTING;
 
-  constructor(private _url: string | URL, private options?: ConstructorParameters<typeof OriginalEventSource>[1]) {
-    super();
-    void this._connnect();
-  }
+	private _eventHandlerQueue: EventHandlerQueueItem[] = [];
 
-  get url() {
-    return this._url instanceof URL ? this._url.toString() : this._url;
-  }
+	constructor(
+		private _url: string | URL,
+		private options?: ConstructorParameters<typeof OriginalEventSource>[1],
+	) {
+		super();
+		void this._connnect();
+	}
 
-  get withCredentials() {
-    return this.options?.withCredentials ?? false;
-  }
+	get url() {
+		return this._url instanceof URL ? this._url.toString() : this._url;
+	}
 
-  get readyState() {
-    if (this.realEventSource) {
-      return this.realEventSource.readyState;
-    }
+	get withCredentials() {
+		return this.options?.withCredentials ?? false;
+	}
 
-    return this._readyState;
-  }
+	get readyState() {
+		if (this.realEventSource) {
+			return this.realEventSource.readyState;
+		}
 
-  get CONNECTING() {
-    return EventSource.CONNECTING;
-  }
+		return this._readyState;
+	}
 
-  get OPEN() {
-    return EventSource.OPEN;
-  }
+	get CONNECTING() {
+		return EventSource.CONNECTING;
+	}
 
-  get CLOSED() {
-    return EventSource.CLOSED;
-  }
+	get OPEN() {
+		return EventSource.OPEN;
+	}
 
-  get onerror() {
-    if (this.realEventSource) {
-      return this.realEventSource.onerror;
-    }
+	get CLOSED() {
+		return EventSource.CLOSED;
+	}
 
-    return this._onerror;
-  }
+	get onerror() {
+		if (this.realEventSource) {
+			return this.realEventSource.onerror;
+		}
 
-  get onmessage() {
-    if (this.realEventSource) {
-      return this.realEventSource.onmessage;
-    }
+		return this._onerror;
+	}
 
-    return this._onmessage;
-  }
+	get onmessage() {
+		if (this.realEventSource) {
+			return this.realEventSource.onmessage;
+		}
 
-  get onopen() {
-    if (this.realEventSource) {
-      return this.realEventSource.onopen;
-    }
+		return this._onmessage;
+	}
 
-    return this._onopen;
-  }
+	get onopen() {
+		if (this.realEventSource) {
+			return this.realEventSource.onopen;
+		}
 
-  set onerror(value: EventSource["onerror"]) {
-    if (this.realEventSource) {
-      this.realEventSource.onerror = value;
-    } else {
-      this._onerror = value;
-    }
-  }
+		return this._onopen;
+	}
 
-  set onmessage(value: EventSource["onmessage"]) {
-    if (this.realEventSource) {
-      this.realEventSource.onmessage = value;
-    } else {
-      this._onmessage = value;
-    }
-  }
+	set onerror(value: EventSource["onerror"]) {
+		if (this.realEventSource) {
+			this.realEventSource.onerror = value;
+		} else {
+			this._onerror = value;
+		}
+	}
 
-  set onopen(value: EventSource["onopen"]) {
-    if (this.realEventSource) {
-      this.realEventSource.onopen = value;
-    } else {
-      this._onopen = value;
-    }
-  }
+	set onmessage(value: EventSource["onmessage"]) {
+		if (this.realEventSource) {
+			this.realEventSource.onmessage = value;
+		} else {
+			this._onmessage = value;
+		}
+	}
 
-  close() {
-    if (this.realEventSource) {
-      this.realEventSource.close();
-    } else {
-      this._readyState = EventSource.CLOSED;
-    }
-  }
+	set onopen(value: EventSource["onopen"]) {
+		if (this.realEventSource) {
+			this.realEventSource.onopen = value;
+		} else {
+			this._onopen = value;
+		}
+	}
 
-  private processEventHandlerQueue(eventSource: EventSource) {
-    for (const item of this._eventHandlerQueue) {
-      switch (item.type) {
-        case "addEventListener":
-          eventSource.addEventListener(...item.args);
-          break;
-        case "dispatchEvent":
-          eventSource.dispatchEvent(...item.args);
-          break;
-        case "removeEventListener":
-          eventSource.removeEventListener(...item.args);
-          break;
-      }
-    }
+	close() {
+		if (this.realEventSource) {
+			this.realEventSource.close();
+		} else {
+			this._readyState = EventSource.CLOSED;
+		}
+	}
 
-    this._eventHandlerQueue = [];
-  }
+	private processEventHandlerQueue(eventSource: EventSource) {
+		for (const item of this._eventHandlerQueue) {
+			switch (item.type) {
+				case "addEventListener":
+					eventSource.addEventListener(...item.args);
+					break;
+				case "dispatchEvent":
+					eventSource.dispatchEvent(...item.args);
+					break;
+				case "removeEventListener":
+					eventSource.removeEventListener(...item.args);
+					break;
+			}
+		}
 
-  private getFullUrl() {
-    const urlString = this.url;
-    try {
-      const url = new URL(urlString);
-      return url;
-    } catch {
-      return new URL(`${window.location.origin}${urlString}`);
-    }
-  }
+		this._eventHandlerQueue = [];
+	}
 
-  private async _connnect() {
-    const result = await window[BrowserGetSSEProxyParamsFunctionName](this.getFullUrl().toString());
-    if (this._readyState !== EventSource.CONNECTING) {
-      return;
-    }
+	private getFullUrl() {
+		const urlString = this.url;
+		try {
+			const url = new URL(urlString);
+			return url;
+		} catch {
+			return new URL(`${window.location.origin}${urlString}`);
+		}
+	}
 
-    let eventSource: EventSource;
-    if (result.shouldProxy) {
-      eventSource = new OriginalEventSource(result.proxyUrl);
-    } else {
-      console.log("not proxying");
-      eventSource = new OriginalEventSource(this.url);
-    }
+	private async _connnect() {
+		const result = await window[BrowserGetSSEProxyParamsFunctionName](
+			this.getFullUrl().toString(),
+		);
+		if (this._readyState !== EventSource.CONNECTING) {
+			return;
+		}
 
-    eventSource.onerror = this._onerror;
-    eventSource.onmessage = this._onmessage;
-    eventSource.onopen = this._onopen;
+		let eventSource: EventSource;
+		if (result.shouldProxy) {
+			eventSource = new OriginalEventSource(result.proxyUrl);
+		} else {
+			console.log("not proxying");
+			eventSource = new OriginalEventSource(this.url);
+		}
 
-    this.realEventSource = eventSource;
-    this.processEventHandlerQueue(this.realEventSource);
-  }
+		eventSource.onerror = this._onerror;
+		eventSource.onmessage = this._onmessage;
+		eventSource.onopen = this._onopen;
 
-  addEventListener(...args: Parameters<EventSource["addEventListener"]>) {
-    if (this.realEventSource) {
-      this.realEventSource.addEventListener(...args);
-    } else {
-      this._eventHandlerQueue.push({ type: "addEventListener", args });
-    }
-  }
+		this.realEventSource = eventSource;
+		this.processEventHandlerQueue(this.realEventSource);
+	}
 
-  dispatchEvent(...args: Parameters<EventSource["dispatchEvent"]>) {
-    if (this.realEventSource) {
-      return this.realEventSource.dispatchEvent(...args);
-    }
+	addEventListener(...args: Parameters<EventSource["addEventListener"]>) {
+		if (this.realEventSource) {
+			this.realEventSource.addEventListener(...args);
+		} else {
+			this._eventHandlerQueue.push({ type: "addEventListener", args });
+		}
+	}
 
-    this._eventHandlerQueue.push({ type: "dispatchEvent", args });
-    return true;
-  }
+	dispatchEvent(...args: Parameters<EventSource["dispatchEvent"]>) {
+		if (this.realEventSource) {
+			return this.realEventSource.dispatchEvent(...args);
+		}
 
-  removeEventListener(...args: Parameters<EventSource["removeEventListener"]>) {
-    if (this.realEventSource) {
-      this.realEventSource.removeEventListener(...args);
-    } else {
-      this._eventHandlerQueue.push({ type: "removeEventListener", args });
-    }
-  }
+		this._eventHandlerQueue.push({ type: "dispatchEvent", args });
+		return true;
+	}
+
+	removeEventListener(...args: Parameters<EventSource["removeEventListener"]>) {
+		if (this.realEventSource) {
+			this.realEventSource.removeEventListener(...args);
+		} else {
+			this._eventHandlerQueue.push({ type: "removeEventListener", args });
+		}
+	}
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: stub EventSource function
 window.EventSource = MockEventSource as any;

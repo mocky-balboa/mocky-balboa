@@ -1,13 +1,13 @@
 mutation CreateUser($input: CreateUserInput!) {
-  createUser(input: $input) {
-    id
-    username
-    email
-    firstName
-    lastName
-    bio
-    createdAt
-    updatedAt
-    isVerified
-  }
+	createUser(input: $input) {
+		id
+		username
+		email
+		firstName
+		lastName
+		bio
+		createdAt
+		updatedAt
+		isVerified
+	}
 }
