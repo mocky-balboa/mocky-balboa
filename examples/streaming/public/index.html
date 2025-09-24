@@ -10,11 +10,13 @@
     <p>This is a server-side events example.</p>
     <p>Latest message: <span id="latest-message">None</span></p>
     <p>Endpoint message: <span id="endpoint-message">None</span></p>
+    <p>WebSocket message: <span id="websocket-message">None</span></p>
     <button id="start">Start EventSource</button>
     <button id="stop">Stop EventSource</button>
     <button id="start-fetch">Start Fetch</button>
     <button id="stop-fetch">Stop Fetch</button>
     <button id="start-endpoint">Get from Endpoint</button>
+    <button id="get-websocket-message">Get WebSocket message</button>
   </body>
   <script>
     let eventSource;
@@ -76,6 +78,29 @@
           document.getElementById("endpoint-message").textContent = data.message;
         });
       });
+    });
+
+    const ws = new WebSocket("wss://somewhere.com:9898/websocket");
+    ws.addEventListener("message", (event) => {
+      try {
+        const parsedMessage = JSON.parse(event.data.toString());
+        if (!parsedMessage.message) {
+          throw new Error("Message not found");
+        }
+
+        document.getElementById("websocket-message").textContent = parsedMessage.message;
+      } catch (error) {
+        console.log("error", error);
+        document.getElementById("websocket-message").textContent = "Error";
+      }
+    });
+
+    ws.addEventListener("open", () => {
+      console.log("WebSocket connection opened", ws.url);
+    });
+
+    document.getElementById("get-websocket-message").addEventListener("click", () => {
+      ws.send(JSON.stringify({ type: "get_message" }));
     });
   </script>
 </html>

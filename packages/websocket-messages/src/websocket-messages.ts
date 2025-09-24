@@ -20,6 +20,18 @@ export const MessageType = {
 	SSE_ERROR: "sse-error",
 	/** When an SSE connection is ready, sent from server to client */
 	SSE_CONNECTION_READY: "sse-connection-ready",
+	/** When a WebSocket connection is opened on the server */
+	WEBSOCKET_CONNECTION_READY: "websocket-connection-ready",
+	/** When a message is received from the client to the server */
+	WEBSOCKET_ON_MESSAGE: "websocket-on-message",
+	/** Triggers a message to be sent to the client */
+	WEBSOCKET_DISPATCH_MESSAGE: "websocket-dispatch-message",
+	/** Tell the WebSocket proxy server to close the connection */
+	WEBSOCKET_CLOSE: "websocket-close",
+	/** Request for determining if the WebSocket proxy should act as the mock */
+	WEBSOCKET_SHOULD_PROXY_REQUEST: "websocket-should-proxy-request",
+	/** Response for determining if the WebSocket proxy should act as the mock */
+	WEBSOCKET_SHOULD_PROXY_RESPONSE: "websocket-should-proxy-response",
 	/** Catch all for unknown messages */
 	UNKNOWN: "unknown",
 } as const;
@@ -112,6 +124,56 @@ export const Messages = z.discriminatedUnion("type", [
 		messageId: z.string(),
 		payload: z.object({
 			id: z.string(),
+		}),
+	}),
+	z.object({
+		type: z.literal(MessageType.WEBSOCKET_CONNECTION_READY),
+		messageId: z.string(),
+		payload: z.object({
+			id: z.string(),
+		}),
+	}),
+	z.object({
+		type: z.literal(MessageType.WEBSOCKET_ON_MESSAGE),
+		messageId: z.string(),
+		payload: z.object({
+			id: z.string(),
+			message: z.string(),
+		}),
+	}),
+	z.object({
+		type: z.literal(MessageType.WEBSOCKET_DISPATCH_MESSAGE),
+		messageId: z.string(),
+		payload: z.object({
+			id: z.string(),
+			message: z.string(),
+		}),
+	}),
+	z.object({
+		type: z.literal(MessageType.WEBSOCKET_CLOSE),
+		messageId: z.string(),
+		payload: z.object({
+			id: z.string(),
+			code: z.number().optional(),
+			reason: z.string().optional(),
+		}),
+	}),
+	z.object({
+		type: z.literal(MessageType.WEBSOCKET_SHOULD_PROXY_REQUEST),
+		messageId: z.string(),
+		payload: z.object({
+			id: z.string(),
+			request: z.object({
+				url: z.string(),
+			}),
+		}),
+	}),
+	z.object({
+		type: z.literal(MessageType.WEBSOCKET_SHOULD_PROXY_RESPONSE),
+		messageId: z.string(),
+		payload: z.object({
+			id: z.string(),
+			shouldProxy: z.boolean(),
 		}),
 	}),
 ]);

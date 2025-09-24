@@ -3,11 +3,12 @@ import {
 	MessageType,
 	type ParsedMessage,
 } from "@mocky-balboa/websocket-messages";
+import type { ProxyConnection, RemoveProxyConnection } from "./shared-types.js";
 
 /**
  * Class for handling SSE (server-sent events) requests
  */
-export class SSE {
+export class SSE implements ProxyConnection {
 	/**
 	 * Tracks whether an event has been sent to the server
 	 */
@@ -21,6 +22,7 @@ export class SSE {
 				Extract<ParsedMessage, { type: MessageType }>["payload"]
 			>,
 		) => void,
+		private readonly removeProxyConnection: RemoveProxyConnection,
 	) {}
 
 	/**
@@ -48,6 +50,8 @@ export class SSE {
 		this.sendMessage(
 			new Message(MessageType.SSE_CLOSE, { id: this.requestId }),
 		);
+
+		this.removeProxyConnection(this);
 	}
 
 	/**

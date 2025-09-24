@@ -1,4 +1,5 @@
 import {
+	type BrowserProxySettings,
 	ClientIdentityStorageHeader,
 	DefaultProxyServerPort,
 	DefaultWebSocketServerPort,
@@ -25,15 +26,19 @@ import { Route } from "./route.js";
 import {
 	DefaultSSERouteTimeout,
 	DefaultWaitForRequestTimeout,
+	DefaultWebSocketRouteTimeout,
 	DefaultWebSocketServerTimeout,
+	type ProxyConnection,
 	type RouteMeta,
 	type RouteOptions,
 	type RouteResponse,
 	RouteType,
 	type SSERouteOptions,
+	type WebSocketRouteOptions,
 } from "./shared-types.js";
 import { SSE } from "./sse.js";
 import { waitForAck } from "./utils.js";
+import { WebSocketServerMock } from "./websocket-server-mock.js";
 
 /** Possible values for URL pattern matching */
 export type UrlMatcher =
@@ -152,6 +157,8 @@ export class Client {
 	private clientWaitForRequestHandlers: Set<
 		(request: Request) => Promise<void>
 	> = new Set();
+	/** The port number of the WebSocket server */
+	private port?: number;
 	/** The port number of the proxy server */
 	private proxyPort?: number;
 	/** Whether to connect to the WebSocket server over WSS and proxy server over HTTPS */
@@ -161,6 +168,10 @@ export class Client {
 	/** Callback handlers for waiting on client-side SSE requests */
 	private clientSideSSERouteHandlers: Map<string, [UrlMatcher, () => void]> =
 		new Map();
+	/** Callback handlers for waiting on WebSocket connections to be made */
+	private websocketInterceptors: Map<string, UrlMatcher> = new Map();
+	/** Proxy server connections */
+	private proxyConnections: Set<ProxyConnection> = new Set();
 
 	/** Convenient access to route types */
 	public readonly RouteType = RouteType;
@@ -182,6 +193,32 @@ export class Client {
 		this.sendMessage = this.sendMessage.bind(this);
 
 		this.on(MessageType.REQUEST, this.onRequest);
+		this.on(
+			MessageType.WEBSOCKET_SHOULD_PROXY_REQUEST,
+			this.onWebSocketShouldProxyRequest,
+		);
+	}
+
+	getProxySettings(): BrowserProxySettings {
+		if (
+			this.hostname === undefined ||
+			this.port === undefined ||
+			this.proxyPort === undefined ||
+			this.https === undefined
+		) {
+			throw new Error("Have you called Client.connect()?");
+		}
+
+		return {
+			hostname: this.hostname,
+			port: this.proxyPort,
+			clientIdentity: this.clientIdentifier,
+			webSocketServerSettings: {
+				port: this.port,
+				hostname: this.hostname,
+				https: this.https,
+			},
+		};
 	}
 
 	/**
@@ -203,6 +240,30 @@ export class Client {
 			});
 		});
 	}
+
+	private onWebSocketShouldProxyRequest = async (
+		message: ParsedMessageType<MessageTypes["WEBSOCKET_SHOULD_PROXY_REQUEST"]>,
+	) => {
+		const url = message.payload.request.url;
+		let requestId: string | undefined;
+		for (const [id, urlMatcher] of this.websocketInterceptors) {
+			if (await this.doesUrlMatch(urlMatcher, new URL(url))) {
+				requestId = id;
+				break;
+			}
+		}
+
+		if (requestId) {
+			this.websocketInterceptors.delete(requestId);
+		}
+
+		this.sendMessage(
+			new Message(MessageType.WEBSOCKET_SHOULD_PROXY_RESPONSE, {
+				id: requestId ?? uuid(),
+				shouldProxy: !!requestId,
+			}),
+		);
+	};
 
 	/**
 	 * Checks if the request URL matches the given URL matcher.
@@ -517,6 +578,7 @@ export class Client {
 	}: ConnectOptions) {
 		this.https = https;
 		this.hostname = hostname;
+		this.port = port;
 		this._ws = new WebSocket(`${https ? "wss" : "ws"}://${hostname}:${port}`);
 		const startTime = Date.now();
 		await this.waitForConnection(this._ws, timeoutDuration);
@@ -547,31 +609,31 @@ export class Client {
 	 * @param messageType - The type of message to handle.
 	 * @param handler - The handler function to call when a message of the specified type is received. The handler function receives the parsed message as an argument.
 	 */
-	on<TMessageType extends MessageType>(
+	on = <TMessageType extends MessageType>(
 		messageType: TMessageType,
 		handler: (message: ParsedMessageType<TMessageType>) => void | Promise<void>,
-	) {
+	) => {
 		const handlers = this.messageHandlers.get(messageType) ?? new Set();
 		handlers.add(handler as (message: ParsedMessage) => void | Promise<void>);
 		this.messageHandlers.set(messageType, handlers);
-	}
+	};
 
 	/**
 	 * Unregisters a handler for a specific message type.
 	 * @param messageType - The type of message to handle.
 	 * @param handler - The original handler function that was registered.
 	 */
-	off<TMessageType extends MessageType>(
+	off = <TMessageType extends MessageType>(
 		messageType: TMessageType,
 		handler: (message: ParsedMessageType<TMessageType>) => void | Promise<void>,
-	) {
+	) => {
 		const handlers = this.messageHandlers.get(messageType);
 		if (!handlers) return;
 
 		handlers.delete(
 			handler as (message: ParsedMessage) => void | Promise<void>,
 		);
-	}
+	};
 
 	/**
 	 * Disconnects the WebSocket connection. You need to run {@link Client.connect} again to reconnect.
@@ -583,6 +645,11 @@ export class Client {
 		if (!this._ws) {
 			throw new Error("Client is not connected");
 		}
+
+		this.proxyConnections.forEach((proxyConnection) => {
+			proxyConnection.close();
+		});
+		this.proxyConnections.clear();
 
 		this._ws.close();
 		delete this._ws;
@@ -625,6 +692,69 @@ export class Client {
 			...options,
 			calls: 0,
 			transport: "http",
+		});
+	}
+
+	/**
+	 * Used to register a route handler for a WebSocket server endpoint.
+	 *
+	 * @param url - the URL pattern to match against the incoming request URL
+	 * @param options - optional options for the route handler
+	 * @returns a WebSocket helper to listen for messages from the client and dispatch messages from the server
+	 */
+	websocket(url: UrlMatcher, options?: WebSocketRouteOptions) {
+		const { timeout: timeoutDuration = DefaultWebSocketRouteTimeout } =
+			options ?? {};
+
+		const requestId = uuid();
+		this.websocketInterceptors.set(requestId, url);
+
+		return new Promise<WebSocketServerMock>((resolve, reject) => {
+			const timedOut = false;
+			const timeout = setTimeout(() => {
+				reject(
+					new Error("Timed out waiting for WebSocket connection to be made"),
+				);
+			}, timeoutDuration);
+
+			/**
+			 * Callback handler when a WebSocket connection is ready
+			 */
+			const onWebSocketConnectionReady = (
+				message: ParsedMessageType<MessageTypes["WEBSOCKET_CONNECTION_READY"]>,
+			) => {
+				if (timedOut) {
+					this.off(
+						MessageType.WEBSOCKET_CONNECTION_READY,
+						onWebSocketConnectionReady,
+					);
+					return;
+				}
+
+				if (message.payload.id === requestId) {
+					const websocketHelper = new WebSocketServerMock(
+						requestId,
+						{
+							on: this.on,
+							off: this.off,
+							sendMessage: this.sendMessage,
+						},
+						this.removeProxyConnection,
+					);
+					clearTimeout(timeout);
+					this.off(
+						MessageType.WEBSOCKET_CONNECTION_READY,
+						onWebSocketConnectionReady,
+					);
+					this.websocketInterceptors.delete(requestId);
+					resolve(websocketHelper);
+				}
+			};
+
+			this.on(
+				MessageType.WEBSOCKET_CONNECTION_READY,
+				onWebSocketConnectionReady,
+			);
 		});
 	}
 
@@ -688,6 +818,10 @@ export class Client {
 		return proxyUrl.toString();
 	}
 
+	private removeProxyConnection = (proxyConnection: ProxyConnection) => {
+		this.proxyConnections.delete(proxyConnection);
+	};
+
 	/**
 	 * Used to register a route handler for a SSE server endpoint.
 	 *
@@ -712,8 +846,6 @@ export class Client {
 			 * Callback handler when an SSE connection is ready
 			 */
 			const listenForConnectionReady = (onReady: (sse: SSE) => void) => {
-				const sse = new SSE(requestId, this.sendMessage);
-
 				const onConnectionReady = (
 					message: ParsedMessageType<MessageTypes["SSE_CONNECTION_READY"]>,
 				) => {
@@ -723,6 +855,11 @@ export class Client {
 					}
 
 					if (message.payload.id === requestId) {
+						const sse = new SSE(
+							requestId,
+							this.sendMessage,
+							this.removeProxyConnection,
+						);
 						clearTimeout(timeout);
 						this.off(MessageType.SSE_CONNECTION_READY, onConnectionReady);
 						this.clientSideSSERouteHandlers.delete(requestId);
@@ -780,7 +917,13 @@ export class Client {
 	 * @returns The SSE proxy parameters
 	 */
 	async getClientSSEProxyParams(urlString: string): Promise<ClientSSEResponse> {
-		const url = new URL(urlString);
+		let url: URL;
+		try {
+			url = new URL(urlString);
+		} catch {
+			return { shouldProxy: false };
+		}
+
 		for (const [requestId, [urlMatcher, handler]] of this
 			.clientSideSSERouteHandlers) {
 			if (await this.doesUrlMatch(urlMatcher, url)) {
@@ -895,6 +1038,8 @@ export class Client {
 
 export {
 	BrowserGetSSEProxyParamsFunctionName,
+	type BrowserProxySettings,
+	BrowserProxySettingsKey,
 	ClientIdentityStorageHeader,
 	DefaultProxyServerPort,
 	SSEProxyEndpoint,

@@ -1,4 +1,4 @@
-# Mocky Balboa server side events example
+# Mocky Balboa server streaming example
 
 - Playwright tests are contained within the `playwright-tests` directory.
 - Cypress tests are contained within the `cypress-tests` directory.

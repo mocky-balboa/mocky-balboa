@@ -7,8 +7,24 @@ export const SSEProxyOriginalUrlParam = "mocky-balboa-sse-proxy-original-url";
 export const SSEProxyEndpoint = "/__mocky_balboa_internal_sse_proxy_endpoint__";
 export const FileProxyEndpoint =
 	"/__mocky_balboa_internal_file_proxy_endpoint__";
+export const WebSocketProxyEndpoint =
+	"/__mocky_balboa_internal_websocket_proxy_endpoint__";
+export const WebSocketProxyOriginalUrlParam =
+	"mocky-balboa-websocket-proxy-original-url";
 export const FileProxyPathParam = "mocky-balboa-file-proxy-path";
 export const BrowserGetSSEProxyParamsFunctionName = "__mocky_balboa_client_sse";
+export const BrowserProxySettingsKey = "__mocky_balboa_client_proxy_settings__";
+
+export interface BrowserProxySettings {
+	hostname: string;
+	port: number;
+	clientIdentity: string;
+	webSocketServerSettings: {
+		port: number;
+		hostname: string;
+		https: boolean;
+	};
+}
 
 export interface SelfSignedCertificate {
 	key: string;

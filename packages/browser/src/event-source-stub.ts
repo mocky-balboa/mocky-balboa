@@ -175,7 +175,6 @@ class MockEventSource extends EventTarget {
 		if (result.shouldProxy) {
 			eventSource = new OriginalEventSource(result.proxyUrl);
 		} else {
-			console.log("not proxying");
 			eventSource = new OriginalEventSource(this.url);
 		}
 

@@ -15,6 +15,9 @@ export const DefaultWaitForRequestTimeout = 5000;
 /** Default timeout duration in milliseconds for waiting for the SSE connection to be ready */
 export const DefaultSSERouteTimeout = 5000;
 
+/** Default timeout duration in milliseconds for waiting for the WebSocket connection to be ready */
+export const DefaultWebSocketRouteTimeout = 5000;
+
 /** Options when configuring a route */
 export interface RouteOptions {
 	/**
@@ -47,6 +50,12 @@ export interface SSERouteOptions {
 	 */
 	timeout?: number;
 }
+
+/**
+ * WebSocket route options
+ */
+export type WebSocketRouteOptions = Pick<RouteOptions, "type"> &
+	SSERouteOptions;
 
 export type RouteMeta = RouteOptions & {
 	calls: number;
@@ -94,3 +103,9 @@ export const PassthroughRouteResponse: PassthroughRouteResponse = {
 	type: "passthrough",
 };
 export const ErrorRouteResponse: ErrorRouteResponse = { type: "error" };
+
+export interface ProxyConnection {
+	close: () => void;
+}
+
+export type RemoveProxyConnection = (proxyConnection: ProxyConnection) => void;

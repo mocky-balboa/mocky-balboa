@@ -11,22 +11,32 @@ declare global {
 
 const OriginalFetch = window.fetch;
 
-const isEventSourceRequest = (requestInit?: RequestInit) => {
+const isEventSourceRequest = (requestInit?: RequestInit): boolean => {
 	const headers = new Headers(requestInit?.headers);
 	const acceptHeader = headers.get("accept");
-	return acceptHeader?.match(/^text\/event-stream;?.*?$/);
+	return acceptHeader?.match(/^text\/event-stream;?.*?$/) !== null;
 };
 
 const getRequestUrl = (requestOrUrl: Parameters<typeof OriginalFetch>[0]) => {
-	if (typeof requestOrUrl === "string") {
-		return requestOrUrl;
+	let urlString: string;
+	switch (true) {
+		case requestOrUrl instanceof URL:
+			urlString = requestOrUrl.toString();
+			break;
+		case typeof requestOrUrl === "string":
+			urlString = requestOrUrl;
+			break;
+		default:
+			urlString = requestOrUrl.url;
+			break;
 	}
 
-	if (requestOrUrl instanceof URL) {
-		return requestOrUrl.toString();
+	try {
+		const url = new URL(urlString);
+		return url.toString();
+	} catch {
+		return new URL(`${window.location.origin}${urlString}`).toString();
 	}
-
-	return requestOrUrl.url;
 };
 
 const MockFetch = async (...args: Parameters<typeof OriginalFetch>) => {

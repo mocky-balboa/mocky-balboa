@@ -1,5 +1,5 @@
 {
-	"name": "server-side-events",
+	"name": "@mocky-balboa/example-streaming",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
@@ -29,7 +29,7 @@
 		"@swc/cli": "catalog:",
 		"@swc/core": "catalog:",
 		"@types/express": "catalog:",
-		"@types/node": "^20",
+		"@types/node": "^24",
 		"cypress": "^15.2.0",
 		"playwright": "^1.55.0",
 		"typescript": "^5.8.3"

@@ -1,5 +1,7 @@
 import {
 	BrowserGetSSEProxyParamsFunctionName,
+	type BrowserProxySettings,
+	BrowserProxySettingsKey,
 	Client,
 	type ClientSSEResponse,
 	type ConnectOptions,
@@ -17,6 +19,7 @@ declare global {
 		[BrowserGetSSEProxyParamsFunctionName]?: (
 			url: string,
 		) => Promise<ClientSSEResponse>;
+		[BrowserProxySettingsKey]: BrowserProxySettings;
 	}
 }
 
@@ -56,35 +59,6 @@ export const createClient = async (
 ): Promise<Client> => {
 	const client = new Client();
 
-	cy.on("window:before:load", (window) => {
-		if (window[BrowserGetSSEProxyParamsFunctionName]) {
-			return;
-		}
-
-		cy.readFile(
-			require.resolve("@mocky-balboa/browser/event-source-stub"),
-		).then((eventSourceStub) => {
-			cy.readFile(require.resolve("@mocky-balboa/browser/fetch-stub")).then(
-				(fetchStub) => {
-					window.eval(eventSourceStub);
-					window.eval(fetchStub);
-				},
-			);
-		});
-
-		window[BrowserGetSSEProxyParamsFunctionName] = (url: string) => {
-			return client.getClientSSEProxyParams(url);
-		};
-	});
-
-	cy.intercept(
-		`!**/${SSEProxyEndpoint}**`,
-		client.attachExternalClientSideRouteHandler({
-			extractRequest: extractRequest(client.clientIdentifier),
-			handleResult: handleResult(client),
-		}),
-	);
-
 	// When the client receives an error message from the server we should log the error and close the context. This can help prevent false positives in test cases.
 	client.on(
 		MessageType.ERROR,
@@ -100,6 +74,42 @@ export const createClient = async (
 	cy.on("test:after:run", () => {
 		client.disconnect();
 	});
+
+	cy.on("window:before:load", (window) => {
+		if (window[BrowserGetSSEProxyParamsFunctionName]) {
+			return;
+		}
+
+		cy.readFile(
+			require.resolve("@mocky-balboa/browser/event-source-stub"),
+		).then((eventSourceStub) => {
+			cy.readFile(require.resolve("@mocky-balboa/browser/fetch-stub")).then(
+				(fetchStub) => {
+					cy.readFile(
+						require.resolve("@mocky-balboa/browser/websocket-stub"),
+					).then((websocketStub) => {
+						const proxySettings = client.getProxySettings();
+						window[BrowserProxySettingsKey] = proxySettings;
+						window.eval(eventSourceStub);
+						window.eval(fetchStub);
+						window.eval(websocketStub);
+					});
+				},
+			);
+		});
+
+		window[BrowserGetSSEProxyParamsFunctionName] = (url: string) => {
+			return client.getClientSSEProxyParams(url);
+		};
+	});
+
+	cy.intercept(
+		`!**${SSEProxyEndpoint}**`,
+		client.attachExternalClientSideRouteHandler({
+			extractRequest: extractRequest(client.clientIdentifier),
+			handleResult: handleResult(client),
+		}),
+	);
 
 	return client;
 };

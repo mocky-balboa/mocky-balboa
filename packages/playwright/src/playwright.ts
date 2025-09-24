@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import {
 	BrowserGetSSEProxyParamsFunctionName,
+	BrowserProxySettingsKey,
 	Client,
 	ClientIdentityStorageHeader,
 	type ConnectOptions,
@@ -60,19 +61,6 @@ export const createClient = async (
 		}),
 	);
 
-	await context.addInitScript({
-		path: require.resolve("@mocky-balboa/browser/event-source-stub"),
-	});
-	await context.addInitScript({
-		path: require.resolve("@mocky-balboa/browser/fetch-stub"),
-	});
-	await context.exposeFunction(
-		BrowserGetSSEProxyParamsFunctionName,
-		(url: string) => {
-			return client.getClientSSEProxyParams(url);
-		},
-	);
-
 	// When the client receives an error message from the server we should log the error and close the context. This can help prevent false positives in test cases.
 	client.on(
 		MessageType.ERROR,
@@ -87,6 +75,28 @@ export const createClient = async (
 	context.on("close", () => {
 		client.disconnect();
 	});
+
+	const proxySettings = client.getProxySettings();
+	context.addInitScript({
+		content: `window.${BrowserProxySettingsKey} = ${JSON.stringify(proxySettings)};`,
+	});
+
+	await context.addInitScript({
+		path: require.resolve("@mocky-balboa/browser/event-source-stub"),
+	});
+	await context.addInitScript({
+		path: require.resolve("@mocky-balboa/browser/fetch-stub"),
+	});
+	await context.addInitScript({
+		path: require.resolve("@mocky-balboa/browser/websocket-stub"),
+	});
+
+	await context.exposeFunction(
+		BrowserGetSSEProxyParamsFunctionName,
+		(url: string) => {
+			return client.getClientSSEProxyParams(url);
+		},
+	);
 
 	return client;
 };
