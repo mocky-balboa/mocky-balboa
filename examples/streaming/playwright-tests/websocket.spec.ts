@@ -9,7 +9,7 @@ test("when messages are handled via the WebSocket server", async ({
 		"wss://somewhere.com:9898/websocket",
 	);
 
-	await page.goto("http://localhost:3000");
+	await page.goto("http://localhost:3000/websocket.html");
 	const websocketHelper = await websocketHelperPromise;
 
 	websocketHelper.onMessage((message) => {

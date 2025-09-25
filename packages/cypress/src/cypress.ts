@@ -75,27 +75,31 @@ export const createClient = async (
 		client.disconnect();
 	});
 
-	cy.on("window:before:load", (window) => {
-		if (window[BrowserGetSSEProxyParamsFunctionName]) {
-			return;
-		}
-
-		cy.readFile(
-			require.resolve("@mocky-balboa/browser/event-source-stub"),
-		).then((eventSourceStub) => {
+	const stubs: string[] = [];
+	cy.readFile(require.resolve("@mocky-balboa/browser/event-source-stub")).then(
+		(eventSourceStub) => {
 			cy.readFile(require.resolve("@mocky-balboa/browser/fetch-stub")).then(
 				(fetchStub) => {
 					cy.readFile(
 						require.resolve("@mocky-balboa/browser/websocket-stub"),
 					).then((websocketStub) => {
-						const proxySettings = client.getProxySettings();
-						window[BrowserProxySettingsKey] = proxySettings;
-						window.eval(eventSourceStub);
-						window.eval(fetchStub);
-						window.eval(websocketStub);
+						stubs.push(eventSourceStub, fetchStub, websocketStub);
 					});
 				},
 			);
+		},
+	);
+
+	cy.on("window:before:load", (window) => {
+		if (window[BrowserGetSSEProxyParamsFunctionName]) {
+			return;
+		}
+
+		const proxySettings = client.getProxySettings();
+		window[BrowserProxySettingsKey] = proxySettings;
+
+		stubs.forEach((stub) => {
+			window.eval(stub);
 		});
 
 		window[BrowserGetSSEProxyParamsFunctionName] = (url: string) => {

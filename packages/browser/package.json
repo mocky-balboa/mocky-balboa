@@ -53,7 +53,7 @@
 		"chokidar-cli": "catalog:",
 		"@types/node": "catalog:",
 		"concurrently": "catalog:",
-		"esbuild": "0.25.10",
+		"esbuild": "catalog:",
 		"rimraf": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"

@@ -5,8 +5,10 @@
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
-		"build": "swc src --out-dir dist -C module.type=es6 --strip-leading-paths",
-		"build:watch": "pnpm build --watch",
+		"build": "pnpm build:client && pnpm build:server",
+		"build:client": "esbuild client.bundle.mjs --bundle --minify --outfile=public/client.bundle.js --log-level=error",
+		"build:server": "swc src --out-dir dist -C module.type=es6 --strip-leading-paths",
+		"build:watch": "concurrently \"pnpm run build:client --watch\" \"pnpm run build:server --watch\"",
 		"build:tests": "pnpm build",
 		"start": "node dist/server.js",
 		"start:tests": "pnpm start",
@@ -19,6 +21,7 @@
 	"license": "ISC",
 	"packageManager": "pnpm@10.14.0",
 	"dependencies": {
+		"@microsoft/fetch-event-source": "^2.0.1",
 		"express": "catalog:"
 	},
 	"devDependencies": {
@@ -30,7 +33,9 @@
 		"@swc/core": "catalog:",
 		"@types/express": "catalog:",
 		"@types/node": "^24",
+		"concurrently": "catalog:",
 		"cypress": "^15.2.0",
+		"esbuild": "catalog:",
 		"playwright": "^1.55.0",
 		"typescript": "^5.8.3"
 	}

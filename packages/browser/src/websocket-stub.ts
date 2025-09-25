@@ -54,18 +54,7 @@ const WebSocketProxy = new Proxy(OriginalWebSocket, {
 	},
 });
 
-const originalWebSocketDescriptor = Object.getOwnPropertyDescriptor(
-	globalThis,
-	"WebSocket",
-);
-
 Object.defineProperty(globalThis, "WebSocket", {
 	value: WebSocketProxy,
 	configurable: true,
 });
-
-if (originalWebSocketDescriptor) {
-	Object.defineProperty(globalThis, "WebSocket", originalWebSocketDescriptor);
-}
-
-window.WebSocket = WebSocketProxy;

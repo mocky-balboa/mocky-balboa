@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server-Side Events</title>
+  </head>
+  <body>
+    <h1>Server-Side Events</h1>
+    <p>This is a server-side events example.</p>
+    <p>Latest message: <span id="latest-message">None</span></p>
+    <button id="start-fetch">Start Fetch</button>
+    <button id="stop-fetch">Stop Fetch</button>
+  </body>
+  <script src="/client.bundle.js"></script>
+  <script>
+    let abortController;
+    const fetchData = async () => {
+      abortController?.abort();
+      abortController = new AbortController();
+      await fetchEventSource("/sse", {
+        signal: abortController.signal,
+        method: "POST",
+        headers: {
+          Accept: "text/event-stream",
+        },
+        onopen(res) {
+          if (res.ok && res.status === 200) {
+            console.log("Connection made ", res);
+          } else if (
+            res.status >= 400 &&
+            res.status < 500 &&
+            res.status !== 429
+          ) {
+            console.log("Client side error ", res);
+          }
+        },
+        onmessage(event) {
+          console.log(event);
+          document.getElementById("latest-message").textContent = event.data;
+        },
+        onclose() {
+          console.log("Connection closed by the server");
+        },
+        onerror(err) {
+          console.log("There was an error from server", err);
+        },
+      });
+    };
+
+    document.getElementById("start-fetch").addEventListener("click", () => {
+      fetchData();
+    });
+    document.getElementById("stop-fetch").addEventListener("click", () => {
+      abortController?.abort();
+    });
+  </script>
+</html>
