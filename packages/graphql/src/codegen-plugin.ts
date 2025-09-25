@@ -38,7 +38,7 @@ const plugin: CodegenPlugin["plugin"] = (schema, documents, config) => {
 		isExternal: false,
 	}));
 
-	const visitor = new MockyBalboaVisitor(schema, allFragments, config);
+	const visitor = new MockyBalboaVisitor(schema, allFragments, config, {});
 	visit(allDocuments, visitor);
 
 	return {

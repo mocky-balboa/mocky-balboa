@@ -15,7 +15,11 @@
 		"isolatedModules": true,
 		"noUncheckedSideEffectImports": true,
 		"moduleDetection": "force",
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"baseUrl": ".",
+		"paths": {
+			"@mocky-balboa/graphql": ["./src/graphql.ts"]
+		}
 	},
-	"exclude": ["dist", "src/test/generated"]
+	"exclude": ["dist"]
 }

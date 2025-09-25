@@ -1,7 +1,7 @@
 import { exec } from "node:child_process";
 import path from "node:path";
 import { rimraf } from "rimraf";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("@mocky-balboa/graphql", () => {
 	return import(path.resolve(packageRoot, "src/graphql.ts"));
@@ -9,46 +9,54 @@ vi.mock("@mocky-balboa/graphql", () => {
 
 const packageRoot = path.resolve(import.meta.dirname, "..");
 
-describe("Codegen Plugin", () => {
-	// biome-ignore lint/suspicious/noExplicitAny: Testing generated module
-	let generatedModule: Record<string, any>;
+afterAll(async () => {
+	await rimraf(path.resolve(packageRoot, "src/test/generated"));
+});
 
-	beforeAll(async () => {
-		// Clean and regenerate the GraphQL types
-		await rimraf(path.resolve(packageRoot, "src/test/generated"));
-		await new Promise<void>((resolve, reject) => {
-			exec(
-				"pnpm graphql-codegen --config src/test/codegen.ts",
-				{
-					cwd: packageRoot,
-				},
-				(error, stdout, stderr) => {
-					if (error) {
-						console.error("Codegen error:", error);
-						console.error("Stdout:", stdout);
-						console.error("Stderr:", stderr);
-						reject(error);
-					} else {
-						resolve();
-					}
-				},
+describe.each(["lower", "pascal", "snake", "sponge", "upper"] as const)(
+	"Codegen Plugin using %s-case",
+	(namingConvention) => {
+		// biome-ignore lint/suspicious/noExplicitAny: Testing generated module
+		let generatedModule: Record<string, any>;
+
+		beforeAll(async () => {
+			// Clean and regenerate the GraphQL types
+			await rimraf(path.resolve(packageRoot, "src/test/generated"));
+			await new Promise<void>((resolve, reject) => {
+				exec(
+					`pnpm graphql-codegen --config src/test/codegen-configs/${namingConvention}-case.ts`,
+					{
+						cwd: packageRoot,
+					},
+					(error, stdout, stderr) => {
+						if (error) {
+							console.error("Codegen error:", error);
+							console.error("Stdout:", stdout);
+							console.error("Stderr:", stderr);
+							reject(error);
+						} else {
+							resolve();
+						}
+					},
+				);
+			});
+
+			// Load the generated module
+			generatedModule = await import(
+				path.resolve(
+					packageRoot,
+					`src/test/generated/graphql-${namingConvention}.ts`,
+				)
 			);
 		});
 
-		// Load the generated module
-		generatedModule = await import(
-			path.resolve(packageRoot, "src/test/generated/graphql.ts")
-		);
-	});
-
-	describe("Mock Function Exports", () => {
 		const expectedMockFunctions = [
 			// Single operations
 			"mockGetUserQuery",
-			"mockGet_PostsQuery",
+			"mockGet_postsQuery",
 			"mockSearchPostsWithDirectivesQuery",
 			"mockCreateUserMutation",
-			"mockCreate_PostMutation",
+			"mockCreate_postMutation",
 			"mockLikePostMutation",
 
 			// Multiple operations from multipleOperations.graphql
@@ -82,13 +90,11 @@ describe("Codegen Plugin", () => {
 			// Complex directives
 			"mockComplexDirectivesQueryQuery",
 			"mockComplexDirectivesMutationMutation",
-		] as const;
+		];
 
-		it("should export all expected mock functions", () => {
-			expectedMockFunctions.forEach((mockFunctionName) => {
-				expect(generatedModule).toHaveProperty(mockFunctionName);
-				expect(typeof generatedModule[mockFunctionName]).toBe("function");
-			});
+		it.each(expectedMockFunctions)("should export %s", (mockFunctionName) => {
+			expect(generatedModule).toHaveProperty(mockFunctionName);
+			expect(typeof generatedModule[mockFunctionName]).toBe("function");
 		});
 
 		it("should not have any extra mock functions beyond the expected ones", () => {
@@ -109,14 +115,12 @@ describe("Codegen Plugin", () => {
 				expect(actualMockFunctions).toContain(expectedMockFunction);
 			});
 		});
-	});
 
-	describe("Mock Function Behavior", () => {
 		it("should create mock functions that return proper operation metadata", () => {
 			const mockGetUser = generatedModule.mockGetUserQuery;
 			const mockCreateUser = generatedModule.mockCreateUserMutation;
-			const mockGetPosts = generatedModule.mockGet_PostsQuery;
-			const mockCreatePost = generatedModule.mockCreate_PostMutation;
+			const mockGetPosts = generatedModule.mockGet_postsQuery;
+			const mockCreatePost = generatedModule.mockCreate_postMutation;
 
 			// Test with a simple handler function
 			const handler = () => ({
@@ -156,9 +160,9 @@ describe("Codegen Plugin", () => {
 
 		it("should handle both camelCase and snake_case operation names correctly", () => {
 			const mockGetUser = generatedModule.mockGetUserQuery;
-			const mockGetPosts = generatedModule.mockGet_PostsQuery;
+			const mockGetPosts = generatedModule.mockGet_postsQuery;
 			const mockCreateUser = generatedModule.mockCreateUserMutation;
-			const mockCreatePost = generatedModule.mockCreate_PostMutation;
+			const mockCreatePost = generatedModule.mockCreate_postMutation;
 
 			const handler = () => ({
 				type: "fulfill" as const,
@@ -202,7 +206,7 @@ describe("Codegen Plugin", () => {
 		});
 
 		it("should handle operations with optional variables", () => {
-			const mockGetPosts = generatedModule.mockGet_PostsQuery;
+			const mockGetPosts = generatedModule.mockGet_postsQuery;
 			const handler = () => ({
 				type: "fulfill" as const,
 				response: new Response(),
@@ -223,5 +227,5 @@ describe("Codegen Plugin", () => {
 			// Should handle default values in variables
 			expect(() => mockSearchPosts(handler)).not.toThrow();
 		});
-	});
-});
+	},
+);

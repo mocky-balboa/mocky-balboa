@@ -1,28 +1,9 @@
-import {
-	ClientSideBaseVisitor,
-	type LoadedFragment,
-	type RawClientSideBasePluginConfig,
-} from "@graphql-codegen/visitor-plugin-common";
-import {
-	type ASTNode,
-	type ASTVisitFn,
-	type GraphQLSchema,
-	Kind,
-	type OperationDefinitionNode,
-	type OperationTypeNode,
-} from "graphql";
-import { logger } from "./logger.js";
+import { ClientSideBaseVisitor } from "@graphql-codegen/visitor-plugin-common";
+import { titleCase } from "change-case-all";
+import type { OperationDefinitionNode } from "graphql";
 
 export class MockyBalboaVisitor extends ClientSideBaseVisitor {
-	private operations: string[] = [];
-
-	constructor(
-		schema: GraphQLSchema,
-		fragments: LoadedFragment[],
-		rawConfig: RawClientSideBasePluginConfig,
-	) {
-		super(schema, fragments, rawConfig, {});
-	}
+	private mockFunctions: string[] = [];
 
 	public getImports(): string[] {
 		const hasOperations = this._collectedOperations.length > 0;
@@ -36,20 +17,25 @@ export class MockyBalboaVisitor extends ClientSideBaseVisitor {
 		];
 	}
 
-	private isSupportedOperation(node: OperationTypeNode) {
-		return node === "query" || node === "mutation";
+	private isSupportedOperation(node: OperationDefinitionNode) {
+		return node.operation === "query" || node.operation === "mutation";
 	}
 
-	private generateMockOperation(operation: OperationDefinitionNode): string {
-		// Use the base visitor's convertName method to match TypeScript Operations plugin naming
-		const operationName = this.convertName(operation.name?.value || "");
-		const operationType = this.convertName(operation.operation);
-		const fqn = `${operationName}${operationType}`;
-		const responseFqn = fqn;
-		const variablesFqn = `${fqn}Variables`;
+	getContent() {
+		return this.mockFunctions.join("\n\n");
+	}
 
-		return `/**
- * Mock ${operation.name?.value} ${operation.operation}
+	protected buildOperation(
+		node: OperationDefinitionNode,
+		_documentVariableName: string,
+		operationType: string,
+		operationResultType: string,
+		operationVariablesTypes: string,
+		_hasRequiredVariables: boolean,
+	): string {
+		if (!this.isSupportedOperation(node)) return "";
+		const mockFunction = `/**
+ * Mock ${node.name?.value} ${operationType}
  *
  * @example
  * Mocking fulfilled responses with objects
@@ -65,51 +51,25 @@ export class MockyBalboaVisitor extends ClientSideBaseVisitor {
  * })
  * \`\`\`
  */
-export const mock${fqn} = (
+export const mock${titleCase(node.name?.value ?? "")}${titleCase(operationType)} = (
   handler: HandlerOrFulfill<
-    ${variablesFqn},
-    ${responseFqn}
+    ${operationVariablesTypes},
+    ${operationResultType}
   >,
 ) => {
-  return mockOperation<${variablesFqn}, ${responseFqn}>(
+  return mockOperation<${operationVariablesTypes}, ${operationResultType}>(
     handler as MockOperationHandlerArg<
-      ${variablesFqn},
-      ${responseFqn}
+      ${operationVariablesTypes},
+      ${operationResultType}
     >,
     {
-      name: "${operation.name?.value}",
-      type: "${operation.operation}",
+      name: "${node.name?.value}",
+      type: "${node.operation}",
     },
   );
 };`;
-	}
 
-	getContent() {
-		const mockOperations: string[] = [];
-		for (const operation of this._collectedOperations) {
-			mockOperations.push(this.generateMockOperation(operation));
-		}
-
-		return mockOperations.join("\n\n");
-	}
-
-	enter<TVisitedNode extends ASTNode>(
-		...args: Parameters<ASTVisitFn<TVisitedNode>>
-	) {
-		const [node, _key, _parent, _path, _ancestors] = args;
-		if (
-			node.kind === Kind.OPERATION_DEFINITION &&
-			this.isSupportedOperation(node.operation) &&
-			node.name
-		) {
-			const operationNamespace = `${node.operation} ${node.name.value}`;
-			if (this.operations.includes(operationNamespace)) {
-				logger.warn(`Skipping duplicate operation: ${operationNamespace}`);
-				return;
-			}
-
-			this._collectedOperations.push(node);
-			this.operations.push(operationNamespace);
-		}
+		this.mockFunctions.push(mockFunction);
+		return mockFunction;
 	}
 }
