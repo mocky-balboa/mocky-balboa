@@ -43,6 +43,7 @@ export function mockOperation<TVariables, TResponse>(
 	fulfillOptions: GraphQLFulfillOptions<TResponse>,
 	operation: Operation,
 ): GraphQLRouteOptions<TVariables, TResponse>;
+
 /**
  * Fulfill a GraphQL operation by specifying the handler function passed to {@link GraphQL.route}
  *

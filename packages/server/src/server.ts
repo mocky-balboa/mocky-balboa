@@ -39,7 +39,7 @@ export interface ServerOptions {
 }
 
 /**
- * Starts the mock server and WebSocket server
+ * Starts the mock server, proxy server, and WebSocket server
  *
  * @param options - Options for the server.
  */

@@ -199,6 +199,12 @@ export class Client {
 		);
 	}
 
+	/**
+	 * Used to get the proxy settings for the client. This is used for the browser stubs
+	 * to connect to the proxy server.
+	 *
+	 * @returns The proxy settings for the client.
+	 */
 	getProxySettings(): BrowserProxySettings {
 		if (
 			this.hostname === undefined ||
@@ -241,6 +247,11 @@ export class Client {
 		});
 	}
 
+	/**
+	 * Callback handler when a WebSocket should proxy request message is received from the WebSocket server.
+	 *
+	 * @param message
+	 */
 	private onWebSocketShouldProxyRequest = async (
 		message: ParsedMessageType<MessageTypes["WEBSOCKET_SHOULD_PROXY_REQUEST"]>,
 	) => {
@@ -1078,3 +1089,4 @@ export {
 	RouteType,
 } from "./shared-types.js";
 export { SSE } from "./sse.js";
+export { WebSocketServerMock } from "./websocket-server-mock.js";

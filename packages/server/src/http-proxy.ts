@@ -19,7 +19,14 @@ import type { RawData } from "ws";
 import { connections } from "./connection-state.js";
 import { logger } from "./logger.js";
 
+/**
+ * Real HTTP server to serve as a proxy allowing for mocking requests that cannot be
+ * mocked by clients. For example: serving binary files and SSE connections.
+ */
 export const createHttpProxy = (app: Express) => {
+	/**
+	 * Serve files from the local file system
+	 */
 	app.get(FileProxyEndpoint, async (req, res) => {
 		const filePath = req.query[FileProxyPathParam];
 		if (!filePath || typeof filePath !== "string") {
@@ -45,6 +52,9 @@ export const createHttpProxy = (app: Express) => {
 		res.sendFile(fullFilePath);
 	});
 
+	/**
+	 * Serve SSE connections
+	 */
 	app.all(SSEProxyEndpoint, (req, res) => {
 		const requestId = req.query[SSEProxyRequestIdParam];
 		const originalUrl = req.query[SSEProxyOriginalUrlParam];

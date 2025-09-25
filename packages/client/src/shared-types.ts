@@ -99,9 +99,11 @@ export type RouteResponse =
 export const FallbackRouteResponse: FallbackRouteResponse = {
 	type: "fallback",
 };
+
 export const PassthroughRouteResponse: PassthroughRouteResponse = {
 	type: "passthrough",
 };
+
 export const ErrorRouteResponse: ErrorRouteResponse = { type: "error" };
 
 export interface ProxyConnection {

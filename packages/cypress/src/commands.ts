@@ -1,4 +1,9 @@
-import type { Client, ConnectOptions, SSE } from "@mocky-balboa/client";
+import type {
+	Client,
+	ConnectOptions,
+	SSE,
+	WebSocketServerMock,
+} from "@mocky-balboa/client";
 import { createClient } from "./cypress.js";
 
 /** Callback for mocky command used to extract any type of response */
@@ -73,6 +78,29 @@ declare global {
 				action: () => Chainable,
 				...args: Parameters<Client["sse"]>
 			) => Chainable<SSE>;
+			/**
+			 * Waits for a WebSocket connection to be established, enables mocking WebSocket connections
+			 *
+			 * @example
+			 * cy
+			 *   .mockyWebSocket(() => {
+			 *     // The action that triggers the WebSocket connection to be established
+			 *     return cy.visit("/");
+			 *   }, "ws://acme.org/socket")
+			 *   .then((webSocket) => {
+			 *     // Dispatch events from the WebSocket server
+			 *     webSocket.sendMessage("This is a message from the server");
+			 *
+			 *     // Listen for messages sent from the client to the server
+			 *     webSocket.onMessage((message) => {
+			 *       // Do something with the message
+			 *     });
+			 *   });
+			 */
+			mockyWebSocket: (
+				action: () => Chainable,
+				...args: Parameters<Client["websocket"]>
+			) => Chainable<WebSocketServerMock>;
 		}
 	}
 }
@@ -135,6 +163,17 @@ Cypress.Commands.add("mockySSE", (action, ...args) => {
 			const ssePromise = mocky.sse(...args);
 			return action().then(() => {
 				return ssePromise;
+			});
+		});
+});
+
+Cypress.Commands.add("mockyWebSocket", (action, ...args) => {
+	return cy
+		.mocky((mocky) => mocky)
+		.then((mocky) => {
+			const websocketPromise = mocky.websocket(...args);
+			return action().then(() => {
+				return websocketPromise;
 			});
 		});
 });

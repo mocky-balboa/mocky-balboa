@@ -12,6 +12,8 @@ import mockyBalboaMiddleware from "./middleware.js";
 import { loadCertificateFiles } from "./utils.js";
 import { createWebSocketProxyServer } from "./websocket-proxy.js";
 
+export const DefaultProxyServerTimeout = 5000;
+
 export interface ProxyServerOptions {
 	/**
 	 * Proxy server port
@@ -29,23 +31,34 @@ export interface ProxyServerOptions {
 	 * Self-signed certificate for the server. Used to serve the server over HTTPS.
 	 */
 	certificate?: SelfSignedCertificate | undefined;
+	/**
+	 * Timeout for the proxy server to start
+	 *
+	 * @default {@link DefaultProxyServerTimeout}
+	 */
+	timeout?: number | undefined;
 }
 
 type CloseProxyServer = () => Promise<void>;
 
 /**
- * Proxy server for serving SSE (server-sent events) requests and file proxy requests.
+ * Proxy server for serving SSE (server-sent events) requests, file proxy requests and WebSocket connections.
  *
- * This server is used to proxy SSE requests originating from the client or the server.
+ * This server is used to proxy requests originating from the client or the server.
  *
  * This server is also used to proxy file requests originating from the client or the server.
  *
  * The file proxy is used to serve files from the local file system.
  *
- * @param options - Options for the SSE proxy server {@link SSEProxyServerOptions}
+ * @param options - Options for the proxy server {@link ProxyServerOptions}
  */
 export const startProxyServer = async (options: ProxyServerOptions = {}) => {
-	const { port = DefaultProxyServerPort, hostname, certificate } = options;
+	const {
+		port = DefaultProxyServerPort,
+		hostname,
+		certificate,
+		timeout: timeoutDuration = DefaultProxyServerTimeout,
+	} = options;
 
 	const app = express();
 	app.use(mockyBalboaMiddleware());
@@ -69,7 +82,7 @@ export const startProxyServer = async (options: ProxyServerOptions = {}) => {
 	return new Promise<CloseProxyServer>((resolve, reject) => {
 		const timeout = setTimeout(() => {
 			reject(new Error("Proxy server failed to start"));
-		}, 5000);
+		}, timeoutDuration);
 
 		server.listen(port, hostname ?? defaultHostname, () => {
 			clearTimeout(timeout);
