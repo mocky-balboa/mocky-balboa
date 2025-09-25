@@ -16,7 +16,7 @@ jobs:
       - name: Setup monorepo
         uses: ./.github/actions/setup-monorepo
 
-      - name: Oxlint
+      - name: Biome
         run: pnpm lint
 
   package_tests:
