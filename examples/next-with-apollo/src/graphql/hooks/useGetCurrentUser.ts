@@ -3,7 +3,7 @@ import {
 	GetCurrentUserDocument,
 	type GetCurrentUserQuery,
 	type GetCurrentUserQueryVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const useGetCurrentUser = (
 	options: useQuery.Options<GetCurrentUserQuery, GetCurrentUserQueryVariables>,

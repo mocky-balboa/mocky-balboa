@@ -3,7 +3,7 @@ import {
 	PublishPostDocument,
 	type PublishPostMutation,
 	type PublishPostMutationVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const usePublishPost = (
 	options: useMutation.Options<

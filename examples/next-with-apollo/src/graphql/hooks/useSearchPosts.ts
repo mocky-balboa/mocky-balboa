@@ -3,7 +3,7 @@ import {
 	SearchPostsDocument,
 	type SearchPostsQuery,
 	type SearchPostsQueryVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const useSearchPosts = (
 	options: useQuery.Options<SearchPostsQuery, SearchPostsQueryVariables>,

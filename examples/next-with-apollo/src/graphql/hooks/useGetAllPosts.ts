@@ -3,7 +3,7 @@ import {
 	GetAllPostsDocument,
 	type GetAllPostsQuery,
 	type GetAllPostsQueryVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const useGetAllPosts = (
 	options: useQuery.Options<GetAllPostsQuery, GetAllPostsQueryVariables>,

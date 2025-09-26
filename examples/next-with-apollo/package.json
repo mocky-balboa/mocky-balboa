@@ -5,26 +5,38 @@
 	"scripts": {
 		"dev": "pnpm generate && next dev",
 		"build": "pnpm generate && next build",
+		"build:tests": "pnpm build",
 		"generate": "graphql-codegen -c graphql-codegen.ts",
-		"start": "next start"
+		"start": "next start -p 3000",
+		"test:cypress": "pnpm cypress run",
+		"test:playwright": "pnpm playwright test",
+		"start:tests": "mocky-balboa-next-js -h 0.0.0.0",
+		"start:tests-dev": "pnpm generate && pnpm start:tests --dev"
 	},
 	"dependencies": {
 		"@apollo/client": "^4.0.6",
 		"@graphql-typed-document-node/core": "^3.2.0",
 		"graphql": "^16.11.0",
+		"graphql-ws": "^6.0.6",
 		"next": "15.5.4",
 		"react": "19.1.0",
 		"react-dom": "19.1.0"
 	},
 	"devDependencies": {
-		"@graphql-codegen/cli": "^6.0.0",
-		"@graphql-codegen/typescript": "^5.0.0",
-		"@graphql-codegen/typescript-operations": "^5.0.0",
-		"@graphql-codegen/typescript-react-apollo": "^4.3.3",
+		"@apollo/client-integration-nextjs": "^0.13.2",
+		"@graphql-codegen/cli": "catalog:",
+		"@graphql-codegen/typed-document-node": "catalog:",
+		"@graphql-codegen/typescript": "catalog:",
+		"@graphql-codegen/typescript-operations": "catalog:",
+		"@mocky-balboa/graphql": "workspace:*",
+		"@mocky-balboa/next-js": "workspace:*",
+		"@mocky-balboa/playwright": "workspace:*",
+		"@playwright/test": "^1.55.0",
 		"@tailwindcss/postcss": "^4",
 		"@types/node": "^20",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
+		"playwright": "^1.55.0",
 		"tailwindcss": "^4",
 		"typescript": "^5"
 	}

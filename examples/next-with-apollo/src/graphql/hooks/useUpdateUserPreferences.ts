@@ -3,7 +3,7 @@ import {
 	UpdateUserPreferencesDocument,
 	type UpdateUserPreferencesMutation,
 	type UpdateUserPreferencesMutationVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const useUpdateUserPreferences = (
 	options: useMutation.Options<

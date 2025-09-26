@@ -3,7 +3,7 @@ import {
 	GetUsersWithFilterDocument,
 	type GetUsersWithFilterQuery,
 	type GetUsersWithFilterQueryVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const useGetUsersWithFilter = (
 	options: useQuery.Options<

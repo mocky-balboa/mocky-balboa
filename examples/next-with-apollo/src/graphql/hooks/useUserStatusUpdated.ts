@@ -3,7 +3,7 @@ import {
 	UserStatusUpdatedDocument,
 	type UserStatusUpdatedSubscription,
 	type UserStatusUpdatedSubscriptionVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const useUserStatusUpdated = (
 	options: useSubscription.Options<

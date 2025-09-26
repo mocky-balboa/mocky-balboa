@@ -3,7 +3,7 @@ import {
 	GetUserByIdDocument,
 	type GetUserByIdQuery,
 	type GetUserByIdQueryVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const useGetUserById = (
 	options: useQuery.Options<GetUserByIdQuery, GetUserByIdQueryVariables>,

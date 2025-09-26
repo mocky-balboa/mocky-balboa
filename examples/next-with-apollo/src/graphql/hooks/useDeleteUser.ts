@@ -3,7 +3,7 @@ import {
 	DeleteUserDocument,
 	type DeleteUserMutation,
 	type DeleteUserMutationVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const useDeleteUser = (
 	options: useMutation.Options<DeleteUserMutation, DeleteUserMutationVariables>,

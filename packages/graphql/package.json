@@ -73,8 +73,8 @@
 		"rimraf": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:",
-		"@graphql-codegen/cli": "^6.0.0",
-		"@graphql-codegen/typescript": "^5.0.0",
-		"@graphql-codegen/typescript-operations": "^5.0.0"
+		"@graphql-codegen/cli": "catalog:",
+		"@graphql-codegen/typescript": "catalog:",
+		"@graphql-codegen/typescript-operations": "catalog:"
 	}
 }

@@ -3,7 +3,7 @@ import {
 	NewPostPublishedDocument,
 	type NewPostPublishedSubscription,
 	type NewPostPublishedSubscriptionVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const useNewPostPublished = (
 	options: useSubscription.Options<

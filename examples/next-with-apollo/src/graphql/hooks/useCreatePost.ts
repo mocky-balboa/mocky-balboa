@@ -3,7 +3,7 @@ import {
 	CreatePostDocument,
 	type CreatePostMutation,
 	type CreatePostMutationVariables,
-} from "../generated/graphql";
+} from "../generated";
 
 export const useCreatePost = (
 	options: useMutation.Options<CreatePostMutation, CreatePostMutationVariables>,

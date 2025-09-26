@@ -40,4 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-src/graphql/generated
+src/graphql/generated.ts
+playwright-tests/graphql/generated.ts
