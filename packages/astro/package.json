@@ -75,7 +75,7 @@
     "@types/node": "catalog:",
     "@types/express": "^5.0.3",
     "concurrently": "catalog:",
-    "astro": "^5.13.3",
+    "astro": "^5.14.3",
     "rimraf": "catalog:",
     "typescript": "catalog:"
   }
