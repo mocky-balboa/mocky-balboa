@@ -76,7 +76,7 @@
     "@types/node": "catalog:",
     "concurrently": "catalog:",
     "h3": "^1.15.4",
-    "nitropack": "^2.12.4",
+    "nitropack": "^2.12.8",
     "nuxt": "^4.1.1",
     "rimraf": "catalog:",
     "typescript": "catalog:"
