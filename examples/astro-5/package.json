@@ -18,7 +18,7 @@
     "@astrojs/node": "^9.4.3",
     "@tailwindcss/vite": "^4.1.12",
     "astro": "^5.13.3",
-    "tailwindcss": "^4.1.12"
+    "tailwindcss": "^4.1.16"
   },
   "devDependencies": {
     "@mocky-balboa/astro": "workspace:*",
