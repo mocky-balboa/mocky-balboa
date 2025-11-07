@@ -131,6 +131,7 @@ export const Messages = z.discriminatedUnion("type", [
 		messageId: z.string(),
 		payload: z.object({
 			id: z.string(),
+			url: z.string(),
 		}),
 	}),
 	z.object({

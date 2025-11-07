@@ -220,6 +220,7 @@ export const createWebSocketProxyServer = (
 			connectionState.ws.send(
 				new Message(MessageType.WEBSOCKET_CONNECTION_READY, {
 					id: requestId,
+					url: originalUrl,
 				}).toString(),
 			);
 		} catch (error) {

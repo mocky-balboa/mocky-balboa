@@ -20,7 +20,12 @@ import {
 import WebSocket from "isomorphic-ws";
 import { minimatch } from "minimatch";
 import { v4 as uuid } from "uuid";
-import { GraphQL } from "./graphql.js";
+import { GraphQL } from "./graphql/graphql.js";
+import { GraphQLHttp } from "./graphql/graphql-http.js";
+import { GraphQLSSE } from "./graphql/graphql-sse.js";
+import { GraphQLSSEAdapter } from "./graphql/graphql-sse-adapter.js";
+import { GraphQLWebSocket } from "./graphql/graphql-websocket.js";
+import { GraphQLWebSocketAdapter } from "./graphql/graphql-websocket-adapter.js";
 import { logger } from "./logger.js";
 import { Route } from "./route.js";
 import {
@@ -28,6 +33,8 @@ import {
 	DefaultWaitForRequestTimeout,
 	DefaultWebSocketRouteTimeout,
 	DefaultWebSocketServerTimeout,
+	type GraphQLRouteOptions,
+	type GraphQLRouteTransport,
 	type ProxyConnection,
 	type RouteMeta,
 	type RouteOptions,
@@ -745,6 +752,7 @@ export class Client {
 				if (message.payload.id === requestId) {
 					const websocketHelper = new WebSocketServerMock(
 						requestId,
+						message.payload.url,
 						{
 							on: this.on,
 							off: this.off,
@@ -769,6 +777,18 @@ export class Client {
 		});
 	}
 
+	private isGraphQLSSEOptions(
+		options?: GraphQLRouteOptions<GraphQLRouteTransport> | undefined,
+	): options is GraphQLRouteOptions<"sse"> {
+		return options?.transport === "sse";
+	}
+
+	private isGraphQLWebSocketOptions(
+		options?: GraphQLRouteOptions<GraphQLRouteTransport> | undefined,
+	): options is GraphQLRouteOptions<"websocket"> {
+		return options?.transport === "websocket";
+	}
+
 	/**
 	 * Used to register a route handler for a GraphQL server endpoint using http transport.
 	 *
@@ -776,18 +796,56 @@ export class Client {
 	 * @param options - optional options for the route handler
 	 * @returns a GraphQL instance that can be used to register mocks for GraphQL operations
 	 */
-	graphql(url: UrlMatcher, options: RouteOptions = {}) {
-		const graphql = new GraphQL();
-		const handlerId = this.route(
-			url,
-			(route) => {
-				return graphql.handleRoute(route);
-			},
-			options,
-		);
+	async graphql(
+		url: UrlMatcher,
+		options?: GraphQLRouteOptions<"http">,
+	): Promise<GraphQLHttp>;
+	async graphql(
+		url: UrlMatcher,
+		options?: GraphQLRouteOptions<"sse">,
+	): Promise<GraphQLSSE>;
+	async graphql(
+		url: UrlMatcher,
+		options?: GraphQLRouteOptions<"websocket">,
+	): Promise<GraphQLWebSocket>;
+	async graphql<TOptions extends GraphQLRouteOptions<GraphQLRouteTransport>>(
+		url: UrlMatcher,
+		options?: TOptions,
+	) {
+		switch (true) {
+			case this.isGraphQLSSEOptions(options): {
+				const { transport: _, adapter, ...sseOptions } = options;
+				const sse = await this.sse(url, sseOptions);
+				const graphql = new GraphQLSSE(sse, adapter ?? GraphQLSSEAdapter);
+				return graphql;
+			}
 
-		graphql.handlerId = handlerId;
-		return graphql;
+			case this.isGraphQLWebSocketOptions(options): {
+				const { transport: _, adapter, ...webSocketOptions } = options;
+				const websocket = await this.websocket(url, webSocketOptions);
+				const graphql = new GraphQLWebSocket(
+					websocket,
+					adapter ?? GraphQLWebSocketAdapter,
+				);
+				return graphql;
+			}
+
+			default: {
+				const { transport: _, ...httpOptions } =
+					options ?? ({ transport: "http" } as GraphQLRouteOptions<"http">);
+				const graphql = new GraphQLHttp();
+				const handlerId = this.route(
+					url,
+					(route) => {
+						return graphql.handleRoute(route);
+					},
+					httpOptions,
+				);
+
+				graphql.handlerId = handlerId;
+				return graphql;
+			}
+		}
 	}
 
 	/**
@@ -1061,16 +1119,16 @@ export {
 	type ParsedMessage,
 	type ParsedMessageType,
 } from "@mocky-balboa/websocket-messages";
-export type { FetchOptions, ModifyResponseOptions } from "./base-route.js";
+export type { FetchOptions, ModifyResponseOptions } from "./base-http-route.js";
 export type {
 	GraphQLOperationName,
 	GraphQLOperationType,
 	GraphQLRouteHandler,
 	GraphQLRouteOptions,
-} from "./graphql.js";
-export { GraphQL, GraphQLQueryParseError } from "./graphql.js";
-export type { GraphQLFulfillOptions } from "./graphql-route.js";
-export { GraphQLRoute } from "./graphql-route.js";
+} from "./graphql/graphql.js";
+export { GraphQL, GraphQLQueryParseError } from "./graphql/graphql.js";
+export type { GraphQLHttpFulfillOptions } from "./graphql/graphql-http-route.js";
+export { GraphQLHttpRoute } from "./graphql/graphql-http-route.js";
 export type { FulfillOptions } from "./route.js";
 export { Route } from "./route.js";
 export type {

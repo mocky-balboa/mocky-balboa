@@ -33,6 +33,7 @@ export class WebSocketServerMock implements ProxyConnection {
 
 	constructor(
 		private readonly requestId: string,
+		public readonly url: string,
 		private readonly messageHandlers: MessageHandlers,
 		private readonly removeProxyConnection: RemoveProxyConnection,
 	) {

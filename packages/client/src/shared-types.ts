@@ -1,3 +1,6 @@
+import type { GraphQLSSEAdapter } from "./graphql/graphql-sse-adapter.js";
+import type { GraphQLWebSocketAdapter } from "./graphql/graphql-websocket-adapter.js";
+
 /** Possible values for route type */
 export type RouteType = "server-only" | "client-only" | "both";
 export const RouteType = {
@@ -26,7 +29,7 @@ export interface RouteOptions {
 	 * @remarks
 	 * When `undefined`, the route handler will be run indefinitely.
 	 */
-	times?: number;
+	times?: number | undefined;
 	/**
 	 * Defines the behaviour of the route handler.
 	 *
@@ -36,8 +39,33 @@ export interface RouteOptions {
 	 *
 	 * @default "both"
 	 */
-	type?: RouteType;
+	type?: RouteType | undefined;
 }
+
+export type GraphQLRouteTransport = "http" | "sse" | "websocket";
+
+export type GraphQLHttpRouteOptions = RouteOptions & {
+	transport: "http";
+};
+
+export type GraphQLSSERouteOptions = SSERouteOptions & {
+	transport: "sse";
+	adapter?: GraphQLSSEAdapter;
+};
+
+export type GraphQLWebSocketRouteOptions = WebSocketRouteOptions & {
+	transport: "websocket";
+	adapter?: GraphQLWebSocketAdapter;
+};
+
+export type GraphQLRouteOptions<TTransport extends GraphQLRouteTransport> =
+	TTransport extends "http"
+		? GraphQLHttpRouteOptions
+		: TTransport extends "sse"
+			? GraphQLSSERouteOptions
+			: TTransport extends "websocket"
+				? GraphQLWebSocketRouteOptions
+				: never;
 
 /**
  * Server-sent events route options
@@ -48,7 +76,7 @@ export interface SSERouteOptions {
 	 *
 	 * @default {@link DefaultSSERouteTimeout}
 	 */
-	timeout?: number;
+	timeout?: number | undefined;
 }
 
 /**

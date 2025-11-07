@@ -6,8 +6,9 @@ test("a users profile is displayed correctly on the profile page", async ({
 	page,
 	mocky,
 }) => {
-	const graphql = mocky.graphql(
+	const graphql = await mocky.graphql(
 		"https://this-is-not-a-real-endpoint.com/graphql",
+		{ transport: "sse" },
 	);
 
 	graphql.route(

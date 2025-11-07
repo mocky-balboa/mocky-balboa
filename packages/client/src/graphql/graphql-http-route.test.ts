@@ -1,10 +1,10 @@
 import { GraphQLError } from "graphql";
 import { beforeEach, describe, expect, test } from "vitest";
-import { GraphQLRoute } from "./graphql-route.js";
+import { GraphQLHttpRoute } from "./graphql-http-route.js";
 
 describe("GraphQLRoute", () => {
 	let request: Request;
-	let graphqlRoute: GraphQLRoute<
+	let graphqlRoute: GraphQLHttpRoute<
 		{ id: string },
 		{ user: { id: string; name: string | null } }
 	>;
@@ -20,7 +20,7 @@ describe("GraphQLRoute", () => {
 			}),
 		});
 
-		graphqlRoute = new GraphQLRoute(
+		graphqlRoute = new GraphQLHttpRoute(
 			request,
 			{ id: "123" },
 			"GetUser",
@@ -63,7 +63,7 @@ describe("GraphQLRoute", () => {
 				},
 			};
 
-			const complexRoute = new GraphQLRoute(
+			const complexRoute = new GraphQLHttpRoute(
 				request,
 				complexVariables,
 				"CreateUser",
@@ -77,7 +77,7 @@ describe("GraphQLRoute", () => {
 		});
 
 		test("should handle null variables", () => {
-			const routeWithNullVars = new GraphQLRoute(
+			const routeWithNullVars = new GraphQLHttpRoute(
 				request,
 				null,
 				"GetAllUsers",
@@ -89,7 +89,7 @@ describe("GraphQLRoute", () => {
 		});
 
 		test("should handle undefined variables", () => {
-			const routeWithUndefinedVars = new GraphQLRoute(
+			const routeWithUndefinedVars = new GraphQLHttpRoute(
 				request,
 				undefined,
 				"GetAllUsers",
@@ -101,7 +101,7 @@ describe("GraphQLRoute", () => {
 		});
 
 		test("should handle empty variables object", () => {
-			const routeWithEmptyVars = new GraphQLRoute(
+			const routeWithEmptyVars = new GraphQLHttpRoute(
 				request,
 				{},
 				"GetAllUsers",
@@ -113,7 +113,7 @@ describe("GraphQLRoute", () => {
 		});
 
 		test("should handle mutation operation type", () => {
-			const mutationRoute = new GraphQLRoute(
+			const mutationRoute = new GraphQLHttpRoute(
 				request,
 				{ name: "John" },
 				"CreateUser",
@@ -555,7 +555,7 @@ describe("GraphQLRoute", () => {
 				};
 			}
 
-			const typedRoute = new GraphQLRoute<UserVariables, UserResponse>(
+			const typedRoute = new GraphQLHttpRoute<UserVariables, UserResponse>(
 				request,
 				{ id: "123", includeProfile: true },
 				"GetUser",
@@ -588,7 +588,7 @@ describe("GraphQLRoute", () => {
 				| { type: "user"; userId: string }
 				| { type: "post"; postId: string; includeComments: boolean };
 
-			const userSearchRoute = new GraphQLRoute<
+			const userSearchRoute = new GraphQLHttpRoute<
 				SearchVariables,
 				Record<string, unknown>
 			>(
@@ -613,7 +613,7 @@ describe("GraphQLRoute", () => {
 				};
 			}
 
-			const optionalRoute = new GraphQLRoute<
+			const optionalRoute = new GraphQLHttpRoute<
 				Record<string, unknown>,
 				OptionalResponse
 			>(
@@ -639,7 +639,7 @@ describe("GraphQLRoute", () => {
 
 	describe("edge cases and error scenarios", () => {
 		test("should handle empty strings in constructor", () => {
-			const emptyRoute = new GraphQLRoute(request, {}, "", "", "");
+			const emptyRoute = new GraphQLHttpRoute(request, {}, "", "", "");
 
 			expect(emptyRoute.operationName).toBe("");
 			expect(emptyRoute.operationType).toBe("");
@@ -659,7 +659,7 @@ describe("GraphQLRoute", () => {
 					})),
 			};
 
-			const largeRoute = new GraphQLRoute(
+			const largeRoute = new GraphQLHttpRoute(
 				request,
 				largeVariables,
 				"ProcessLargeData",
@@ -676,7 +676,7 @@ describe("GraphQLRoute", () => {
 				text: "Special chars: áéíóú ñ ç 中文 русский العربية 🎉",
 			};
 
-			const specialRoute = new GraphQLRoute(
+			const specialRoute = new GraphQLHttpRoute(
 				request,
 				specialVars,
 				"ProcessText",

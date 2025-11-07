@@ -1,22 +1,41 @@
-import { Kind, parse } from "graphql";
+import { type GraphQLError, Kind, parse } from "graphql";
 import { v4 as uuid } from "uuid";
 import * as z from "zod";
-import { GraphQLRoute } from "./graphql-route.js";
-import { logger } from "./logger.js";
-import type { Route } from "./route.js";
-import {
-	FallbackRouteResponse,
-	type GraphQLRouteMeta,
-	type RouteOptions,
-	type RouteResponse,
-} from "./shared-types.js";
+import { logger } from "../logger.js";
+import type {
+	GraphQLRouteMeta,
+	RouteOptions,
+	RouteResponse,
+} from "../shared-types.js";
+import type { GraphQLHttpRoute } from "./graphql-http-route.js";
+import type { GraphSSERoute } from "./graphql-sse-route.js";
+import type { GraphWebSocketRoute } from "./graphql-websocket-route.js";
+
+export type GraphQLRoute<TVariables, TResponse> =
+	| GraphQLHttpRoute<TVariables, TResponse>
+	| GraphSSERoute<TVariables, TResponse>
+	| GraphWebSocketRoute<TVariables, TResponse>;
+
+export type GraphQLHandlerBasicResponse<TResponse> = {
+	data?: TResponse | null;
+	errors?: GraphQLError[];
+};
+
+export type GraphQLHandlerResponse<TResponse> =
+	| RouteResponse
+	| GraphQLHandlerBasicResponse<TResponse>;
 
 /**
  * Type for the GraphQL route handler
  */
-export type GraphQLRouteHandler<TVariables, TResponse> = (
-	route: GraphQLRoute<TVariables, TResponse>,
-) => RouteResponse | Promise<RouteResponse>;
+export type GraphQLRouteHandler<
+	TVariables,
+	TResponse,
+	TGraphQLRoute extends GraphQLRoute<TVariables, TResponse>,
+	TGraphQLHandlerResponse extends GraphQLHandlerResponse<TResponse>,
+> = (
+	route: TGraphQLRoute,
+) => TGraphQLHandlerResponse | Promise<TGraphQLHandlerResponse>;
 
 /**
  * Type for the GraphQL operation name
@@ -26,26 +45,38 @@ export type GraphQLOperationName = string;
 /**
  * Supported operation types
  */
-export type GraphQLOperationType = "query" | "mutation";
+export type GraphQLOperationType = "query" | "mutation" | "subscription";
 
 /**
  * Options for the GraphQL route handler
  */
-export interface GraphQLRouteOptions<TVariables, TResponse> {
+export interface GraphQLRouteOptions<
+	TVariables,
+	TResponse,
+	TGraphQLRoute extends GraphQLRoute<TVariables, TResponse>,
+	TGraphQLHandlerResponse extends GraphQLHandlerResponse<TResponse>,
+> {
 	operationName: GraphQLOperationName;
 	operationType: GraphQLOperationType;
-	handler: GraphQLRouteHandler<TVariables, TResponse>;
+	handler: GraphQLRouteHandler<
+		TVariables,
+		TResponse,
+		TGraphQLRoute,
+		TGraphQLHandlerResponse
+	>;
 }
 
 type GraphQLRouteHandlerId = string;
 
-const GraphQLRequestSchema = z.object({
+export const GraphQLRequestSchema = z.object({
 	query: z.string(),
 	variables: z.record(z.string(), z.unknown()).nullable().optional(),
 	operationName: z.string().nullable().optional(),
+	/** Operation ID */
+	id: z.string().optional(),
 });
 
-type GraphQLRequest = z.infer<typeof GraphQLRequestSchema>;
+export type GraphQLRequest = z.infer<typeof GraphQLRequestSchema>;
 
 /**
  * Error thrown when there is an error parsing the GraphQL request
@@ -55,14 +86,28 @@ export class GraphQLQueryParseError extends Error {}
 /**
  * Class for handling GraphQL requests
  */
-export class GraphQL {
+export class GraphQL<
+	TSupportedOperations extends GraphQLOperationType,
+	// biome-ignore lint/suspicious/noExplicitAny: Accepts any variables and response types
+	TGraphQLRoute extends GraphQLRoute<any, any>,
+	// biome-ignore lint/suspicious/noExplicitAny: Accepts any response types
+	TGraphQLHandlerResponse extends GraphQLHandlerResponse<any>,
+> {
 	private _handlerId: string | undefined;
 
-	private routeHandlers: Map<
+	protected routeHandlers: Map<
 		GraphQLRouteHandlerId,
 		// biome-ignore lint/suspicious/noExplicitAny: Accepts any variables and response types
-		[GraphQLRouteOptions<any, any>, GraphQLRouteMeta]
+		[
+			GraphQLRouteOptions<any, any, TGraphQLRoute, TGraphQLHandlerResponse>,
+			GraphQLRouteMeta,
+		]
 	> = new Map();
+
+	constructor(
+		private readonly transport: "http" | "sse" | "websocket",
+		private readonly supportedOperations: TSupportedOperations[],
+	) {}
 
 	/**
 	 * The handler ID for the GraphQL route handler on the client
@@ -86,7 +131,7 @@ export class GraphQL {
 	 * Increments the call count for a route handler. Function to be called
 	 * whenever a route handler is executed, irregardless of the result.
 	 */
-	private incrementRouteHandlerCallCount = (
+	protected incrementRouteHandlerCallCount = (
 		routeHandlerId: string,
 		routeMeta: GraphQLRouteMeta,
 	) => {
@@ -95,18 +140,6 @@ export class GraphQL {
 			this.unroute(routeHandlerId);
 		}
 	};
-
-	/**
-	 * Checks if the request body is a valid GraphQL request
-	 *
-	 * @param requestBody - the request body
-	 * @returns true if the request body is a valid GraphQL request, false otherwise
-	 */
-	private isGraphQLRequest(
-		requestBody: unknown,
-	): requestBody is GraphQLRequest {
-		return GraphQLRequestSchema.safeParse(requestBody).success;
-	}
 
 	/**
 	 * Attempts to extract the operation name from the request body in the following order:
@@ -121,7 +154,7 @@ export class GraphQL {
 	 * @param request - the parsed request body
 	 * @returns the operation name
 	 */
-	private getOperationName(request: GraphQLRequest): string {
+	protected getOperationName(request: GraphQLRequest): string {
 		if (request.operationName) {
 			return request.operationName;
 		}
@@ -167,10 +200,10 @@ export class GraphQL {
 	 * @param operationName - the operation name
 	 * @returns the operation type (query or mutation)
 	 */
-	private getOperationType(
+	protected getOperationType(
 		request: GraphQLRequest,
 		operationName: string,
-	): GraphQLOperationType {
+	): TSupportedOperations {
 		try {
 			const document = parse(request.query);
 			const operationDefinition = document.definitions
@@ -184,13 +217,17 @@ export class GraphQL {
 			}
 
 			const operationType = operationDefinition.operation.toLowerCase();
-			if (operationType !== "query" && operationType !== "mutation") {
+			if (
+				!this.supportedOperations.includes(
+					operationType as TSupportedOperations,
+				)
+			) {
 				throw new GraphQLQueryParseError(
-					`Operation ${operationName} is not a query or mutation\n\n${request.query}`,
+					`Operation ${operationName} is not supported. Supported operations: ${this.supportedOperations.join(", ")}\n\n${request.query}`,
 				);
 			}
 
-			return operationType;
+			return operationType as TSupportedOperations;
 		} catch (error) {
 			if (!(error instanceof GraphQLQueryParseError)) {
 				logger.error(
@@ -203,96 +240,6 @@ export class GraphQL {
 	}
 
 	/**
-	 * Attempts to extract the GraphQL request from the request body
-	 *
-	 * @throws {GraphQLQueryParseError} if the request method is not POST or GET
-	 * @throws {GraphQLQueryParseError} if the request body is not a valid GraphQL request
-	 *
-	 * @param request - the request
-	 * @returns the GraphQL request
-	 */
-	private async getGraphQLRequestFromRequest(
-		request: Request,
-	): Promise<GraphQLRequest | null> {
-		if (!["GET", "POST"].includes(request.method)) {
-			throw new GraphQLQueryParseError(
-				`GraphQL requests must be POST or GET requests ${request.url}`,
-			);
-		}
-
-		if (request.method === "GET") {
-			const url = new URL(request.url);
-			const query = url.searchParams.get("query");
-			if (!query) {
-				return null;
-			}
-
-			const variables = url.searchParams.get("variables");
-			const operationName = url.searchParams.get("operationName");
-
-			return {
-				query,
-				...(variables ? { variables: JSON.parse(variables) } : {}),
-				operationName,
-			};
-		}
-
-		const requestBody = await request.json();
-		if (!this.isGraphQLRequest(requestBody)) {
-			return null;
-		}
-
-		return requestBody;
-	}
-
-	/**
-	 * Handles the incoming request by trying to match the operation name and type to a registered route handler
-	 *
-	 * @internal
-	 *
-	 * @param route - the http route
-	 * @returns the route response
-	 */
-	async handleRoute(route: Route): Promise<RouteResponse> {
-		const graphQLRequest = await this.getGraphQLRequestFromRequest(
-			route.request,
-		);
-		if (!graphQLRequest) {
-			logger.warn(
-				`Received a non-GraphQL request on GraphQL route handler ${route.request.url}. Falling back to next route handler.`,
-			);
-			return FallbackRouteResponse;
-		}
-
-		const operationName = this.getOperationName(graphQLRequest);
-		const operationType = this.getOperationType(graphQLRequest, operationName);
-		const graphQLRoute = new GraphQLRoute(
-			route.request,
-			graphQLRequest.variables,
-			operationName,
-			operationType,
-			graphQLRequest.query,
-		);
-		for (const [handlerId, [routeOptions, routeMeta]] of this.routeHandlers) {
-			if (
-				operationName !== routeOptions.operationName ||
-				operationType !== routeOptions.operationType
-			)
-				continue;
-			const routeResponse = await routeOptions.handler(graphQLRoute);
-			this.incrementRouteHandlerCallCount(handlerId, routeMeta);
-			switch (routeResponse.type) {
-				case "error":
-				case "passthrough":
-				case "fulfill":
-					return routeResponse;
-			}
-		}
-
-		return FallbackRouteResponse;
-	}
-
-	/**
 	 * Registers a route handler for a GraphQL operation
 	 *
 	 * @param route - the route handler
@@ -300,7 +247,12 @@ export class GraphQL {
 	 * @returns the handler ID
 	 */
 	route = <TVariables, TResponse>(
-		route: GraphQLRouteOptions<TVariables, TResponse>,
+		route: GraphQLRouteOptions<
+			TVariables,
+			TResponse,
+			TGraphQLRoute,
+			TGraphQLHandlerResponse
+		>,
 		options: Omit<RouteOptions, "type"> = {},
 	): GraphQLRouteHandlerId => {
 		const handlerId = uuid();

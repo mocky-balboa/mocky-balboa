@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { Route } from "../route.js";
 import { GraphQL } from "./graphql.js";
-import { GraphQLRoute } from "./graphql-route.js";
-import { Route } from "./route.js";
+import { GraphQLHttpRoute } from "./graphql-http-route.js";
 
 describe("GraphQL", () => {
 	let graphql: GraphQL;
@@ -120,7 +120,7 @@ describe("GraphQL", () => {
 			const result = await graphql.handleRoute(mockRoute);
 
 			expect(mockHandler).toHaveBeenCalledOnce();
-			expect(mockHandler).toHaveBeenCalledWith(expect.any(GraphQLRoute));
+			expect(mockHandler).toHaveBeenCalledWith(expect.any(GraphQLHttpRoute));
 			expect(result.type).toBe("fulfill");
 		});
 
@@ -267,7 +267,7 @@ describe("GraphQL", () => {
 		test("should create GraphQLRoute with correct parameters", async () => {
 			const mockHandler = vi
 				.fn()
-				.mockImplementation((route: GraphQLRoute<unknown, unknown>) => {
+				.mockImplementation((route: GraphQLHttpRoute<unknown, unknown>) => {
 					expect(route.operationName).toBe("GetUser");
 					expect(route.operationType).toBe("query");
 					expect(route.variables).toEqual({ id: "123" });

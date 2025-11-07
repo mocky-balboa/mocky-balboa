@@ -34,24 +34,31 @@ export class MockyBalboaVisitor extends ClientSideBaseVisitor {
 		_hasRequiredVariables: boolean,
 	): string {
 		if (!this.isSupportedOperation(node)) return "";
+		const functionName = `mock${titleCase(node.name?.value ?? "")}${titleCase(operationType)}`;
 		const mockFunction = `/**
  * Mock ${node.name?.value} ${operationType}
  *
  * @example
  * Mocking fulfilled responses with objects
  * \`\`\`TypeScript
- * graphql.route({ data: { ... } })
+ * graphql.route(
+ *   ${functionName}({
+ *     data: { ... }
+ *   }),
+ * );
  * \`\`\`
  * 
  * @example
  * Mocking responses with a handler function and access to GraphQL route helper
  * \`\`\`TypeScript
- * graphql.route((route) => {
- *   return route.fulfill({ ... });
- * })
+ * graphql.route(
+ *   ${functionName}((route) => {
+ *     return route.fulfill({ ... });
+ *   }),
+ * );
  * \`\`\`
  */
-export const mock${titleCase(node.name?.value ?? "")}${titleCase(operationType)} = (
+export const ${functionName} = (
   handler: HandlerOrFulfill<
     ${operationVariablesTypes},
     ${operationResultType}

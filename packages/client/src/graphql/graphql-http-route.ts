@@ -1,8 +1,8 @@
 import { GraphQLError, type GraphQLErrorOptions } from "graphql";
-import { BaseRoute } from "./base-route.js";
-import type { FulfillRouteResponse } from "./shared-types.js";
+import { BaseHttpRoute } from "../base-http-route.js";
+import type { FulfillRouteResponse } from "../shared-types.js";
 
-export type GraphQLFulfillOptions<TResponse> =
+export type GraphQLHttpFulfillOptions<TResponse> =
 	| {
 			data?: TResponse | null;
 			errors?: GraphQLError[];
@@ -18,7 +18,7 @@ export type GraphQLFulfillOptions<TResponse> =
 			path: string;
 	  };
 
-export class GraphQLRoute<TVariables, TResponse> extends BaseRoute {
+export class GraphQLHttpRoute<TVariables, TResponse> extends BaseHttpRoute {
 	private readonly _variables: TVariables;
 	private readonly _operationName: string;
 	private readonly _operationType: string;
@@ -82,7 +82,7 @@ export class GraphQLRoute<TVariables, TResponse> extends BaseRoute {
 	 * @example
 	 * Implicitly calling .fulfill()
 	 * ```ts
-	 * graohql.route(mockGetUserQuery({
+	 * graphql.route(mockGetUserQuery({
 	 *   data: {
 	 *     user: {
 	 *       id: "user-id",
@@ -101,7 +101,7 @@ export class GraphQLRoute<TVariables, TResponse> extends BaseRoute {
 		headers,
 		status,
 		path,
-	}: GraphQLFulfillOptions<TResponse>): FulfillRouteResponse {
+	}: GraphQLHttpFulfillOptions<TResponse>): FulfillRouteResponse {
 		const response = new Response(
 			path
 				? null

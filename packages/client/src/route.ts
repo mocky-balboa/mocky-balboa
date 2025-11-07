@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
-import { BaseRoute } from "./base-route.js";
+import { BaseHttpRoute } from "./base-http-route.js";
 import { Client } from "./client.js";
 import type { FulfillRouteResponse } from "./shared-types.js";
 
@@ -42,7 +42,7 @@ export interface FulfillOptions {
 /**
  * Route passed as an argument to the handler callback on {@link Client.route}
  */
-export class Route extends BaseRoute {
+export class Route extends BaseHttpRoute {
 	/**
 	 * When fulfilling a route
 	 *

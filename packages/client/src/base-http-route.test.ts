@@ -8,26 +8,26 @@ import {
 	test,
 	vi,
 } from "vitest";
-import { BaseRoute } from "./base-route.js";
+import { BaseHttpRoute } from "./base-http-route.js";
 import { startHttpServer } from "./test/utils.js";
 
 describe("Route.error", () => {
 	test("the correct response signature is returned", () => {
-		const route = new BaseRoute(new Request("http://example.com"));
+		const route = new BaseHttpRoute(new Request("http://example.com"));
 		expect(route.error()).toEqual({ type: "error" });
 	});
 });
 
 describe("Route.fallback", () => {
 	test("the correct response signature is returned", () => {
-		const route = new BaseRoute(new Request("http://example.com"));
+		const route = new BaseHttpRoute(new Request("http://example.com"));
 		expect(route.fallback()).toEqual({ type: "fallback" });
 	});
 });
 
 describe("Route.passthrough", () => {
 	test("the correct response signature is returned", () => {
-		const route = new BaseRoute(new Request("http://example.com"));
+		const route = new BaseHttpRoute(new Request("http://example.com"));
 		expect(route.passthrough()).toEqual({ type: "passthrough" });
 	});
 });
@@ -35,11 +35,11 @@ describe("Route.passthrough", () => {
 describe("Route.fetch", () => {
 	let closeHttpServer: () => Promise<void>;
 	let HttpServerPort: number;
-	let route: BaseRoute;
+	let route: BaseHttpRoute;
 	beforeAll(async () => {
 		HttpServerPort = await getPort();
 		closeHttpServer = await startHttpServer(HttpServerPort);
-		route = new BaseRoute(
+		route = new BaseHttpRoute(
 			new Request(`http://localhost:${HttpServerPort}/endpoint`, {
 				method: "POST",
 				headers: {
@@ -135,10 +135,10 @@ describe("Route.fetch", () => {
 });
 
 describe("Route.continue", () => {
-	let route: BaseRoute;
+	let route: BaseHttpRoute;
 	let response: Response;
 	beforeEach(async () => {
-		route = new BaseRoute(
+		route = new BaseHttpRoute(
 			new Request("http://localhost:8080/endpoint", {
 				method: "POST",
 				headers: {

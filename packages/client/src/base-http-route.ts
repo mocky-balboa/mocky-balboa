@@ -75,7 +75,7 @@ const DefaultNetworkOptions = {
 	keepalive: false,
 };
 
-export class BaseRoute {
+export class BaseHttpRoute {
 	/** The original request */
 	private readonly _request: Request;
 
