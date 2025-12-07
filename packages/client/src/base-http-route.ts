@@ -176,7 +176,7 @@ export class BaseHttpRoute {
 	 * the requests
 	 */
 	private getRequestBodyString(): Promise<string | null> {
-		if (!this.request.body) null;
+		if (!this.request.body) return Promise.resolve(null);
 		return this.request.text();
 	}
 
