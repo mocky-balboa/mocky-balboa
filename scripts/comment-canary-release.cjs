@@ -1,146 +1,151 @@
-const { execSync } = require("child_process");
-const fs = require("fs");
-const path = require("path");
+const { execSync } = require("node:child_process");
+const fs = require("node:fs");
+const path = require("node:path");
 const { Octokit } = require("octokit");
 
-const canaryReleaseCommentIdentifier = "<!-- DO_NOT_REMOVE canary release comment identifier -->"
+const canaryReleaseCommentIdentifier =
+	"<!-- DO_NOT_REMOVE canary release comment identifier -->";
 
 const commitHash = process.argv[2];
 
 if (typeof commitHash !== "string" || commitHash.length !== 40) {
-  console.error("Invalid commit hash");
-  process.exit(1);
+	console.error("Invalid commit hash");
+	process.exit(1);
 }
 
 const shortCommit = commitHash.substring(0, 7);
 
 const main = async () => {
-  const rootDir = path.resolve(__dirname, "..");
-  const releaseJson = fs.readFileSync(
-    path.join(rootDir, "release.json"),
-    "utf8",
-  );
+	const rootDir = path.resolve(__dirname, "..");
+	const releaseJson = fs.readFileSync(
+		path.join(rootDir, "release.json"),
+		"utf8",
+	);
 
-  const updatedPackages = JSON.parse(releaseJson).releases.map(
-    ({ name }) => name,
-  );
+	const updatedPackages = JSON.parse(releaseJson).releases.map(
+		({ name }) => name,
+	);
 
-  let hasError = false;
-  const updatedPackagePaths = updatedPackages.map((name) => {
-    console.log(`pnpm --filter ${name} exec pwd`);
-    try {
-      const output = execSync(`pnpm --filter ${name} exec pwd`, {
-        cwd: rootDir,
-      })
-        .toString()
-        .trim();
+	let hasError = false;
+	const updatedPackagePaths = updatedPackages.reduce((acc, name) => {
+		console.log(`pnpm --filter ${name} exec pwd`);
+		try {
+			const output = execSync(`pnpm --filter ${name} exec pwd`, {
+				cwd: rootDir,
+			})
+				.toString()
+				.trim();
 
-      return output;
-    } catch (error) {
-      console.error(
-        `Error executing "pnpm --filter ${name} exec pwd": ${error.message}`,
-        error.stdout.toString(),
-      );
+			acc.push(output);
+		} catch (error) {
+			console.error(
+				`Error executing "pnpm --filter ${name} exec pwd": ${error.message}`,
+				error.stdout.toString(),
+			);
 
-      hasError = true;
-    }
-  });
+			hasError = true;
+		}
 
-  let gitStatus = "";
-  try {
-    console.log("git status --porcelain");
-    gitStatus = execSync("git status --porcelain", { cwd: rootDir })
-      .toString()
-      .trim();
-  } catch (error) {
-    console.error(
-      `Error executing "git status --porcelain": ${error.message}`,
-      error.stdout.toString(),
-    );
+		return acc;
+	}, []);
 
-    hasError = true;
-  }
+	let gitStatus = "";
+	try {
+		console.log("git status --porcelain");
+		gitStatus = execSync("git status --porcelain", { cwd: rootDir })
+			.toString()
+			.trim();
+	} catch (error) {
+		console.error(
+			`Error executing "git status --porcelain": ${error.message}`,
+			error.stdout.toString(),
+		);
 
-  if (hasError) {
-    process.exit(1);
-  }
+		hasError = true;
+	}
 
-  console.log("");
-  console.log("updatedPackagePaths", updatedPackagePaths);
-  console.log("");
-  console.log("gitStatus", gitStatus);
-  console.log("");
+	if (hasError) {
+		process.exit(1);
+	}
 
-  const unstagedPackageJsonPaths = gitStatus
-    .split("\n")
-    .map((line) => {
-      const [status, ...pathParts] = line.trim().split(" ");
-      const relativePath = pathParts.join();
-      if (!relativePath.match(/^packages\/[^/]+\/package\.json$/)) return;
-      return status.toLowerCase() === "m"
-        ? path.join(rootDir, relativePath)
-        : undefined;
-    })
-    .filter(Boolean);
+	console.log("");
+	console.log("updatedPackagePaths", updatedPackagePaths);
+	console.log("");
+	console.log("gitStatus", gitStatus);
+	console.log("");
 
-  console.log("unstagedPackageJsonPaths", unstagedPackageJsonPaths);
-  console.log("");
+	const unstagedPackageJsonPaths = gitStatus
+		.split("\n")
+		.map((line) => {
+			const [status, ...pathParts] = line.trim().split(" ");
+			const relativePath = pathParts.join();
+			if (!relativePath.match(/^packages\/[^/]+\/package\.json$/))
+				return undefined;
 
-  const changedPackageVersions = unstagedPackageJsonPaths.map(
-    (packageJsonPath) => {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-      return {
-        name: packageJson.name,
-        version: packageJson.version,
-      };
-    },
-  );
+			return status.toLowerCase() === "m"
+				? path.join(rootDir, relativePath)
+				: undefined;
+		})
+		.filter(Boolean);
 
-  console.log("changedPackageVersions", changedPackageVersions);
+	console.log("unstagedPackageJsonPaths", unstagedPackageJsonPaths);
+	console.log("");
 
-  if (changedPackageVersions.length === 0) {
-    console.log("No changes detected");
-    process.exit(0);
-  }
+	const changedPackageVersions = unstagedPackageJsonPaths.map(
+		(packageJsonPath) => {
+			const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+			return {
+				name: packageJson.name,
+				version: packageJson.version,
+			};
+		},
+	);
 
-  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+	console.log("changedPackageVersions", changedPackageVersions);
 
-  const { data: comments } = await octokit.rest.issues.listComments({
-    owner: "mocky-balboa",
-    repo: "mocky-balboa",
-    issue_number: process.env.PR_NUMBER,
-  })
+	if (changedPackageVersions.length === 0) {
+		console.log("No changes detected");
+		process.exit(0);
+	}
 
-  const releaseComment = comments.find(comment => {
-    return comment.body.startsWith(canaryReleaseCommentIdentifier);
-  });
+	const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-  const getCommentBody = () => {
-    return `${canaryReleaseCommentIdentifier}
+	const { data: comments } = await octokit.rest.issues.listComments({
+		owner: "mocky-balboa",
+		repo: "mocky-balboa",
+		issue_number: process.env.PR_NUMBER,
+	});
+
+	const releaseComment = comments.find((comment) => {
+		return comment.body.startsWith(canaryReleaseCommentIdentifier);
+	});
+
+	const getCommentBody = () => {
+		return `${canaryReleaseCommentIdentifier}
     
 ## 🐥 Canary releases ([${shortCommit}](https://github.com/mocky-balboa/mocky-balboa/commit/${commitHash}))
 
 | Package | Version | Install command |
 | ------- | ------- | --------------- |
 ${changedPackageVersions.map(({ name, version }) => `| ${name} | ${version} | \`pnpm i -D ${name}@${version}\``).join("\n")}
-    `
-  };
+    `;
+	};
 
-  if (releaseComment) {
-    await octokit.rest.issues.updateComment({
-      owner: "mocky-balboa",
-      repo: "mocky-balboa",
-      comment_id: releaseComment.id,
-      body: getCommentBody(),
-    });
-  } else {
-    await octokit.rest.issues.createComment({
-      owner: "mocky-balboa",
-      repo: "mocky-balboa",
-      issue_number: process.env.PR_NUMBER,
-      body: getCommentBody(),
-    })
-  }
+	if (releaseComment) {
+		await octokit.rest.issues.updateComment({
+			owner: "mocky-balboa",
+			repo: "mocky-balboa",
+			comment_id: releaseComment.id,
+			body: getCommentBody(),
+		});
+	} else {
+		await octokit.rest.issues.createComment({
+			owner: "mocky-balboa",
+			repo: "mocky-balboa",
+			issue_number: process.env.PR_NUMBER,
+			body: getCommentBody(),
+		});
+	}
 };
 
 void main();

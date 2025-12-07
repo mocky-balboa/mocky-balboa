@@ -1,8 +1,8 @@
-import { type WebSocket } from "ws";
+import type { WebSocket } from "ws";
 
 export interface WebSocketConnectionState {
-  ws: WebSocket;
-  clientIdentity?: string;
+	ws: WebSocket;
+	clientIdentity?: string;
 }
 
 // In memory storage for WebSocket connections

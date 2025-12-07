@@ -1,12 +1,12 @@
 {
-  "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["../../packages/!(cli-utils)"],
-  "name": "Mocky Balboa API Reference",
-  "readme": "./API_REFERENCE.md",
-  "entryPointStrategy": "packages",
-  "includeVersion": false,
-  "navigationLinks": {
-    "GitHub": "https://github.com/mocky-balboa/mocky-balboa",
-    "Documentation": "https://docs.mockybalboa.com"
-  }
+	"$schema": "https://typedoc.org/schema.json",
+	"entryPoints": ["../../packages/!(cli-utils|browser)"],
+	"name": "Mocky Balboa API Reference",
+	"readme": "./API_REFERENCE.md",
+	"entryPointStrategy": "packages",
+	"includeVersion": false,
+	"navigationLinks": {
+		"GitHub": "https://github.com/mocky-balboa/mocky-balboa",
+		"Documentation": "https://docs.mockybalboa.com"
+	}
 }

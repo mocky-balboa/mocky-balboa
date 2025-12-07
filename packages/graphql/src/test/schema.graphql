@@ -1,0 +1,246 @@
+type Query {
+	# User operations
+	getUser(id: ID!): User
+	getUsers(filter: UserFilter, limit: Int, offset: Int): [User!]!
+	getCurrentUser: User
+
+	# Post operations
+	getPost(id: ID!): Post
+	getPosts(authorId: ID, published: Boolean): [Post!]!
+	searchPosts(query: String!, category: PostCategory): [Post!]!
+
+	# Comment operations
+	getComments(postId: ID!): [Comment!]!
+	getComment(id: ID!): Comment
+
+	# Analytics
+	getUserStats(userId: ID!): UserStats
+	getPostAnalytics(postId: ID!): PostAnalytics
+}
+
+type Mutation {
+	# User mutations
+	createUser(input: CreateUserInput!): User!
+	updateUser(id: ID!, input: UpdateUserInput!): User!
+	deleteUser(id: ID!): Boolean!
+
+	# Post mutations
+	createPost(input: CreatePostInput!): Post!
+	updatePost(id: ID!, input: UpdatePostInput!): Post!
+	deletePost(id: ID!): Boolean!
+	publishPost(id: ID!): Post!
+	unpublishPost(id: ID!): Post!
+
+	# Comment mutations
+	createComment(input: CreateCommentInput!): Comment!
+	updateComment(id: ID!, input: UpdateCommentInput!): Comment!
+	deleteComment(id: ID!): Boolean!
+
+	# Like/Unlike operations
+	likePost(postId: ID!): Boolean!
+	unlikePost(postId: ID!): Boolean!
+	likeComment(commentId: ID!): Boolean!
+	unlikeComment(commentId: ID!): Boolean!
+}
+
+type User {
+	id: ID!
+	username: String!
+	email: String!
+	firstName: String
+	lastName: String
+	bio: String
+	avatar: String
+	createdAt: DateTime!
+	updatedAt: DateTime!
+	posts: [Post!]!
+	comments: [Comment!]!
+	followers: [User!]!
+	following: [User!]!
+	isVerified: Boolean!
+	preferences: UserPreferences
+}
+
+type Post {
+	id: ID!
+	title: String!
+	content: String!
+	excerpt: String
+	slug: String!
+	author: User!
+	category: PostCategory!
+	tags: [String!]!
+	publishedAt: DateTime
+	createdAt: DateTime!
+	updatedAt: DateTime!
+	comments: [Comment!]!
+	likes: Int!
+	views: Int!
+	isPublished: Boolean!
+	featuredImage: String
+	readingTime: Int!
+}
+
+type Comment {
+	id: ID!
+	content: String!
+	author: User!
+	post: Post!
+	parentComment: Comment
+	replies: [Comment!]!
+	createdAt: DateTime!
+	updatedAt: DateTime!
+	likes: Int!
+	isEdited: Boolean!
+}
+
+type UserStats {
+	totalPosts: Int!
+	totalComments: Int!
+	totalLikes: Int!
+	followersCount: Int!
+	followingCount: Int!
+	joinDate: DateTime!
+	lastActiveAt: DateTime
+}
+
+type PostAnalytics {
+	views: Int!
+	likes: Int!
+	comments: Int!
+	shares: Int!
+	avgReadTime: Float!
+	topReferrers: [String!]!
+}
+
+type UserPreferences {
+	theme: Theme!
+	notifications: NotificationSettings!
+	privacy: PrivacySettings!
+	language: String!
+}
+
+type NotificationSettings {
+	email: Boolean!
+	push: Boolean!
+	comments: Boolean!
+	likes: Boolean!
+	follows: Boolean!
+}
+
+type PrivacySettings {
+	profileVisibility: ProfileVisibility!
+	showEmail: Boolean!
+	showFollowers: Boolean!
+	allowDirectMessages: Boolean!
+}
+
+enum PostCategory {
+	TECHNOLOGY
+	LIFESTYLE
+	TRAVEL
+	FOOD
+	BUSINESS
+	EDUCATION
+	ENTERTAINMENT
+	HEALTH
+	SPORTS
+}
+
+enum Theme {
+	LIGHT
+	DARK
+	AUTO
+}
+
+enum ProfileVisibility {
+	PUBLIC
+	PRIVATE
+	FRIENDS_ONLY
+}
+
+enum UserRole {
+	USER
+	MODERATOR
+	ADMIN
+}
+
+input CreateUserInput {
+	username: String!
+	email: String!
+	firstName: String
+	lastName: String
+	bio: String
+	password: String!
+}
+
+input UpdateUserInput {
+	firstName: String
+	lastName: String
+	bio: String
+	avatar: String
+	preferences: UserPreferencesInput
+}
+
+input CreatePostInput {
+	title: String!
+	content: String!
+	excerpt: String
+	category: PostCategory!
+	tags: [String!]
+	featuredImage: String
+	published: Boolean = false
+}
+
+input UpdatePostInput {
+	title: String
+	content: String
+	excerpt: String
+	category: PostCategory
+	tags: [String!]
+	featuredImage: String
+	published: Boolean
+}
+
+input CreateCommentInput {
+	content: String!
+	postId: ID!
+	parentCommentId: ID
+}
+
+input UpdateCommentInput {
+	content: String!
+}
+
+input UserFilter {
+	username: String
+	email: String
+	role: UserRole
+	isVerified: Boolean
+	createdAfter: DateTime
+	createdBefore: DateTime
+}
+
+input UserPreferencesInput {
+	theme: Theme
+	notifications: NotificationSettingsInput
+	privacy: PrivacySettingsInput
+	language: String
+}
+
+input NotificationSettingsInput {
+	email: Boolean
+	push: Boolean
+	comments: Boolean
+	likes: Boolean
+	follows: Boolean
+}
+
+input PrivacySettingsInput {
+	profileVisibility: ProfileVisibility
+	showEmail: Boolean
+	showFollowers: Boolean
+	allowDirectMessages: Boolean
+}
+
+scalar DateTime

@@ -1,36 +1,38 @@
 {
-  "name": "@mocky-balboa/mocky-balboa",
-  "version": "1.0.0",
-  "description": "Knock out server-side rendering test headaches",
-  "author": {
-    "name": "Lewis Nelson",
-    "url": "https://lewnelson.com"
-  },
-  "private": true,
-  "scripts": {
-    "build:packages": "pnpm --filter \"./packages/*\" build",
-    "build:packages-watch": "pnpm --filter \"./packages/*\" --parallel build:watch",
-    "lint": "oxlint",
-    "test:packages": "pnpm --filter \"./packages/*\" test",
-    "prepare-release": "pnpm changeset",
-    "package-post-cjs-build": "node ./scripts/package-post-cjs-build.cjs"
-  },
-  "keywords": [],
-  "license": "MIT",
-  "packageManager": "pnpm@10.14.0",
-  "devDependencies": {
-    "@changesets/cli": "^2.29.6",
-    "@changesets/types": "^6.1.0",
-    "@mocky-balboa/changeset-changelog": "file:./scripts/changeset-changelog",
-    "@types/recursive-readdir": "^2.2.4",
-    "octokit": "^5.0.3",
-    "oxlint": "^1.14.0",
-    "recursive-readdir": "^2.2.3",
-    "wrangler": "^4.34.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  }
+	"name": "@mocky-balboa/mocky-balboa",
+	"version": "1.0.0",
+	"description": "Knock out server-side rendering test headaches",
+	"author": {
+		"name": "Lewis Nelson",
+		"url": "https://lewnelson.com"
+	},
+	"private": true,
+	"scripts": {
+		"build:packages": "pnpm --filter \"./packages/*\" build",
+		"build:packages-watch": "pnpm --filter \"./packages/*\" --parallel build:watch",
+		"lint": "pnpm exec biome check --error-on-warnings",
+		"test:packages": "pnpm --filter \"./packages/*\" test",
+		"prepare-release": "pnpm changeset",
+		"package-post-cjs-build": "node ./scripts/package-post-cjs-build.cjs",
+		"type:check:filter": "pnpm --filter \"./packages/*\"",
+		"type:check": "pnpm type:check:filter exec pwd && pnpm type:check:filter exec pnpm tsc --noEmit"
+	},
+	"keywords": [],
+	"license": "MIT",
+	"packageManager": "pnpm@10.14.0",
+	"devDependencies": {
+		"@biomejs/biome": "2.2.4",
+		"@changesets/cli": "^2.29.6",
+		"@changesets/types": "^6.1.0",
+		"@mocky-balboa/changeset-changelog": "file:./scripts/changeset-changelog",
+		"@types/recursive-readdir": "^2.2.4",
+		"octokit": "^5.0.3",
+		"recursive-readdir": "^2.2.3",
+		"wrangler": "^4.34.0"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild"
+		]
+	}
 }

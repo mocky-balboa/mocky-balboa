@@ -1,0 +1,76 @@
+query GetCurrentUser($includePreferences: Boolean = true) {
+	getCurrentUser {
+		id
+		username
+		email
+		firstName
+		lastName
+		bio
+		avatar
+		createdAt
+		updatedAt
+		isVerified
+		preferences @include(if: $includePreferences) {
+			theme
+			language
+			notifications {
+				email
+				push
+				comments
+				likes
+				follows
+			}
+			privacy {
+				profileVisibility
+				showEmail
+				showFollowers
+				allowDirectMessages
+			}
+		}
+	}
+}
+
+query GetUsersWithFilter($filter: UserFilter, $limit: Int, $offset: Int) {
+	getUsers(filter: $filter, limit: $limit, offset: $offset) {
+		id
+		username
+		email
+		firstName
+		lastName
+		bio
+		avatar
+		createdAt
+		isVerified
+	}
+}
+
+mutation DeleteUser($userId: ID!) {
+	deleteUser(id: $userId)
+}
+
+mutation UpdateUserPreferences(
+	$userId: ID!
+	$preferences: UserPreferencesInput!
+) {
+	updateUser(id: $userId, input: { preferences: $preferences }) {
+		id
+		username
+		preferences {
+			theme
+			language
+			notifications {
+				email
+				push
+				comments
+				likes
+				follows
+			}
+			privacy {
+				profileVisibility
+				showEmail
+				showFollowers
+				allowDirectMessages
+			}
+		}
+	}
+}

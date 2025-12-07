@@ -1,0 +1,61 @@
+{
+	"name": "@mocky-balboa/browser",
+	"version": "0.0.0",
+	"description": "Browser integration for Mocky Balboa.",
+	"type": "module",
+	"homepage": "https://docs.mockybalboa.com",
+	"bugs": {
+		"url": "https://github.com/mocky-balboa/mocky-balboa/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mocky-balboa/mocky-balboa.git",
+		"directory": "packages/browser"
+	},
+	"keywords": [],
+	"author": {
+		"name": "Lewis Nelson",
+		"url": "https://lewnelson.com"
+	},
+	"license": "MIT",
+	"packageManager": "pnpm@10.14.0",
+	"main": "./dist/event-source-stub.js",
+	"exports": {
+		"./event-source-stub": {
+			"import": "./dist/event-source-stub.js",
+			"require": "./dist/event-source-stub.js"
+		},
+		"./fetch-stub": {
+			"import": "./dist/fetch-stub.js",
+			"require": "./dist/fetch-stub.js"
+		},
+		"./websocket-stub": {
+			"import": "./dist/websocket-stub.js",
+			"require": "./dist/websocket-stub.js"
+		}
+	},
+	"scripts": {
+		"build:event-source-stub": "esbuild src/event-source-stub.ts --bundle --minify --outfile=dist/event-source-stub.js --log-level=error",
+		"build:fetch-stub": "esbuild src/fetch-stub.ts --bundle --minify --outfile=dist/fetch-stub.js --log-level=error",
+		"build:websocket-stub": "esbuild src/websocket-stub.ts --bundle --minify --outfile=dist/websocket-stub.js --log-level=error",
+		"build": "pnpm clean && pnpm run build:event-source-stub && pnpm run build:fetch-stub && pnpm run build:websocket-stub",
+		"build:watch": "concurrently \"pnpm run build:event-source-stub --watch\" \"pnpm run build:fetch-stub --watch\" \"pnpm run build:websocket-stub --watch\"",
+		"clean": "rimraf dist",
+		"release": "semantic-release",
+		"test": "echo \"No tests\""
+	},
+	"dependencies": {
+		"@mocky-balboa/client": "workspace:*",
+		"@mocky-balboa/logger": "workspace:*",
+		"@mocky-balboa/shared-config": "workspace:*"
+	},
+	"devDependencies": {
+		"chokidar-cli": "catalog:",
+		"@types/node": "catalog:",
+		"concurrently": "catalog:",
+		"esbuild": "catalog:",
+		"rimraf": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	}
+}

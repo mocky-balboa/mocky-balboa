@@ -1,0 +1,36 @@
+query SearchPostsWithDirectives(
+	$query: String!
+	$category: PostCategory
+	$includeAuthor: Boolean = true
+	$includeComments: Boolean = false
+	$skipTags: Boolean = false
+) {
+	searchPosts(query: $query, category: $category) {
+		id
+		title
+		content
+		excerpt
+		slug
+		author @include(if: $includeAuthor) {
+			id
+			username
+			avatar
+		}
+		category
+		tags @skip(if: $skipTags)
+		publishedAt
+		createdAt
+		likes
+		views
+		isPublished
+		featuredImage
+		comments @include(if: $includeComments) {
+			id
+			content
+			author {
+				username
+			}
+			createdAt
+		}
+	}
+}

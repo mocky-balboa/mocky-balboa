@@ -1,8 +1,10 @@
 import {
-  ClientIdentityStorageHeader,
-  type ExternalRouteHandlerRouteResponse,
+	type Client,
+	ClientIdentityStorageHeader,
+	type ExternalRouteHandlerRouteResponse,
 } from "@mocky-balboa/client";
 
+// biome-ignore lint/suspicious/noExplicitAny: Accepts any arguments
 type FunctionType<T> = T extends (...args: any[]) => any ? T : never;
 type InterceptCallback = FunctionType<Parameters<typeof cy.intercept>[2]>;
 type CyRequest = Parameters<InterceptCallback>[0];
@@ -12,68 +14,69 @@ type CyRequest = Parameters<InterceptCallback>[0];
  * intercept handler to the Mocky Balboa client internal request handler.
  */
 export const extractRequest =
-  (clientId: string) =>
-  (req: CyRequest): Request => {
-    req.headers[ClientIdentityStorageHeader] = clientId;
-    const headers = new Headers();
-    Object.entries(req.headers).forEach(([key, value]) => {
-      [value].flat().forEach((value) => {
-        headers.set(key, value);
-      });
-    });
+	(clientId: string) =>
+	(req: CyRequest): Request => {
+		req.headers[ClientIdentityStorageHeader] = clientId;
+		const headers = new Headers();
+		Object.entries(req.headers).forEach(([key, value]) => {
+			[value].flat().forEach((value) => {
+				headers.set(key, value);
+			});
+		});
 
-    let body: RequestInit["body"];
-    if (typeof req.body === "string") {
-      body = req.body;
-    } else if (req.body instanceof Buffer) {
-      body = req.body;
-    } else {
-      body = JSON.stringify(body);
-    }
+		let body: RequestInit["body"];
+		if (typeof req.body === "string") {
+			body = req.body;
+		} else if (req.body instanceof Buffer) {
+			body = req.body;
+		} else {
+			body = JSON.stringify(body);
+		}
 
-    const request = new Request(req.url, {
-      method: req.method,
-      headers,
-      body: ["GET", "HEAD"].includes(req.method.toUpperCase()) ? null : body,
-    });
+		const request = new Request(req.url, {
+			method: req.method,
+			headers,
+			body: ["GET", "HEAD"].includes(req.method.toUpperCase()) ? null : body,
+		});
 
-    return request;
-  };
+		return request;
+	};
 
 /**
  * Handles the result from the internal route handler allowing it to be dealt
  * with inside the Cypress intercept handler.
  */
-export const handleResult = async (
-  result: ExternalRouteHandlerRouteResponse | undefined,
-  req: CyRequest,
-) => {
-  switch (result?.type) {
-    case "error":
-      req.destroy();
-      break;
+export const handleResult =
+	(client: Client) =>
+	async (
+		result: ExternalRouteHandlerRouteResponse | undefined,
+		req: CyRequest,
+	) => {
+		switch (result?.type) {
+			case "error":
+				req.destroy();
+				break;
 
-    case "passthrough":
-      req.continue();
-      break;
+			case "passthrough":
+				req.continue();
+				break;
 
-    case "fulfill":
-      if (result.path) {
-        throw new Error(
-          "@mocky-balboa/cypress: 'path' option not supported on route.fulfill for Cypress. Use cy.readFile and pass contents as body instead.",
-        );
-      } else {
-        const responseText = await result.response.text();
-        req.reply(
-          result.response.status,
-          responseText,
-          Object.fromEntries(result.response.headers),
-        );
-      }
-      break;
+			case "fulfill":
+				if (result.path) {
+					req.url = client.getFileProxyUrl(result.path);
+					req.continue();
+				} else {
+					const responseText = await result.response.text();
+					req.reply(
+						result.response.status,
+						responseText,
+						Object.fromEntries(result.response.headers),
+					);
+				}
+				break;
 
-    default:
-      req.continue();
-      break;
-  }
-};
+			default:
+				req.continue();
+				break;
+		}
+	};

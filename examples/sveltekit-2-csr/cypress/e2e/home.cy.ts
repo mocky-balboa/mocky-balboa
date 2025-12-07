@@ -1,121 +1,143 @@
 import {
-  type Fight,
-  FightStatus,
-  TrainingIntensity,
-  type TrainingRegime,
+	type Fight,
+	FightStatus,
+	TrainingIntensity,
+	type TrainingRegime,
 } from "../../src/lib/data";
 
 const nextFightEndpoint = "http://localhost:58157/api/next-fight";
 const trainingRegimeEndpoint = "http://localhost:58157/api/training-regime";
 
 const nextFight: Fight = {
-  id: "fight-id",
-  date: new Date("1976-11-25").toISOString(),
-  status: FightStatus.UPCOMING,
-  opponent: {
-    id: "opponent-id",
-    name: "Apollo Creed",
-    record: {
-      wins: {
-        total: 47,
-        ko: 42,
-      },
-      losses: {
-        total: 0,
-        ko: 0,
-      },
-      draws: 0,
-    },
-  },
+	id: "fight-id",
+	date: new Date("1976-11-25").toISOString(),
+	status: FightStatus.UPCOMING,
+	opponent: {
+		id: "opponent-id",
+		name: "Apollo Creed",
+		record: {
+			wins: {
+				total: 47,
+				ko: 42,
+			},
+			losses: {
+				total: 0,
+				ko: 0,
+			},
+			draws: 0,
+		},
+	},
 };
 
 const trainingRegime: TrainingRegime = {
-  id: "training-regime-id",
-  name: "Prep for fight",
-  intensity: TrainingIntensity.HIGH,
-  routine: {
-    Running: "10 Miles",
-    "Heavy Bag": "3 x 2 minute rounds",
-    "Sit-ups": "200 Reps",
-  },
+	id: "training-regime-id",
+	name: "Prep for fight",
+	intensity: TrainingIntensity.HIGH,
+	routine: {
+		Running: "10 Miles",
+		"Heavy Bag": "3 x 2 minute rounds",
+		"Sit-ups": "200 Reps",
+	},
 };
 
 it("when there's a network error loading the next fight data", () => {
-  cy.mocky((mocky) => {
-    mocky.route(nextFightEndpoint, (route) => {
-      return route.error();
-    });
+	cy.mocky((mocky) => {
+		mocky.route(nextFightEndpoint, (route) => {
+			return route.error();
+		});
 
-    mocky.route(trainingRegimeEndpoint, (route) => {
-      return route.fulfill({
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(trainingRegime),
-      });
-    });
-  });
+		mocky.route(trainingRegimeEndpoint, (route) => {
+			return route.fulfill({
+				status: 200,
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(trainingRegime),
+			});
+		});
+	});
 
-  cy.visit("/");
-  cy.contains("Failed to load next fight data");
+	cy.visit("/");
+	cy.contains("Failed to load next fight data");
 });
 
 it("when there's a network error loading the training regime data", () => {
-  cy.mocky((mocky) => {
-    mocky.route(nextFightEndpoint, (route) => {
-      return route.fulfill({
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(nextFight),
-      });
-    });
+	cy.mocky((mocky) => {
+		mocky.route(nextFightEndpoint, (route) => {
+			return route.fulfill({
+				status: 200,
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(nextFight),
+			});
+		});
 
-    mocky.route(trainingRegimeEndpoint, (route) => {
-      return route.error();
-    });
-  });
+		mocky.route(trainingRegimeEndpoint, (route) => {
+			return route.error();
+		});
+	});
 
-  cy.visit("/");
-  cy.contains("Failed to load training log data");
+	cy.visit("/");
+	cy.contains("Failed to load training log data");
 });
 
 describe("when the data is loaded successfully", () => {
-  beforeEach(() => {
-    cy.mocky((mocky) => {
-      mocky.route(nextFightEndpoint, (route) => {
-        return route.fulfill({
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(nextFight),
-        });
-      });
+	beforeEach(() => {
+		cy.mocky((mocky) => {
+			mocky.route(nextFightEndpoint, (route) => {
+				return route.fulfill({
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(nextFight),
+				});
+			});
 
-      mocky.route(trainingRegimeEndpoint, (route) => {
-        return route.fulfill({
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(trainingRegime),
-        });
-      });
-    });
-  });
+			mocky.route(trainingRegimeEndpoint, (route) => {
+				return route.fulfill({
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(trainingRegime),
+				});
+			});
+		});
+	});
 
-  it("it shows the stats for the next fight", () => {
-    cy.visit("/");
-    cy.contains("Apollo Creed");
-  });
+	it("it shows the stats for the next fight", () => {
+		cy.visit("/");
+		cy.contains("Apollo Creed");
+	});
 
-  it("it shows the stats for the training regime", () => {
-    cy.visit("/");
-    cy.contains("3 x 2 minute rounds");
-  });
+	it("it shows the stats for the training regime", () => {
+		cy.visit("/");
+		cy.contains("3 x 2 minute rounds");
+	});
 
-  it("it loads the data for the next fight with the correct custom X-Public-Api-Key header value", () => {
-    cy.mockyWaitForRequest(() => {
-      return cy.visit("/");
-    }, nextFightEndpoint).then((request) => {
-      expect(request.headers.get("X-Public-Api-Key")).to.equal(
-        "public-api-key",
-      );
-    });
-  });
+	it("it loads the data for the next fight with the correct custom X-Public-Api-Key header value", () => {
+		cy.mockyWaitForRequest(() => {
+			return cy.visit("/");
+		}, nextFightEndpoint).then((request) => {
+			expect(request.headers.get("X-Public-Api-Key")).to.equal(
+				"public-api-key",
+			);
+		});
+	});
+});
+
+it("loads the data for the next fight using file path", () => {
+	cy.mocky((mocky) => {
+		mocky.route(nextFightEndpoint, (route) => {
+			return route.fulfill({
+				status: 200,
+				path: "cypress/fixtures/james-clubber-lang.next-fight.json",
+			});
+		});
+
+		mocky.route(trainingRegimeEndpoint, (route) => {
+			return route.fulfill({
+				status: 200,
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(trainingRegime),
+			});
+		});
+	});
+
+	cy.visit("/");
+	cy.contains('James "Clubber" Lang');
 });

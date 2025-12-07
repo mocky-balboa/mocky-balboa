@@ -1,0 +1,96 @@
+query GetUserProfile($userId: ID!, $includeStats: Boolean = true) {
+	getUser(id: $userId) {
+		id
+		username
+		email
+		firstName
+		lastName
+		bio
+		avatar
+		createdAt
+		updatedAt
+		isVerified
+		preferences {
+			theme
+			language
+		}
+	}
+
+	getUserStats(userId: $userId) @include(if: $includeStats) {
+		totalPosts
+		totalComments
+		totalLikes
+		followersCount
+		followingCount
+		joinDate
+		lastActiveAt
+	}
+}
+
+query GetUserPosts($userId: ID!, $includeComments: Boolean = false) {
+	getPosts(authorId: $userId) {
+		id
+		title
+		content
+		excerpt
+		slug
+		category
+		tags
+		publishedAt
+		createdAt
+		likes
+		views
+		isPublished
+		featuredImage
+		readingTime
+		comments @include(if: $includeComments) {
+			id
+			content
+			author {
+				username
+			}
+			createdAt
+		}
+	}
+}
+
+mutation UpdateUserProfile($userId: ID!, $input: UpdateUserInput!) {
+	updateUser(id: $userId, input: $input) {
+		id
+		username
+		firstName
+		lastName
+		bio
+		avatar
+		updatedAt
+	}
+}
+
+mutation CreatePostAndLike(
+	$input: CreatePostInput!
+	$postId: ID!
+	$likePost: Boolean = true
+) {
+	createPost(input: $input) {
+		id
+		title
+		content
+		excerpt
+		slug
+		author {
+			id
+			username
+		}
+		category
+		tags
+		publishedAt
+		createdAt
+		likes
+		views
+		isPublished
+		featuredImage
+		readingTime
+	}
+
+	likePost(postId: $postId) @include(if: $likePost)
+}

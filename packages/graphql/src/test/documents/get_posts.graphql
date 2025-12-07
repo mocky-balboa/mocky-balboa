@@ -1,0 +1,24 @@
+query get_posts($authorId: ID, $published: Boolean) {
+	getPosts(authorId: $authorId, published: $published) {
+		id
+		title
+		content
+		excerpt
+		slug
+		author {
+			id
+			username
+			avatar
+		}
+		category
+		tags
+		publishedAt
+		createdAt
+		updatedAt
+		likes
+		views
+		isPublished
+		featuredImage
+		readingTime
+	}
+}

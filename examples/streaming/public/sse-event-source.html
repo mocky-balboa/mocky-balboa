@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server-Side Events using EventSource</title>
+  </head>
+  <body>
+    <h1>Server-Side Events using EventSource</h1>
+    <p>This is a server-side events example using EventSource.</p>
+    <p>Latest message: <span id="latest-message">None</span></p>
+    <button id="start">Start EventSource</button>
+    <button id="stop">Stop EventSource</button>
+  </body>
+  <script>
+    let eventSource;
+    document.getElementById("start").addEventListener("click", () => {
+      eventSource?.close();
+      eventSource = new EventSource("/sse");
+      eventSource.addEventListener("message", (event) => {
+        document.getElementById("latest-message").textContent = event.data;
+      });
+    });
+
+    document.getElementById("stop").addEventListener("click", () => {
+      eventSource.close();
+    });
+  </script>
+</html>

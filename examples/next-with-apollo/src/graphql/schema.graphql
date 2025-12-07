@@ -1,0 +1,112 @@
+# --- Custom Scalar Types ---
+scalar Date
+scalar JSON
+
+# --- Main Entity Types ---
+
+type User {
+	id: ID!
+	username: String!
+	email: String!
+	isAdmin: Boolean!
+	posts(limit: Int): [Post!]
+	createdAt: Date!
+	preferences: UserPreferences
+}
+
+type UserPreferences {
+	theme: Theme!
+	notificationsEnabled: Boolean!
+	language: String!
+}
+
+type Post {
+	id: ID!
+	title: String!
+	content: String!
+	author: User!
+	status: PostStatus!
+	tags: [String!]
+	publishedAt: Date
+}
+
+# --- Enum and Input Types ---
+
+enum Theme {
+	LIGHT
+	DARK
+	SYSTEM
+}
+
+enum PostStatus {
+	DRAFT
+	PUBLISHED
+	ARCHIVED
+}
+
+input UpdateUserPreferencesInput {
+	theme: Theme
+	notificationsEnabled: Boolean
+}
+
+input CreatePostInput {
+	title: String!
+	content: String!
+	tags: [String!]
+}
+
+input PostFilter {
+	status: PostStatus
+	minPublishedDate: Date
+	searchQuery: String
+}
+
+# ----------------------------------------------------------------------
+# --- ROOT OPERATION TYPES ---
+# ----------------------------------------------------------------------
+
+type Query {
+	"Fetches the currently authenticated user."
+	getCurrentUser: User
+
+	"Fetches a single user by ID."
+	getUserById(id: ID!): User
+
+	"Searches and fetches multiple posts based on filters, demonstrating complex variable usage."
+	searchPosts(filter: PostFilter!): [Post!]!
+
+	"Fetches a list of all posts, demonstrating an array return type."
+	getAllPosts: [Post!]!
+		@deprecated(reason: "Use searchPosts for better filtering.")
+
+	"Fetches users with pagination and a simple filter."
+	getUsersWithFilter(limit: Int!, offset: Int!, isAdmin: Boolean): [User!]!
+}
+
+type Mutation {
+	"Creates a new post, demonstrating a complex input object."
+	createPost(input: CreatePostInput!): Post!
+
+	"Updates an existing user's preferences, demonstrating an optional input."
+	updateUserPreferences(
+		userId: ID!
+		preferences: UpdateUserPreferencesInput!
+	): User!
+
+	"Deletes a post by its ID."
+	deletePost(postId: ID!): Boolean!
+
+	"Publishes a draft post."
+	publishPost(postId: ID!): Post!
+
+	"Deletes a user account."
+	deleteUser(userId: ID!): Boolean!
+}
+
+type Subscription {
+	"Subscribes to new posts as they are published in real-time."
+	newPostPublished(tags: [String!]): Post
+
+	"Subscribes to updates on a specific user's status."
+	userStatusUpdated(userId: ID!): User
+}

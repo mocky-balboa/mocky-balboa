@@ -1,15 +1,15 @@
-import { CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import styles from "./text.module.css";
 
 export const Text = ({
-  children,
-  ...cssProperties
+	children,
+	...cssProperties
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
 } & Pick<CSSProperties, "textAlign" | "fontWeight" | "color">) => {
-  return (
-    <p className={styles.text} style={cssProperties}>
-      {children}
-    </p>
-  );
+	return (
+		<p className={styles.text} style={cssProperties}>
+			{children}
+		</p>
+	);
 };

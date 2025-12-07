@@ -1,14 +1,27 @@
 import {
-  Client,
-  MessageType,
-  type ConnectOptions,
-  ClientIdentityStorageHeader,
-  type MessageTypes,
-  type ParsedMessageType,
+	BrowserGetSSEProxyParamsFunctionName,
+	type BrowserProxySettings,
+	BrowserProxySettingsKey,
+	Client,
+	type ClientSSEResponse,
+	type ConnectOptions,
+	MessageType,
+	type MessageTypes,
+	type ParsedMessageType,
+	SSEProxyEndpoint,
 } from "@mocky-balboa/client";
 import type Cypress from "cypress";
-import { logger } from "./logger.js";
 import { extractRequest, handleResult } from "./intercept.js";
+import { logger } from "./logger.js";
+
+declare global {
+	interface Window {
+		[BrowserGetSSEProxyParamsFunctionName]?: (
+			url: string,
+		) => Promise<ClientSSEResponse>;
+		[BrowserProxySettingsKey]: BrowserProxySettings;
+	}
+}
 
 /**
  * Creates a Mocky Balboa client used to mock network requests at runtime defined by your test suite.
@@ -41,36 +54,68 @@ import { extractRequest, handleResult } from "./intercept.js";
  * ```
  */
 export const createClient = async (
-  cy: Cypress.Chainable,
-  options: ConnectOptions = {},
+	cy: Cypress.Chainable,
+	options: ConnectOptions = {},
 ): Promise<Client> => {
-  const client = new Client();
+	const client = new Client();
 
-  cy.intercept(
-    /.*/,
-    client.attachExternalClientSideRouteHandler({
-      extractRequest: extractRequest(client.clientIdentifier),
-      handleResult,
-    }),
-  );
+	// When the client receives an error message from the server we should log the error and close the context. This can help prevent false positives in test cases.
+	client.on(
+		MessageType.ERROR,
+		(message: ParsedMessageType<MessageTypes["ERROR"]>) => {
+			logger.error("Error received from Mocky Balboa mock server", { message });
+			throw new Error(message.payload.message);
+		},
+	);
 
-  // When the client receives an error message from the server we should log the error and close the context. This can help prevent false positives in test cases.
-  client.on(
-    MessageType.ERROR,
-    (message: ParsedMessageType<MessageTypes["ERROR"]>) => {
-      logger.error("Error received from Mocky Balboa mock server", { message });
-      throw new Error(message.payload.message);
-    },
-  );
+	await client.connect(options);
 
-  await client.connect(options);
+	// When the cypress test is finished disconnect the client
+	cy.on("test:after:run", () => {
+		client.disconnect();
+	});
 
-  // When the cypress test is finished disconnect the client
-  cy.on("test:after:run", () => {
-    client.disconnect();
-  });
+	const stubs: string[] = [];
+	cy.readFile(require.resolve("@mocky-balboa/browser/event-source-stub")).then(
+		(eventSourceStub) => {
+			cy.readFile(require.resolve("@mocky-balboa/browser/fetch-stub")).then(
+				(fetchStub) => {
+					cy.readFile(
+						require.resolve("@mocky-balboa/browser/websocket-stub"),
+					).then((websocketStub) => {
+						stubs.push(eventSourceStub, fetchStub, websocketStub);
+					});
+				},
+			);
+		},
+	);
 
-  return client;
+	cy.on("window:before:load", (window) => {
+		if (window[BrowserGetSSEProxyParamsFunctionName]) {
+			return;
+		}
+
+		const proxySettings = client.getProxySettings();
+		window[BrowserProxySettingsKey] = proxySettings;
+
+		stubs.forEach((stub) => {
+			window.eval(stub);
+		});
+
+		window[BrowserGetSSEProxyParamsFunctionName] = (url: string) => {
+			return client.getClientSSEProxyParams(url);
+		};
+	});
+
+	cy.intercept(
+		`!**${SSEProxyEndpoint}**`,
+		client.attachExternalClientSideRouteHandler({
+			extractRequest: extractRequest(client.clientIdentifier),
+			handleResult: handleResult(client),
+		}),
+	);
+
+	return client;
 };
 
-export { Client } from "@mocky-balboa/client";
+export { Client, SSE } from "@mocky-balboa/client";

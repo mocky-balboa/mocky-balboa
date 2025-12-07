@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server-Side WebSocket</title>
+  </head>
+  <body>
+    <h1>Server-Side WebSocket</h1>
+    <p>This is an example of mocking a server-side WebSocket connection.</p>
+    <p>Latest message: <span id="latest-message">None</span></p>
+    <button id="open-websocket">Open WebSocket</button>
+    <button id="start-streaming">Start streaming</button>
+    <button id="stop-streaming">Stop streaming</button>
+  </body>
+  <script>
+    console.log("EventSource in app");
+    let eventSource;
+    document.getElementById("start-streaming").addEventListener("click", () => {
+      eventSource?.close();
+      eventSource = new EventSource("/sse-powered-by-server-websocket?userId=my-user");
+      eventSource.addEventListener("message", (event) => {
+        document.getElementById("latest-message").textContent = event.data;
+      });
+    });
+    document.getElementById("stop-streaming").addEventListener("click", () => {
+      eventSource.close();
+    });
+
+    document.getElementById("open-websocket").addEventListener("click", async () => {
+      await fetch("/open-server-websocket");
+    });
+  </script>
+</html>

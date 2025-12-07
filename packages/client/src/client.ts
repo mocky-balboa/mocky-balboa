@@ -1,112 +1,124 @@
 import {
-  Message,
-  MessageType,
-  parseMessage,
-  type MessageTypes,
-  type ParsedMessage,
-  type ParsedMessageType,
+	type BrowserProxySettings,
+	ClientIdentityStorageHeader,
+	DefaultProxyServerPort,
+	DefaultWebSocketServerPort,
+	FileProxyEndpoint,
+	FileProxyPathParam,
+	SSEProxyEndpoint,
+	SSEProxyOriginalUrlParam,
+	SSEProxyRequestIdParam,
+} from "@mocky-balboa/shared-config";
+import {
+	Message,
+	MessageType,
+	type MessageTypes,
+	type ParsedMessage,
+	type ParsedMessageType,
+	parseMessage,
 } from "@mocky-balboa/websocket-messages";
-import { v4 as uuid } from "uuid";
-import { minimatch } from "minimatch";
 import WebSocket from "isomorphic-ws";
-import { waitForAck } from "./utils.js";
-import { Route, type RouteResponse } from "./route.js";
-import { DefaultWebSocketServerPort } from "@mocky-balboa/shared-config";
+import { minimatch } from "minimatch";
+import { v4 as uuid } from "uuid";
+import { GraphQL } from "./graphql/graphql.js";
+import { GraphQLHttp } from "./graphql/graphql-http.js";
+import { GraphQLSSE } from "./graphql/graphql-sse.js";
+import { GraphQLSSEAdapter } from "./graphql/graphql-sse-adapter.js";
+import { GraphQLWebSocket } from "./graphql/graphql-websocket.js";
+import { GraphQLWebSocketAdapter } from "./graphql/graphql-websocket-adapter.js";
 import { logger } from "./logger.js";
-
-/** Default timeout duration in milliseconds for establishing an identified connection with the WebSocket server */
-export const DefaultWebSocketServerTimeout = 5000;
-
-/** Default timeout duration in milliseconds for waiting on a request to be sent */
-export const DefaultWaitForRequestTimeout = 5000;
+import { Route } from "./route.js";
+import {
+	DefaultSSERouteTimeout,
+	DefaultWaitForRequestTimeout,
+	DefaultWebSocketRouteTimeout,
+	DefaultWebSocketServerTimeout,
+	type GraphQLRouteOptions,
+	type GraphQLRouteTransport,
+	type ProxyConnection,
+	type RouteMeta,
+	type RouteOptions,
+	type RouteResponse,
+	RouteType,
+	type SSERouteOptions,
+	type WebSocketRouteOptions,
+} from "./shared-types.js";
+import { SSE } from "./sse.js";
+import { waitForAck } from "./utils.js";
+import { WebSocketServerMock } from "./websocket-server-mock.js";
 
 /** Possible values for URL pattern matching */
 export type UrlMatcher =
-  | string
-  | RegExp
-  | ((url: URL) => boolean | Promise<boolean>);
-
-/** Possible values for route type */
-export type RouteType = "server-only" | "client-only" | "both";
-export const RouteType = {
-  ServerOnly: "server-only",
-  ClientOnly: "client-only",
-  Both: "both",
-} as const;
-
-/** Options when configuring a route */
-export interface RouteOptions {
-  /**
-   * Total number of times that a route handler will be run when the URL pattern matcher is a hit.
-   *
-   * @remarks
-   * When `undefined`, the route handler will be run indefinitely.
-   */
-  times?: number;
-  /**
-   * Defines the behaviour of the route handler.
-   *
-   * - `server-only` - The route handler will only be called if the request is executed on the server.
-   * - `client-only` - The route handler will only be called if the request is executed on the client.
-   * - `both` - The route handler will be called regardless of whether the request is executed on the server or client.
-   *
-   * @default "both"
-   */
-  type?: RouteType;
-}
-
-type RouteMeta = RouteOptions & {
-  calls: number;
-};
+	| string
+	| RegExp
+	| ((url: URL) => boolean | Promise<boolean>);
 
 export interface WaitForRequestOptions {
-  /**
-   * Timeout duration in milliseconds for waiting for a request to be received from the WebSocket server
-   *
-   * @default {@link DefaultWaitForRequestTimeout}
-   */
-  timeout?: number;
-  /**
-   * Determines where to expect the request to be executed from
-   *
-   * - `server-only` - The request will only be received if it originated from the server.
-   * - `client-only` - The request will only be received if it originated from the client.
-   * - `both` - The request will be received regardless of whether it originated from the server or client. The request returned is the first request received.
-   *
-   * @default "both"
-   */
-  type?: RouteType;
+	/**
+	 * Timeout duration in milliseconds for waiting for a request to be received from the WebSocket server
+	 *
+	 * @default {@link DefaultWaitForRequestTimeout}
+	 */
+	timeout?: number | undefined;
+	/**
+	 * Determines where to expect the request to be executed from
+	 *
+	 * - `server-only` - The request will only be received if it originated from the server.
+	 * - `client-only` - The request will only be received if it originated from the client.
+	 * - `both` - The request will be received regardless of whether it originated from the server or client. The request returned is the first request received.
+	 *
+	 * @default "both"
+	 */
+	type?: RouteType;
 }
 
 /**
  * Connection options for the WebSocket server client connection
  */
 export interface ConnectOptions {
-  /**
-   * Port number to connect to the WebSocket server on
-   *
-   * @default {@link DefaultWebSocketServerPort}
-   */
-  port?: number;
-  /**
-   * Timeout duration in milliseconds for establishing an identified connection with the WebSocket server
-   *
-   * @default {@link DefaultWebSocketServerTimeout}
-   */
-  timeout?: number;
+	/**
+	 * Whether to connect to the WebSocket server over WSS and proxy server over HTTPS
+	 *
+	 * @default false
+	 */
+	https?: boolean;
+	/**
+	 * Hostname to connect to the WebSocket server and proxy server on
+	 *
+	 * @default "localhost"
+	 */
+	hostname?: string;
+	/**
+	 * Port number to connect to the WebSocket server on
+	 *
+	 * @default {@link DefaultWebSocketServerPort}
+	 */
+	port?: number;
+	/**
+	 * Port number to connect to the proxy server on
+	 *
+	 * @default {@link DefaultProxyServerPort}
+	 */
+	proxyPort?: number;
+	/**
+	 * Timeout duration in milliseconds for establishing an identified connection with the WebSocket server
+	 *
+	 * @default {@link DefaultWebSocketServerTimeout}
+	 */
+	timeout?: number;
 }
 
 /**
  * Data related to the mocked response
  */
 export interface ResponseData {
-  response?: Response;
-  /** @default false */
-  error?: boolean;
-  /**
-   * The file path if any to load the response body from
-   */
-  path?: string | undefined;
+	response?: Response;
+	/** @default false */
+	error?: boolean;
+	/**
+	 * The file path if any to load the response body from
+	 */
+	path?: string | undefined;
 }
 
 /**
@@ -114,9 +126,21 @@ export interface ResponseData {
  * internally to continue to the next handler
  */
 export type ExternalRouteHandlerRouteResponse = Exclude<
-  RouteResponse,
-  { type: "fallback" }
+	RouteResponse,
+	{ type: "fallback" }
 >;
+
+export type ClientSSEResponse =
+	| {
+			shouldProxy: true;
+			proxyUrl: string;
+			requestId: string;
+	  }
+	| {
+			shouldProxy: false;
+			proxyUrl?: never;
+			requestId?: never;
+	  };
 
 /**
  * Client used to interface with the WebSocket server for mocking server-side network requests. And
@@ -125,551 +149,1002 @@ export type ExternalRouteHandlerRouteResponse = Exclude<
  * @hideconstructor
  */
 export class Client {
-  /** The WebSocket connection */
-  private _ws?: WebSocket;
-  /** Unique identifier for the client, used for continuity across the WebSocket connection enabling parallel mocking */
-  public readonly clientIdentifier: string;
-  /** Message handlers when receiving messages from the WebSocket server */
-  private messageHandlers: Map<
-    MessageType,
-    Set<(message: ParsedMessage) => void | Promise<void>>
-  > = new Map();
-  /** Tracks whether an external client side route handler is attached */
-  private externalClientSideRouteHandlerAttached = false;
-  /** Callback handlers for waiting on client-side network requests */
-  private clientWaitForRequestHandlers: Set<
-    (request: Request) => Promise<void>
-  > = new Set();
+	/** The WebSocket connection */
+	private _ws?: WebSocket;
+	/** Unique identifier for the client, used for continuity across the WebSocket connection enabling parallel mocking */
+	public readonly clientIdentifier: string;
+	/** Message handlers when receiving messages from the WebSocket server */
+	private messageHandlers: Map<
+		MessageType,
+		Set<(message: ParsedMessage) => void | Promise<void>>
+	> = new Map();
+	/** Tracks whether an external client side route handler is attached */
+	private externalClientSideRouteHandlerAttached = false;
+	/** Callback handlers for waiting on client-side network requests */
+	private clientWaitForRequestHandlers: Set<
+		(request: Request) => Promise<void>
+	> = new Set();
+	/** The port number of the WebSocket server */
+	private port?: number;
+	/** The port number of the proxy server */
+	private proxyPort?: number;
+	/** Whether to connect to the WebSocket server over WSS and proxy server over HTTPS */
+	private https?: boolean;
+	/** The hostname of the WebSocket server */
+	private hostname?: string;
+	/** Callback handlers for waiting on client-side SSE requests */
+	private clientSideSSERouteHandlers: Map<string, [UrlMatcher, () => void]> =
+		new Map();
+	/** Callback handlers for waiting on WebSocket connections to be made */
+	private websocketInterceptors: Map<string, UrlMatcher> = new Map();
+	/** Proxy server connections */
+	private proxyConnections: Set<ProxyConnection> = new Set();
 
-  /** Convenient access to route types */
-  public readonly RouteType = RouteType;
+	/** Convenient access to route types */
+	public readonly RouteType = RouteType;
 
-  /** Registered route handlers to handle outgoing network requests on the server */
-  private routeHandlers: Map<
-    string,
-    [
-      UrlMatcher,
-      (route: Route) => RouteResponse | Promise<RouteResponse>,
-      RouteMeta,
-    ]
-  > = new Map();
+	/** Registered route handlers to handle outgoing network requests on the server */
+	private routeHandlers: Map<
+		string,
+		[
+			UrlMatcher,
+			(route: Route) => RouteResponse | Promise<RouteResponse>,
+			RouteMeta,
+		]
+	> = new Map();
 
-  constructor() {
-    this.clientIdentifier = uuid();
-    this.onMessage = this.onMessage.bind(this);
-    this.onRequest = this.onRequest.bind(this);
+	constructor() {
+		this.clientIdentifier = uuid();
+		this.onMessage = this.onMessage.bind(this);
+		this.onRequest = this.onRequest.bind(this);
+		this.sendMessage = this.sendMessage.bind(this);
 
-    this.on(MessageType.REQUEST, this.onRequest);
-  }
+		this.on(MessageType.REQUEST, this.onRequest);
+		this.on(
+			MessageType.WEBSOCKET_SHOULD_PROXY_REQUEST,
+			this.onWebSocketShouldProxyRequest,
+		);
+	}
 
-  /**
-   * Waits for the WebSocket connection to open before proceeding.
-   *
-   * @param ws - the WebSocket connection
-   * @param timeoutDuration - the duration in milliseconds to wait for the connection to open
-   * @returns a Promise that resolves when the connection is open, or rejects if the timeout is reached
-   */
-  private waitForConnection(ws: WebSocket, timeoutDuration: number) {
-    return new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error("Timed out connecting to server"));
-      }, timeoutDuration);
+	/**
+	 * Used to get the proxy settings for the client. This is used for the browser stubs
+	 * to connect to the proxy server.
+	 *
+	 * @returns The proxy settings for the client.
+	 */
+	getProxySettings(): BrowserProxySettings {
+		if (
+			this.hostname === undefined ||
+			this.port === undefined ||
+			this.proxyPort === undefined ||
+			this.https === undefined
+		) {
+			throw new Error("Have you called Client.connect()?");
+		}
 
-      ws.addEventListener("open", () => {
-        clearTimeout(timeout);
-        resolve();
-      });
-    });
-  }
+		return {
+			hostname: this.hostname,
+			port: this.proxyPort,
+			clientIdentity: this.clientIdentifier,
+			webSocketServerSettings: {
+				port: this.port,
+				hostname: this.hostname,
+				https: this.https,
+			},
+		};
+	}
 
-  /**
-   * Checks if the request URL matches the given URL matcher.
-   *
-   * @remarks
-   * This method uses [minimatch](https://www.npmjs.com/package/minimatch) when urlMatcher is a string for glob pattern matching.
-   *
-   * @param urlMatcher - method of matching the request URL
-   * @param url - the request URL
-   * @returns Promise resolving to true if the URL matches, otherwise returns a promise resolving to false
-   */
-  private async doesUrlMatch(
-    urlMatcher: UrlMatcher,
-    url: URL,
-  ): Promise<boolean> {
-    if (typeof urlMatcher === "string") {
-      return minimatch(url.toString(), urlMatcher);
-    }
+	/**
+	 * Waits for the WebSocket connection to open before proceeding.
+	 *
+	 * @param ws - the WebSocket connection
+	 * @param timeoutDuration - the duration in milliseconds to wait for the connection to open
+	 * @returns a Promise that resolves when the connection is open, or rejects if the timeout is reached
+	 */
+	private waitForConnection(ws: WebSocket, timeoutDuration: number) {
+		return new Promise<void>((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				reject(new Error("Timed out connecting to server"));
+			}, timeoutDuration);
 
-    if (urlMatcher instanceof RegExp) {
-      return urlMatcher.test(url.toString());
-    }
+			ws.addEventListener("open", () => {
+				clearTimeout(timeout);
+				resolve();
+			});
+		});
+	}
 
-    return urlMatcher(url);
-  }
+	/**
+	 * Callback handler when a WebSocket should proxy request message is received from the WebSocket server.
+	 *
+	 * @param message
+	 */
+	private onWebSocketShouldProxyRequest = async (
+		message: ParsedMessageType<MessageTypes["WEBSOCKET_SHOULD_PROXY_REQUEST"]>,
+	) => {
+		const url = message.payload.request.url;
+		let requestId: string | undefined;
+		for (const [id, urlMatcher] of this.websocketInterceptors) {
+			if (await this.doesUrlMatch(urlMatcher, new URL(url))) {
+				requestId = id;
+				break;
+			}
+		}
 
-  /**
-   * Sends a response message to the WebSocket server and waits for an acknowledgement.
-   *
-   * @param ws - the WebSocket connection
-   * @param requestId - the request ID originally sent from the WebSocket server
-   * @param response - optional response to send back to the WebSocket server
-   * @param error - optional error flag to simulate a network level error
-   */
-  private async respondWithResponse(
-    ws: WebSocket,
-    requestId: string,
-    responseData: ResponseData = {},
-  ) {
-    const { response, error, path } = responseData;
-    const message = new Message(MessageType.RESPONSE, {
-      id: requestId,
-      error,
-      response: response
-        ? {
-            status: response.status,
-            headers: Object.fromEntries(response.headers),
-            body: await response.text(),
-            path,
-          }
-        : undefined,
-    });
+		if (requestId) {
+			this.websocketInterceptors.delete(requestId);
+		}
 
-    const ackPromise = waitForAck(ws, message.messageId, 2000);
-    ws.send(message.toString());
-    await ackPromise;
-  }
+		this.sendMessage(
+			new Message(MessageType.WEBSOCKET_SHOULD_PROXY_RESPONSE, {
+				id: requestId ?? uuid(),
+				shouldProxy: !!requestId,
+			}),
+		);
+	};
 
-  /**
-   * Builds a Request instance from a parsed request message.
-   */
-  private getRequestObjectFromRequestMessage(
-    message: ParsedMessageType<MessageTypes["REQUEST"]>,
-  ) {
-    const { request } = message.payload;
-    let requestInit: RequestInit;
-    if (request.method === "GET" || request.method === "HEAD") {
-      requestInit = {
-        body: null,
-        headers: request.headers,
-        method: request.method,
-      };
-    } else {
-      requestInit = {
-        body: request.body ?? null,
-        headers: request.headers,
-        method: request.method,
-      };
-    }
+	/**
+	 * Checks if the request URL matches the given URL matcher.
+	 *
+	 * @remarks
+	 * This method uses [minimatch](https://www.npmjs.com/package/minimatch) when urlMatcher is a string for glob pattern matching.
+	 *
+	 * @param urlMatcher - method of matching the request URL
+	 * @param url - the request URL
+	 * @returns Promise resolving to true if the URL matches, otherwise returns a promise resolving to false
+	 */
+	private async doesUrlMatch(
+		urlMatcher: UrlMatcher,
+		url: URL,
+	): Promise<boolean> {
+		if (typeof urlMatcher === "string") {
+			return minimatch(url.toString(), urlMatcher);
+		}
 
-    return new Request(request.url, requestInit);
-  }
+		if (urlMatcher instanceof RegExp) {
+			return urlMatcher.test(url.toString());
+		}
 
-  /**
-   * Waits for a request to be made that matches the given URL matcher.
-   *
-   * @param urlMatcher - The URL matcher to match against.
-   * @param options - Options for the wait operation.
-   * @returns Promise resolving to an instance of Request matching the original request dispatched by the server, rejects with an error if the request is not found within the specified timeout duration.
-   */
-  async waitForRequest(
-    urlMatcher: UrlMatcher,
-    options: WaitForRequestOptions = {},
-  ): Promise<Request> {
-    const {
-      timeout: timeoutDuration = DefaultWaitForRequestTimeout,
-      type = RouteType.Both,
-    } = options;
-    return new Promise<Request>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error("Timed out waiting for request"));
-      }, timeoutDuration);
+		return urlMatcher(url);
+	}
 
-      const client = this;
-      async function onServerRequest(
-        message: ParsedMessageType<MessageTypes["REQUEST"]>,
-      ) {
-        const urlMatch = await client.doesUrlMatch(
-          urlMatcher,
-          new URL(message.payload.request.url),
-        );
-        if (urlMatch) {
-          unregisterHandlers();
-          clearTimeout(timeout);
-          resolve(client.getRequestObjectFromRequestMessage(message));
-        }
-      }
+	/**
+	 * Sends a response message to the WebSocket server and waits for an acknowledgement.
+	 *
+	 * @param ws - the WebSocket connection
+	 * @param requestId - the request ID originally sent from the WebSocket server
+	 * @param response - optional response to send back to the WebSocket server
+	 * @param error - optional error flag to simulate a network level error
+	 */
+	private async respondWithResponse(
+		requestId: string,
+		responseData: ResponseData = {},
+	) {
+		if (!this._ws) {
+			throw new Error("WebSocket is not connected");
+		}
 
-      async function onClientRequest(request: Request) {
-        const urlMatch = await client.doesUrlMatch(
-          urlMatcher,
-          new URL(request.url),
-        );
-        if (urlMatch) {
-          unregisterHandlers();
-          clearTimeout(timeout);
-          resolve(request);
-        }
-      }
+		const { response, error, path } = responseData;
+		const message = new Message(MessageType.RESPONSE, {
+			id: requestId,
+			error,
+			response: response
+				? {
+						status: response.status,
+						headers: Object.fromEntries(response.headers),
+						body: await response.text(),
+						path,
+					}
+				: undefined,
+		});
 
-      function unregisterHandlers() {
-        client.off(MessageType.REQUEST, onServerRequest);
-        client.clientWaitForRequestHandlers.delete(onClientRequest);
-      }
+		const ackPromise = waitForAck(this._ws, message.messageId, 2000);
+		this.sendMessage(message);
+		await ackPromise;
+	}
 
-      if (this.shouldHandleRouteType(type, "server")) {
-        this.on(MessageType.REQUEST, onServerRequest);
-      }
+	/**
+	 * Builds a Request instance from a parsed request message.
+	 */
+	private getRequestObjectFromRequestMessage(
+		message: ParsedMessageType<MessageTypes["REQUEST"]>,
+	) {
+		const { request } = message.payload;
+		let requestInit: RequestInit;
+		if (request.method === "GET" || request.method === "HEAD") {
+			requestInit = {
+				body: null,
+				headers: request.headers,
+				method: request.method,
+			};
+		} else {
+			requestInit = {
+				body: request.body ?? null,
+				headers: request.headers,
+				method: request.method,
+			};
+		}
 
-      if (this.shouldHandleRouteType(type, "client")) {
-        this.clientWaitForRequestHandlers.add(onClientRequest);
-      }
-    });
-  }
+		return new Request(request.url, requestInit);
+	}
 
-  /**
-   * Increments the call count for a route handler. Function to be called
-   * whenever a route handler is executed, irregardless of the result.
-   */
-  private incrementRouteHandlerCallCount = (
-    routeHandlerId: string,
-    routeMeta: RouteMeta,
-  ) => {
-    routeMeta.calls++;
-    if (routeMeta.times === routeMeta.calls) {
-      this.unroute(routeHandlerId);
-    }
-  };
+	/**
+	 * Waits for a request to be made that matches the given URL matcher.
+	 *
+	 * @param urlMatcher - The URL matcher to match against.
+	 * @param options - Options for the wait operation.
+	 * @returns Promise resolving to an instance of Request matching the original request dispatched by the server, rejects with an error if the request is not found within the specified timeout duration.
+	 */
+	async waitForRequest(
+		urlMatcher: UrlMatcher,
+		options: WaitForRequestOptions = {},
+	): Promise<Request> {
+		const {
+			timeout: timeoutDuration = DefaultWaitForRequestTimeout,
+			type = RouteType.Both,
+		} = options;
+		return new Promise<Request>((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				reject(new Error("Timed out waiting for request"));
+			}, timeoutDuration);
 
-  /**
-   * Deduce whether or not a handler should be executed based on the route metadata and handler type.
-   *
-   * @param routeMeta - The metadata & options of the route.
-   * @param handlerType - The type of the handler wanting to execute the route handler.
-   * @returns Whether or not the handler should be executed.
-   */
-  private shouldHandleRouteType(
-    routeType: RouteType | undefined,
-    handlerType: "server" | "client",
-  ) {
-    const type = routeType ?? RouteType.Both;
-    switch (handlerType) {
-      case "server":
-        return type === "server-only" || type === "both";
-      case "client":
-        return type === "client-only" || type === "both";
-      default:
-        throw new Error(`Invalid handler type: ${handlerType}`);
-    }
-  }
+			const onServerRequest = async (
+				message: ParsedMessageType<MessageTypes["REQUEST"]>,
+			) => {
+				const urlMatch = await this.doesUrlMatch(
+					urlMatcher,
+					new URL(message.payload.request.url),
+				);
+				if (urlMatch) {
+					unregisterHandlers();
+					clearTimeout(timeout);
+					resolve(this.getRequestObjectFromRequestMessage(message));
+				}
+			};
 
-  /**
-   * Callback handler when a request message is received from the WebSocket server. This method is responsible for finding the appropriate route handlers, executing them, and sending the response back to the WebSocket server.
-   *
-   * @param message - The received request message.
-   */
-  private async onRequest(message: ParsedMessageType<MessageTypes["REQUEST"]>) {
-    if (!this._ws) {
-      throw new Error("WebSocket is not connected");
-    }
+			const onClientRequest = async (request: Request) => {
+				const urlMatch = await this.doesUrlMatch(
+					urlMatcher,
+					new URL(request.url),
+				);
+				if (urlMatch) {
+					unregisterHandlers();
+					clearTimeout(timeout);
+					resolve(request);
+				}
+			};
 
-    const { request, id } = message.payload;
-    const url = new URL(request.url);
+			const unregisterHandlers = () => {
+				this.off(MessageType.REQUEST, onServerRequest);
+				this.clientWaitForRequestHandlers.delete(onClientRequest);
+			};
 
-    const requestObject = this.getRequestObjectFromRequestMessage(message);
-    const route = new Route(requestObject);
+			if (this.shouldHandleRouteType(type, "server")) {
+				this.on(MessageType.REQUEST, onServerRequest);
+			}
 
-    // Iterate over all the route handlers sequentially. This ensures the
-    // correct order of execution.
-    for (const [routeHandlerId, [urlMatcher, handler, routeMeta]] of this
-      .routeHandlers) {
-      // Skip the handler if the URL does not match
-      if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
-      // Skip the handler if it should not be handled by the server
-      if (!this.shouldHandleRouteType(routeMeta.type, "server")) continue;
+			if (this.shouldHandleRouteType(type, "client")) {
+				this.clientWaitForRequestHandlers.add(onClientRequest);
+			}
+		});
+	}
 
-      // Execute the handler
-      const routeResponse = await handler(route);
+	/**
+	 * Increments the call count for a route handler. Function to be called
+	 * whenever a route handler is executed, irregardless of the result.
+	 */
+	private incrementRouteHandlerCallCount = (
+		routeHandlerId: string,
+		routeMeta: RouteMeta,
+	) => {
+		routeMeta.calls++;
+		if (routeMeta.times === routeMeta.calls) {
+			this.unroute(routeHandlerId);
+		}
+	};
 
-      let responded = false;
-      // When the route handler responds with fallback behavior we loop to the next handler
-      switch (routeResponse.type) {
-        // Finite result. Terminates the route with a simulated network error.
-        case "error":
-          await this.respondWithResponse(this._ws, id, { error: true });
-          responded = true;
-          break;
-        // Finite result. Terminates the route telling the server to execute the request without mocking.
-        case "passthrough":
-          await this.respondWithResponse(this._ws, id);
-          responded = true;
-          break;
-        // Finite result. Terminates the route, passing the response to the server.
-        case "fulfill":
-          await this.respondWithResponse(this._ws, id, {
-            response: routeResponse.response,
-            path: routeResponse.path,
-          });
-          responded = true;
-          break;
-      }
+	/**
+	 * Deduce whether or not a handler should be executed based on the route metadata and handler type.
+	 *
+	 * @param routeMeta - The metadata & options of the route.
+	 * @param handlerType - The type of the handler wanting to execute the route handler.
+	 * @returns Whether or not the handler should be executed.
+	 */
+	private shouldHandleRouteType(
+		routeType: RouteType | undefined,
+		handlerType: "server" | "client",
+	) {
+		const type = routeType ?? RouteType.Both;
+		switch (handlerType) {
+			case "server":
+				return type === "server-only" || type === "both";
+			case "client":
+				return type === "client-only" || type === "both";
+			default:
+				throw new Error(`Invalid handler type: ${handlerType}`);
+		}
+	}
 
-      this.incrementRouteHandlerCallCount(routeHandlerId, routeMeta);
+	/**
+	 * Callback handler when a request message is received from the WebSocket server. This method is responsible for finding the appropriate route handlers, executing them, and sending the response back to the WebSocket server.
+	 *
+	 * @param message - The received request message.
+	 */
+	private async onRequest(message: ParsedMessageType<MessageTypes["REQUEST"]>) {
+		if (!this._ws) {
+			throw new Error("WebSocket is not connected");
+		}
 
-      // If we have responded then exit
-      if (responded) {
-        return;
-      }
-    }
+		const { request, id } = message.payload;
+		const url = new URL(request.url);
 
-    // Fallback to passthrough behaviour
-    await this.respondWithResponse(this._ws, id);
-  }
+		const requestObject = this.getRequestObjectFromRequestMessage(message);
+		const route = new Route(requestObject);
 
-  /**
-   * Callback when a message is received from the WebSocket server. We find all the handlers for the message type and call them concurrently.
-   *
-   * @param data - the raw WebSocket message data
-   */
-  private async onMessage({ data }: WebSocket.MessageEvent) {
-    if (!this._ws) {
-      throw new Error("WebSocket is not connected");
-    }
+		// Iterate over all the route handlers sequentially. This ensures the
+		// correct order of execution.
+		for (const [routeHandlerId, [urlMatcher, handler, routeMeta]] of this
+			.routeHandlers) {
+			// Skip the handler if the URL does not match
+			if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
+			// Skip the handler if it should not be handled by the server
+			if (!this.shouldHandleRouteType(routeMeta.type, "server")) continue;
 
-    const parsedMessage = parseMessage(data.toString());
-    this._ws.send(
-      new Message(MessageType.ACK, {}, parsedMessage.messageId).toString(),
-    );
+			// Execute the handler
+			const routeResponse = await handler(route);
 
-    const handlers = this.messageHandlers.get(parsedMessage.type);
-    if (handlers) {
-      const results = await Promise.allSettled(
-        [...handlers].map((handler) => handler(parsedMessage)),
-      );
-      const errors = results
-        .filter((result) => result.status === "rejected")
-        .map((result) => result.reason);
+			let responded = false;
+			// When the route handler responds with fallback behavior we loop to the next handler
+			switch (routeResponse.type) {
+				// Finite result. Terminates the route with a simulated network error.
+				case "error":
+					await this.respondWithResponse(id, { error: true });
+					responded = true;
+					break;
+				// Finite result. Terminates the route telling the server to execute the request without mocking.
+				case "passthrough":
+					await this.respondWithResponse(id);
+					responded = true;
+					break;
+				// Finite result. Terminates the route, passing the response to the server.
+				case "fulfill":
+					await this.respondWithResponse(id, {
+						response: routeResponse.response,
+						path: routeResponse.path,
+					});
+					responded = true;
+					break;
+			}
 
-      errors.forEach((error) => {
-        logger.error(`Error handling message ${parsedMessage.type}`, error);
-      });
+			this.incrementRouteHandlerCallCount(routeHandlerId, routeMeta);
 
-      if (errors.length > 0) {
-        throw new Error(
-          `Failed to handle message "${parsedMessage.type}". Check console or stdout for more details.`,
-        );
-      }
-    }
-  }
+			// If we have responded then exit
+			if (responded) {
+				return;
+			}
+		}
 
-  /**
-   * Used to connect the client to the WebSocket server. This will also identify the client on the server to enable concurrency for mocking. You need to call this method before you can register any route handlers.
-   *
-   * @param options - Options for the connection.
-   */
-  async connect({
-    port = DefaultWebSocketServerPort,
-    timeout: timeoutDuration = DefaultWebSocketServerTimeout,
-  }: ConnectOptions) {
-    this._ws = new WebSocket(`ws://localhost:${port}`);
-    const startTime = Date.now();
-    await this.waitForConnection(this._ws, timeoutDuration);
+		// Fallback to passthrough behaviour
+		await this.respondWithResponse(id);
+	}
 
-    // The timeout is the sum of the time it takes to connect to the server and the time it takes to identify the client.
-    const elapsedTime = Date.now() - startTime;
+	/**
+	 * Abstraction for sending messages to the WebSocket server
+	 *
+	 * @internal
+	 *
+	 * @param message - The message to send to the WebSocket server
+	 */
+	private sendMessage(
+		message: Message<
+			MessageType,
+			Extract<ParsedMessage, { type: MessageType }>["payload"]
+		>,
+	) {
+		if (!this._ws) {
+			throw new Error("WebSocket is not connected");
+		}
 
-    const identifyMessage = new Message(MessageType.IDENTIFY, {
-      id: this.clientIdentifier,
-    });
+		this._ws.send(message.toString());
+	}
 
-    const identifyAckPromise = waitForAck(
-      this._ws,
-      identifyMessage.messageId,
-      timeoutDuration - elapsedTime,
-    );
-    this._ws.send(JSON.stringify(identifyMessage));
+	/**
+	 * Callback when a message is received from the WebSocket server. We find all the handlers for the message type and call them concurrently.
+	 *
+	 * @param data - the raw WebSocket message data
+	 */
+	private async onMessage({ data }: WebSocket.MessageEvent) {
+		if (!this._ws) {
+			throw new Error("WebSocket is not connected");
+		}
 
-    // Wait until the server has acknowledged the identification message.
-    await identifyAckPromise;
+		const parsedMessage = parseMessage(data.toString());
+		this.sendMessage(new Message(MessageType.ACK, {}, parsedMessage.messageId));
 
-    this._ws.addEventListener("message", this.onMessage);
-  }
+		const handlers = this.messageHandlers.get(parsedMessage.type);
+		if (handlers) {
+			const results = await Promise.allSettled(
+				[...handlers].map((handler) => handler(parsedMessage)),
+			);
+			const errors = results
+				.filter((result) => result.status === "rejected")
+				.map((result) => result.reason);
 
-  /**
-   * Registers a handler for a specific message type.
-   * @param messageType - The type of message to handle.
-   * @param handler - The handler function to call when a message of the specified type is received. The handler function receives the parsed message as an argument.
-   */
-  on<TMessageType extends MessageType>(
-    messageType: TMessageType,
-    handler: (message: ParsedMessageType<TMessageType>) => void | Promise<void>,
-  ) {
-    const handlers = this.messageHandlers.get(messageType) ?? new Set();
-    handlers.add(handler as (message: ParsedMessage) => void | Promise<void>);
-    this.messageHandlers.set(messageType, handlers);
-  }
+			errors.forEach((error) => {
+				logger.error(`Error handling message ${parsedMessage.type}`, error);
+			});
 
-  /**
-   * Unregisters a handler for a specific message type.
-   * @param messageType - The type of message to handle.
-   * @param handler - The original handler function that was registered.
-   */
-  off<TMessageType extends MessageType>(
-    messageType: TMessageType,
-    handler: (message: ParsedMessageType<TMessageType>) => void | Promise<void>,
-  ) {
-    const handlers = this.messageHandlers.get(messageType);
-    if (!handlers) return;
+			if (errors.length > 0) {
+				throw new Error(
+					`Failed to handle message "${parsedMessage.type}". Check console or stdout for more details.`,
+				);
+			}
+		}
+	}
 
-    handlers.delete(
-      handler as (message: ParsedMessage) => void | Promise<void>,
-    );
-  }
+	/**
+	 * Used to connect the client to the WebSocket server. This will also identify the client on the server to enable concurrency for mocking. You need to call this method before you can register any route handlers.
+	 *
+	 * @param options - Options for the connection.
+	 */
+	async connect({
+		https = false,
+		hostname = "localhost",
+		port = DefaultWebSocketServerPort,
+		proxyPort = DefaultProxyServerPort,
+		timeout: timeoutDuration = DefaultWebSocketServerTimeout,
+	}: ConnectOptions) {
+		this.https = https;
+		this.hostname = hostname;
+		this.port = port;
+		this._ws = new WebSocket(`${https ? "wss" : "ws"}://${hostname}:${port}`);
+		const startTime = Date.now();
+		await this.waitForConnection(this._ws, timeoutDuration);
 
-  /**
-   * Disconnects the WebSocket connection. You need to run {@link Client.connect} again to reconnect.
-   *
-   * @remarks
-   * Route handlers and message handlers are not removed when the client disconnects.
-   */
-  disconnect() {
-    if (!this._ws) {
-      throw new Error("Client is not connected");
-    }
+		// The timeout is the sum of the time it takes to connect to the server and the time it takes to identify the client.
+		const elapsedTime = Date.now() - startTime;
 
-    this._ws.close();
-    delete this._ws;
-  }
+		const identifyMessage = new Message(MessageType.IDENTIFY, {
+			id: this.clientIdentifier,
+		});
 
-  /**
-   * Registers a route handler, when the client receives a request message.
-   * @param url - the URL pattern to match against the incoming request URL
-   * @param handler - the function to handle the request
-   * @param options - optional options for the route handler
-   * @returns a route handler ID that can be used to unregister the handler later if required
-   */
-  route(
-    url: UrlMatcher,
-    handler: (route: Route) => RouteResponse | Promise<RouteResponse>,
-    options: RouteOptions = {},
-  ) {
-    const routeHandlerId = uuid();
-    this.routeHandlers.set(routeHandlerId, [
-      url,
-      handler,
-      { ...options, calls: 0 },
-    ]);
+		const identifyAckPromise = waitForAck(
+			this._ws,
+			identifyMessage.messageId,
+			timeoutDuration - elapsedTime,
+		);
+		this.sendMessage(identifyMessage);
 
-    return routeHandlerId;
-  }
+		// Wait until the server has acknowledged the identification message.
+		await identifyAckPromise;
 
-  /**
-   * Used to unregister a route handler.
-   * @param routeHandlerId - the route handler ID returned from {@link Client.route}
-   */
-  unroute(routeHandlerId: string) {
-    this.routeHandlers.delete(routeHandlerId);
-  }
+		this._ws.addEventListener("message", this.onMessage);
+		this.proxyPort = proxyPort;
+	}
 
-  /**
-   * Removes all route handlers
-   */
-  unrouteAll() {
-    this.routeHandlers.clear();
-  }
+	/**
+	 * Registers a handler for a specific message type.
+	 * @param messageType - The type of message to handle.
+	 * @param handler - The handler function to call when a message of the specified type is received. The handler function receives the parsed message as an argument.
+	 */
+	on = <TMessageType extends MessageType>(
+		messageType: TMessageType,
+		handler: (message: ParsedMessageType<TMessageType>) => void | Promise<void>,
+	) => {
+		const handlers = this.messageHandlers.get(messageType) ?? new Set();
+		handlers.add(handler as (message: ParsedMessage) => void | Promise<void>);
+		this.messageHandlers.set(messageType, handlers);
+	};
 
-  /**
-   * Allows an external handler to be injected into the route handling process for dealing with
-   * client-side request interception.
-   *
-   * @internal
-   *
-   * @param options - options for the external route handler
-   * @param options.extractRequest - a function that extracts a request from the arguments passed to the external handler
-   * @param options.handleResult - a function that transforms the internal result to the external handlers expected result
-   * @returns a function that acts as a handler for the external route handler
-   */
-  attachExternalClientSideRouteHandler<
-    TCallbackArgs extends unknown[],
-    TResult,
-  >({
-    extractRequest,
-    handleResult,
-  }: {
-    extractRequest: (...args: TCallbackArgs) => Request | Promise<Request>;
-    handleResult: (
-      response: ExternalRouteHandlerRouteResponse | undefined,
-      ...args: TCallbackArgs
-    ) => TResult | undefined | Promise<TResult | undefined>;
-  }): (...args: TCallbackArgs) => Promise<TResult | undefined> {
-    if (this.externalClientSideRouteHandlerAttached) {
-      logger.warn(
-        "External client side route handler already attached. Are you sure you want to call attachExternalClientSideRouteHandler? attachExternalClientSideRouteHandler was only intended to be called once per client instance.",
-      );
-    }
+	/**
+	 * Unregisters a handler for a specific message type.
+	 * @param messageType - The type of message to handle.
+	 * @param handler - The original handler function that was registered.
+	 */
+	off = <TMessageType extends MessageType>(
+		messageType: TMessageType,
+		handler: (message: ParsedMessageType<TMessageType>) => void | Promise<void>,
+	) => {
+		const handlers = this.messageHandlers.get(messageType);
+		if (!handlers) return;
 
-    this.externalClientSideRouteHandlerAttached = true;
-    return async (...args: TCallbackArgs) => {
-      const request = await extractRequest(...args);
-      const url = new URL(request.url);
-      const route = new Route(request);
+		handlers.delete(
+			handler as (message: ParsedMessage) => void | Promise<void>,
+		);
+	};
 
-      for (const awaitingRequestHandler of this.clientWaitForRequestHandlers) {
-        await awaitingRequestHandler(request);
-      }
+	/**
+	 * Disconnects the WebSocket connection. You need to run {@link Client.connect} again to reconnect.
+	 *
+	 * @remarks
+	 * Route handlers and message handlers are not removed when the client disconnects.
+	 */
+	disconnect() {
+		if (!this._ws) {
+			throw new Error("Client is not connected");
+		}
 
-      for (const [routeHandlerId, [urlMatcher, handler, routeMeta]] of this
-        .routeHandlers) {
-        // Skip the handler if the URL does not match
-        if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
-        // Skip the handler if it should not be handled by the client
-        if (!this.shouldHandleRouteType(routeMeta.type, "client")) continue;
+		this.proxyConnections.forEach((proxyConnection) => {
+			proxyConnection.close();
+		});
+		this.proxyConnections.clear();
 
-        // Execute the handler
-        const routeResponse = await handler(route);
-        let finalResponse: TResult | undefined;
-        let handledRoute = false;
-        if (routeResponse.type !== "fallback") {
-          handledRoute = true;
-          finalResponse = await handleResult(routeResponse, ...args);
-        }
+		this._ws.close();
+		delete this._ws;
+	}
 
-        this.incrementRouteHandlerCallCount(routeHandlerId, routeMeta);
-        if (handledRoute) return finalResponse;
-      }
+	/**
+	 * Abstraction for registering a route handler
+	 *
+	 * @internal
+	 *
+	 * @param url - The URL pattern to match against the incoming request URL
+	 * @param handler - The function to handle the request
+	 * @param routeMeta - The metadata for the route handler
+	 * @returns The route handler ID
+	 */
+	private internalRoute(
+		url: UrlMatcher,
+		handler: (route: Route) => RouteResponse | Promise<RouteResponse>,
+		routeMeta: RouteMeta,
+	) {
+		const routeHandlerId = uuid();
+		this.routeHandlers.set(routeHandlerId, [url, handler, routeMeta]);
 
-      await handleResult(undefined, ...args);
-    };
-  }
+		return routeHandlerId;
+	}
 
-  /**
-   * WebSocket connection.
-   *
-   * @throws an error if the client has not been connected yet with {@link Client.connect}
-   */
-  get ws(): WebSocket {
-    if (!this._ws) {
-      throw new Error("Call connect() before accessing webSocket");
-    }
+	/**
+	 * Registers a route handler, when the client receives a request message.
+	 * @param url - the URL pattern to match against the incoming request URL
+	 * @param handler - the function to handle the request
+	 * @param options - optional options for the route handler
+	 * @returns a route handler ID that can be used to unregister the handler later if required
+	 */
+	route(
+		url: UrlMatcher,
+		handler: (route: Route) => RouteResponse | Promise<RouteResponse>,
+		options: RouteOptions = {},
+	) {
+		return this.internalRoute(url, handler, {
+			...options,
+			calls: 0,
+			transport: "http",
+		});
+	}
 
-    return this._ws;
-  }
+	/**
+	 * Used to register a route handler for a WebSocket server endpoint.
+	 *
+	 * @param url - the URL pattern to match against the incoming request URL
+	 * @param options - optional options for the route handler
+	 * @returns a WebSocket helper to listen for messages from the client and dispatch messages from the server
+	 */
+	websocket(url: UrlMatcher, options?: WebSocketRouteOptions) {
+		const { timeout: timeoutDuration = DefaultWebSocketRouteTimeout } =
+			options ?? {};
+
+		const requestId = uuid();
+		this.websocketInterceptors.set(requestId, url);
+
+		return new Promise<WebSocketServerMock>((resolve, reject) => {
+			const timedOut = false;
+			const timeout = setTimeout(() => {
+				reject(
+					new Error("Timed out waiting for WebSocket connection to be made"),
+				);
+			}, timeoutDuration);
+
+			/**
+			 * Callback handler when a WebSocket connection is ready
+			 */
+			const onWebSocketConnectionReady = (
+				message: ParsedMessageType<MessageTypes["WEBSOCKET_CONNECTION_READY"]>,
+			) => {
+				if (timedOut) {
+					this.off(
+						MessageType.WEBSOCKET_CONNECTION_READY,
+						onWebSocketConnectionReady,
+					);
+					return;
+				}
+
+				if (message.payload.id === requestId) {
+					const websocketHelper = new WebSocketServerMock(
+						requestId,
+						message.payload.url,
+						{
+							on: this.on,
+							off: this.off,
+							sendMessage: this.sendMessage,
+						},
+						this.removeProxyConnection,
+					);
+					clearTimeout(timeout);
+					this.off(
+						MessageType.WEBSOCKET_CONNECTION_READY,
+						onWebSocketConnectionReady,
+					);
+					this.websocketInterceptors.delete(requestId);
+					resolve(websocketHelper);
+				}
+			};
+
+			this.on(
+				MessageType.WEBSOCKET_CONNECTION_READY,
+				onWebSocketConnectionReady,
+			);
+		});
+	}
+
+	private isGraphQLSSEOptions(
+		options?: GraphQLRouteOptions<GraphQLRouteTransport> | undefined,
+	): options is GraphQLRouteOptions<"sse"> {
+		return options?.transport === "sse";
+	}
+
+	private isGraphQLWebSocketOptions(
+		options?: GraphQLRouteOptions<GraphQLRouteTransport> | undefined,
+	): options is GraphQLRouteOptions<"websocket"> {
+		return options?.transport === "websocket";
+	}
+
+	/**
+	 * Used to register a route handler for a GraphQL server endpoint using http transport.
+	 *
+	 * @param url - the URL pattern to match against the incoming request URL
+	 * @param options - optional options for the route handler
+	 * @returns a GraphQL instance that can be used to register mocks for GraphQL operations
+	 */
+	async graphql(
+		url: UrlMatcher,
+		options?: GraphQLRouteOptions<"http">,
+	): Promise<GraphQLHttp>;
+	async graphql(
+		url: UrlMatcher,
+		options?: GraphQLRouteOptions<"sse">,
+	): Promise<GraphQLSSE>;
+	async graphql(
+		url: UrlMatcher,
+		options?: GraphQLRouteOptions<"websocket">,
+	): Promise<GraphQLWebSocket>;
+	async graphql<TOptions extends GraphQLRouteOptions<GraphQLRouteTransport>>(
+		url: UrlMatcher,
+		options?: TOptions,
+	) {
+		switch (true) {
+			case this.isGraphQLSSEOptions(options): {
+				const { transport: _, adapter, ...sseOptions } = options;
+				const sse = await this.sse(url, sseOptions);
+				const graphql = new GraphQLSSE(sse, adapter ?? GraphQLSSEAdapter);
+				return graphql;
+			}
+
+			case this.isGraphQLWebSocketOptions(options): {
+				const { transport: _, adapter, ...webSocketOptions } = options;
+				const websocket = await this.websocket(url, webSocketOptions);
+				const graphql = new GraphQLWebSocket(
+					websocket,
+					adapter ?? GraphQLWebSocketAdapter,
+				);
+				return graphql;
+			}
+
+			default: {
+				const { transport: _, ...httpOptions } =
+					options ?? ({ transport: "http" } as GraphQLRouteOptions<"http">);
+				const graphql = new GraphQLHttp();
+				const handlerId = this.route(
+					url,
+					(route) => {
+						return graphql.handleRoute(route);
+					},
+					httpOptions,
+				);
+
+				graphql.handlerId = handlerId;
+				return graphql;
+			}
+		}
+	}
+
+	/**
+	 * Resolves the SSE proxy URL for a given request ID and original URL
+	 *
+	 * @param requestId - The request ID
+	 * @param originalUrl - The original URL
+	 * @returns The SSE proxy URL
+	 */
+	private getSSEProxyUrl(requestId: string, originalUrl: string) {
+		const proxyUrl = new URL(
+			`${this.https ? "https" : "http"}://${this.hostname}:${this.proxyPort}${SSEProxyEndpoint}`,
+		);
+		proxyUrl.searchParams.set(SSEProxyRequestIdParam, requestId);
+		proxyUrl.searchParams.set(
+			SSEProxyOriginalUrlParam,
+			encodeURIComponent(originalUrl),
+		);
+		proxyUrl.searchParams.set(
+			ClientIdentityStorageHeader,
+			this.clientIdentifier,
+		);
+		return proxyUrl.toString();
+	}
+
+	/**
+	 * Resolves the file proxy URL for a given file path
+	 *
+	 * @internal
+	 *
+	 * @param filePath - The file path to proxy
+	 * @returns The file proxy URL
+	 */
+	public getFileProxyUrl(filePath: string) {
+		const proxyUrl = new URL(
+			`${this.https ? "https" : "http"}://${this.hostname}:${this.proxyPort}${FileProxyEndpoint}`,
+		);
+		proxyUrl.searchParams.set(FileProxyPathParam, filePath);
+		return proxyUrl.toString();
+	}
+
+	private removeProxyConnection = (proxyConnection: ProxyConnection) => {
+		this.proxyConnections.delete(proxyConnection);
+	};
+
+	/**
+	 * Used to register a route handler for a SSE server endpoint.
+	 *
+	 * Works for both server-side and client-side requests.
+	 *
+	 * Uses the SSE proxy server to proxy the request to the server.
+	 *
+	 * @param url - the URL pattern to match against the incoming request URL
+	 * @param options - optional options for the route handler
+	 * @returns a SSE instance that can be used to stream data to the client
+	 */
+	async sse(url: UrlMatcher, options: SSERouteOptions = {}) {
+		return new Promise<SSE>((resolve, reject) => {
+			const timedOut = false;
+			const timeout = setTimeout(() => {
+				reject(new Error("Timed out waiting for SSE connection to be ready"));
+			}, options.timeout ?? DefaultSSERouteTimeout);
+
+			const requestId = uuid();
+
+			/**
+			 * Callback handler when an SSE connection is ready
+			 */
+			const listenForConnectionReady = (onReady: (sse: SSE) => void) => {
+				const onConnectionReady = (
+					message: ParsedMessageType<MessageTypes["SSE_CONNECTION_READY"]>,
+				) => {
+					if (timedOut) {
+						this.off(MessageType.SSE_CONNECTION_READY, onConnectionReady);
+						return;
+					}
+
+					if (message.payload.id === requestId) {
+						const sse = new SSE(
+							requestId,
+							this.sendMessage,
+							this.removeProxyConnection,
+						);
+						clearTimeout(timeout);
+						this.off(MessageType.SSE_CONNECTION_READY, onConnectionReady);
+						this.clientSideSSERouteHandlers.delete(requestId);
+						onReady(sse);
+					}
+				};
+
+				this.on(MessageType.SSE_CONNECTION_READY, onConnectionReady);
+			};
+
+			/**
+			 * Route handler for server-side requests
+			 */
+			const routeHandlerId = this.internalRoute(
+				url,
+				(route) => {
+					if (!this.proxyPort) {
+						throw new Error("Did you forget to call Client.connect()?");
+					}
+
+					listenForConnectionReady((sse) => {
+						resolve(sse);
+					});
+
+					return route.continue({
+						url: this.getSSEProxyUrl(requestId, route.request.url),
+					});
+				},
+				{ times: 1, calls: 0, type: "server-only", transport: "sse" },
+			);
+
+			/**
+			 * Route handler for client-side requests
+			 */
+			this.clientSideSSERouteHandlers.set(requestId, [
+				url,
+				() => {
+					listenForConnectionReady((sse) => {
+						this.unroute(routeHandlerId);
+						resolve(sse);
+					});
+				},
+			]);
+		});
+	}
+
+	/**
+	 * Resolves the SSE proxy parameters for a given URL
+	 *
+	 * This is used by the browser stubs to get the required parameters to proxy the request to the server.
+	 *
+	 * @internal
+	 *
+	 * @param urlString - The URL to resolve the SSE proxy parameters for
+	 * @returns The SSE proxy parameters
+	 */
+	async getClientSSEProxyParams(urlString: string): Promise<ClientSSEResponse> {
+		let url: URL;
+		try {
+			url = new URL(urlString);
+		} catch {
+			return { shouldProxy: false };
+		}
+
+		for (const [requestId, [urlMatcher, handler]] of this
+			.clientSideSSERouteHandlers) {
+			if (await this.doesUrlMatch(urlMatcher, url)) {
+				handler();
+				return {
+					shouldProxy: true,
+					requestId,
+					proxyUrl: this.getSSEProxyUrl(requestId, urlString),
+				};
+			}
+		}
+
+		return {
+			shouldProxy: false,
+		};
+	}
+
+	/**
+	 * Used to unregister a route handler.
+	 * @param routeHandlerId - the route handler ID returned from {@link Client.route}
+	 */
+	unroute(routeHandlerId: string) {
+		this.routeHandlers.delete(routeHandlerId);
+	}
+
+	/**
+	 * Removes all route handlers
+	 */
+	unrouteAll() {
+		this.routeHandlers.clear();
+	}
+
+	/**
+	 * Allows an external handler to be injected into the route handling process for dealing with
+	 * client-side request interception.
+	 *
+	 * @internal
+	 *
+	 * @param options - options for the external route handler
+	 * @param options.extractRequest - a function that extracts a request from the arguments passed to the external handler
+	 * @param options.handleResult - a function that transforms the internal result to the external handlers expected result
+	 * @returns a function that acts as a handler for the external route handler
+	 */
+	attachExternalClientSideRouteHandler<
+		TCallbackArgs extends unknown[],
+		TResult,
+	>({
+		extractRequest,
+		handleResult,
+	}: {
+		extractRequest: (...args: TCallbackArgs) => Request | Promise<Request>;
+		handleResult: (
+			response: ExternalRouteHandlerRouteResponse | undefined,
+			...args: TCallbackArgs
+		) => TResult | undefined | Promise<TResult | undefined>;
+	}): (...args: TCallbackArgs) => Promise<TResult | undefined> {
+		if (this.externalClientSideRouteHandlerAttached) {
+			logger.warn(
+				"External client side route handler already attached. Are you sure you want to call attachExternalClientSideRouteHandler? attachExternalClientSideRouteHandler was only intended to be called once per client instance.",
+			);
+		}
+
+		this.externalClientSideRouteHandlerAttached = true;
+		return async (...args: TCallbackArgs) => {
+			const request = await extractRequest(...args);
+			const url = new URL(request.url);
+			const route = new Route(request);
+
+			for (const awaitingRequestHandler of this.clientWaitForRequestHandlers) {
+				await awaitingRequestHandler(request);
+			}
+
+			for (const [routeHandlerId, [urlMatcher, handler, routeMeta]] of this
+				.routeHandlers) {
+				// Need to handle SSE mocking separately on the client
+				if (routeMeta.transport !== "http") continue;
+				// Skip the handler if the URL does not match
+				if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
+				// Skip the handler if it should not be handled by the client
+				if (!this.shouldHandleRouteType(routeMeta.type, "client")) continue;
+
+				// Execute the handler
+				const routeResponse = await handler(route);
+				let finalResponse: TResult | undefined;
+				let handledRoute = false;
+				if (routeResponse.type !== "fallback") {
+					handledRoute = true;
+					finalResponse = await handleResult(routeResponse, ...args);
+				}
+
+				this.incrementRouteHandlerCallCount(routeHandlerId, routeMeta);
+				if (handledRoute) return finalResponse;
+			}
+
+			await handleResult(undefined, ...args);
+		};
+	}
+
+	/**
+	 * WebSocket connection.
+	 *
+	 * @throws an error if the client has not been connected yet with {@link Client.connect}
+	 */
+	get ws(): WebSocket {
+		if (!this._ws) {
+			throw new Error("Call connect() before accessing webSocket");
+		}
+
+		return this._ws;
+	}
 }
 
+export {
+	BrowserGetSSEProxyParamsFunctionName,
+	type BrowserProxySettings,
+	BrowserProxySettingsKey,
+	ClientIdentityStorageHeader,
+	DefaultProxyServerPort,
+	SSEProxyEndpoint,
+} from "@mocky-balboa/shared-config";
+export {
+	MessageType,
+	type MessageTypes,
+	type ParsedMessage,
+	type ParsedMessageType,
+} from "@mocky-balboa/websocket-messages";
+export type { FetchOptions, ModifyResponseOptions } from "./base-http-route.js";
+export type {
+	GraphQLOperationName,
+	GraphQLOperationType,
+	GraphQLRouteHandler,
+	GraphQLRouteOptions,
+} from "./graphql/graphql.js";
+export { GraphQL, GraphQLQueryParseError } from "./graphql/graphql.js";
+export type { GraphQLHttpFulfillOptions } from "./graphql/graphql-http-route.js";
+export { GraphQLHttpRoute } from "./graphql/graphql-http-route.js";
+export type { FulfillOptions } from "./route.js";
 export { Route } from "./route.js";
 export type {
-  FetchOptions,
-  FulfillOptions,
-  ModifyResponseOptions,
-  FallbackRouteResponse,
-  PassthroughRouteResponse,
-  ErrorRouteResponse,
-  FulfillRouteResponse,
-  RouteResponse,
-} from "./route.js";
-export { ClientIdentityStorageHeader } from "@mocky-balboa/shared-config";
+	ErrorRouteResponse,
+	FallbackRouteResponse,
+	FulfillRouteResponse,
+	PassthroughRouteResponse,
+	RouteOptions,
+	RouteResponse,
+	SSERouteOptions,
+} from "./shared-types.js";
 export {
-  MessageType,
-  type MessageTypes,
-  type ParsedMessage,
-  type ParsedMessageType,
-} from "@mocky-balboa/websocket-messages";
+	DefaultSSERouteTimeout,
+	DefaultWaitForRequestTimeout,
+	DefaultWebSocketServerTimeout,
+	RouteType,
+} from "./shared-types.js";
+export { SSE } from "./sse.js";
+export { WebSocketServerMock } from "./websocket-server-mock.js";

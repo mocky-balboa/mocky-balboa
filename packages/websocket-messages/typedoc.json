@@ -1,3 +1,3 @@
 {
-  "entryPoints": ["src/websocket-messages.ts"]
+	"entryPoints": ["src/websocket-messages.ts"]
 }
