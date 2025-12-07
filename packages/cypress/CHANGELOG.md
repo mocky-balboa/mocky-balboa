@@ -1,5 +1,12 @@
 # @mocky-balboa/cypress
 
+## 2.0.1
+
+### Patch Changes
+
+- Updated dependencies [[782825f](https://github.com/mocky-balboa/mocky-balboa/commit/782825fb26761d0bd8de84c2a8112a390bfcd34a)]
+  - [@mocky-balboa/client@2.0.1](https://github.com/mocky-balboa/mocky-balboa/releases/tag/%40mocky-balboa%2Fclient%402.0.1)
+
 ## 2.0.0
 
 ### Major Changes

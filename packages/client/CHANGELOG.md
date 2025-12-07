@@ -1,5 +1,11 @@
 # @mocky-balboa/client
 
+## 2.0.1
+
+### Patch Changes
+
+- [782825f](https://github.com/mocky-balboa/mocky-balboa/commit/782825fb26761d0bd8de84c2a8112a390bfcd34a): Fixes issue when detecting empty request body strings appearing as Request with GET/HEAD method cannot have body error
+
 ## 2.0.0
 
 ### Major Changes
