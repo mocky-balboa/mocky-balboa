@@ -12,7 +12,11 @@ import {
   MessageType,
   parseMessage,
 } from "@mocky-balboa/websocket-messages";
-import { Client, type ExternalRouteHandlerRouteResponse } from "./client.js";
+import {
+  Client,
+  type ExternalRouteHandlerRouteResponse,
+  HandlerPriority,
+} from "./client.js";
 import { type RawData, type WebSocketServer } from "ws";
 import WebSocket from "isomorphic-ws";
 import {
@@ -397,6 +401,59 @@ describe("Client", () => {
           response: undefined,
         },
       });
+    });
+
+    test("with handlerPriority = 'last-registered-wins', the handler registered last is executed first", async () => {
+      client.setHandlerPriority(HandlerPriority.LastRegisteredWins);
+      const spies = [vi.fn(), vi.fn(), vi.fn()] as const;
+
+      const artificialDelay = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      };
+
+      client.route("**/endpoint", async (route) => {
+        await artificialDelay();
+        spies[0](Date.now());
+        return route.fulfill({ status: 200 });
+      });
+
+      client.route("**/endpoint", async (route) => {
+        await artificialDelay();
+        spies[1](Date.now());
+        return route.fallback();
+      });
+
+      client.route("**/endpoint", async (route) => {
+        await artificialDelay();
+        spies[2](Date.now());
+        return route.fallback();
+      });
+
+      const requestMessage = new Message(MessageType.REQUEST, {
+        id: "request-id",
+        request: {
+          method: "GET",
+          url: "http://example.com/endpoint",
+          headers: { Accept: "application/json" },
+        },
+      });
+
+      const idlePromise = waitForAckIdle(serverWs);
+      serverWs.send(requestMessage.toString());
+      await idlePromise;
+
+      expect(spies[2]).toHaveBeenCalled();
+      expect(spies[1]).toHaveBeenCalled();
+      expect(spies[0]).toHaveBeenCalled();
+
+      const spiesCallTimes = [
+        spies[0].mock.calls[0]?.[0],
+        spies[1].mock.calls[0]?.[0],
+        spies[2].mock.calls[0]?.[0],
+      ];
+
+      expect(spiesCallTimes[2]).toBeLessThan(spiesCallTimes[1]);
+      expect(spiesCallTimes[1]).toBeLessThan(spiesCallTimes[0]);
     });
 
     test("when a route is registered to only run 1 time it is removed after running once", async () => {
