@@ -145,6 +145,20 @@ You might prefer to use the `startServers` function programmatically, especially
 
 See [startServers API reference](https://api-reference.mockybalboa.com/functions/_mocky-balboa_next-js..startservers) for full documentation on how to use `startServers`.
 
+## Middleware
+
+In Next.js versions before 16.0, middleware defaults to the 'edge' runtime, which does not respect the mocks defined in Mocky Balboa. To use mocks from middleware, you must ensure it runs on the 'nodejs' runtime.
+
+- **Next.js < 15.5**: You must set the experimental flag `nodeMiddleware: true` in your `next.config`.
+- **Next.js < 16.0**: You must explicitly set `runtime: "nodejs"` in your middleware configuration:
+  ```typescript
+  export const config = {
+    runtime: "nodejs",
+  };
+  ```
+
+In Next.js 16.0, middleware was deprecated and replaced by Proxy, which does not use the 'edge' runtime and therefore does not suffer from this limitation.
+
 ## Working with Next.js caching
 
 When using the `app` directory in Next.js unless you opt out of caching in your application logic, then the server will cache fetch requests and app routes. This can become problematic in a test suite when determinism is required for robust testing.
