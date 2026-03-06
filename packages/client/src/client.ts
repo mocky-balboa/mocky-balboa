@@ -536,6 +536,7 @@ export class Client {
       throw new Error("Client is not connected");
     }
 
+    this._ws.removeEventListener("message", this.onMessage);
     this._ws.close();
     delete this._ws;
   }
