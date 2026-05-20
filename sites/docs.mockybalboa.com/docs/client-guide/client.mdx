@@ -66,6 +66,125 @@ Registering a route handler allows you to intercept requests and modify the resp
   </TabItem>
 </Tabs>
 
+## Configure handler priority
+
+Mocky Balboa defaults to calling route handlers in the order they were registered in.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+    ```TypeScript
+    // Matches all user requests
+    client.route("**/api/user/*", (route) => {
+        return route.fulfill({
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "Not Found" }),
+        });
+    });
+
+    // Matches a specific user
+    client.route("**/api/user/123", (route) => {
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: 123, name: 'Test User' }),
+        });
+    });
+
+    // GET .../api/user/1 -> 404
+    // GET .../api/user/123 -> ALSO 404
+    ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    // Matches all user requests
+    client.route("**/api/user/*", (route) => {
+        return route.fulfill({
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "Not Found" }),
+        });
+    });
+
+    // Matches a specific user
+    client.route("**/api/user/123", (route) => {
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: 123, name: 'Test User' }),
+        });
+    });
+
+    // GET .../api/user/1 -> 404
+    // GET .../api/user/123 -> ALSO 404
+    ```
+  </TabItem>
+</Tabs>
+
+When using the default behavior, make sure to define handlers that should take priority first.
+
+You can change the priority using [Client.setHandlerPriority](https://api-reference.mockybalboa.com/classes/_mocky-balboa_client.Client#setHandlerPriority):
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+    ```TypeScript
+    // Reverse handler priority
+    client.setHandlerPriority("last-registered-wins");
+
+    // Matches all user requests
+    client.route("**/api/user/*", (route) => {
+        return route.fulfill({
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "Not Found" }),
+        });
+    });
+
+    // Matches a specific user
+    client.route("**/api/user/123", (route) => {
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: 123, name: "Test User" }),
+        });
+    });
+
+    // GET .../api/user/1 -> still 404
+    // GET .../api/user/123 -> now gets 200
+    ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    // Reverse handler priority
+    client.setHandlerPriority("last-registered-wins");
+
+    // Matches all user requests
+    client.route("**/api/user/*", (route) => {
+        return route.fulfill({
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ error: "Not Found" }),
+        });
+    });
+
+    // Matches a specific user
+    client.route("**/api/user/123", (route) => {
+        return route.fulfill({
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: 123, name: "Test User" }),
+        });
+    });
+
+    // GET .../api/user/1 -> still 404
+    // GET .../api/user/123 -> now gets 200
+    ```
+  </TabItem>
+</Tabs>
+
+This can be useful if you want to define situation-specific route handlers in nested test suites
+or specific tests.
+
 ## Mock n times
 
 :::note[API Reference]

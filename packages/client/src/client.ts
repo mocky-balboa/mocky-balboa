@@ -59,6 +59,13 @@ type RouteMeta = RouteOptions & {
   calls: number;
 };
 
+/** Handler priority order, in the case of multiple handlers matching the same request */
+export type HandlerPriority = "first-registered-wins" | "last-registered-wins";
+export const HandlerPriority = {
+  FirstRegisteredWins: "first-registered-wins",
+  LastRegisteredWins: "last-registered-wins",
+} as const;
+
 export interface WaitForRequestOptions {
   /**
    * Timeout duration in milliseconds for waiting for a request to be received from the WebSocket server
@@ -136,6 +143,9 @@ export class Client {
   > = new Map();
   /** Tracks whether an external client side route handler is attached */
   private externalClientSideRouteHandlerAttached = false;
+  /** Priority order for multiple matching handlers */
+  private handlerPriority: HandlerPriority =
+    HandlerPriority.FirstRegisteredWins;
   /** Callback handlers for waiting on client-side network requests */
   private clientWaitForRequestHandlers: Set<
     (request: Request) => Promise<void>
@@ -143,6 +153,9 @@ export class Client {
 
   /** Convenient access to route types */
   public readonly RouteType = RouteType;
+
+  /** Convenient access to handler priorities */
+  public readonly HandlerPriority = HandlerPriority;
 
   /** Registered route handlers to handle outgoing network requests on the server */
   private routeHandlers: Map<
@@ -180,6 +193,17 @@ export class Client {
         resolve();
       });
     });
+  }
+
+  /**
+   * Handlers in the order matching {@link handlerPriority}
+   */
+  private get handlersInPriorityOrder() {
+    if (this.handlerPriority === HandlerPriority.FirstRegisteredWins) {
+      return [...this.routeHandlers];
+    } else {
+      return [...this.routeHandlers].reverse();
+    }
   }
 
   /**
@@ -379,9 +403,9 @@ export class Client {
     const route = new Route(requestObject);
 
     // Iterate over all the route handlers sequentially. This ensures the
-    // correct order of execution.
+    // correct order of execution regardless of handler timing.
     for (const [routeHandlerId, [urlMatcher, handler, routeMeta]] of this
-      .routeHandlers) {
+      .handlersInPriorityOrder) {
       // Skip the handler if the URL does not match
       if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
       // Skip the handler if it should not be handled by the server
@@ -536,8 +560,29 @@ export class Client {
       throw new Error("Client is not connected");
     }
 
+    this._ws.removeEventListener("message", this.onMessage);
     this._ws.close();
     delete this._ws;
+  }
+
+  /**
+   * Sets the priority between multiple route handlers that match the same request.
+   *
+   * The default is "first-registered-wins" - the first registered handler matching
+   * a request gets the chance to handle it first. The handlers that were registered later
+   * are run only if the first handler calls {@link Route.fallback}.
+   *
+   * By setting this to "last-registered-wins", the priority is reversed. This matches
+   * e.g. Playwright's mock route handling behavior and enables the following common patterns:
+   * - Registering a default handler for a URL pattern early in a test suite and
+   *   then overriding it in specific tests or for more specific URLs.
+   * - Defining a "catch-all" handler, which detects requests that no other handler, even
+   *   one registered later within a specific test, has mocked.
+   *
+   * @param priority - The handler priority to set.
+   */
+  setHandlerPriority(priority: HandlerPriority) {
+    this.handlerPriority = priority;
   }
 
   /**
@@ -618,7 +663,7 @@ export class Client {
       }
 
       for (const [routeHandlerId, [urlMatcher, handler, routeMeta]] of this
-        .routeHandlers) {
+        .handlersInPriorityOrder) {
         // Skip the handler if the URL does not match
         if (!(await this.doesUrlMatch(urlMatcher, url))) continue;
         // Skip the handler if it should not be handled by the client

@@ -264,7 +264,7 @@ export class Route {
    * the requests
    */
   private getRequestBodyString(): Promise<string | null> {
-    if (!this._request.body) null;
+    if (!this._request.body) return Promise.resolve(null);
     return this.request.text();
   }
 
