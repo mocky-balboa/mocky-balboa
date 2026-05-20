@@ -36,7 +36,7 @@ export const extendTest = <TBaseTest extends typeof base>(
     mockyConnectOptions: { ...mockyConnectOptions },
     mocky: async ({ context, mockyConnectOptions }, use) => {
       const mocky = await createClient(context, mockyConnectOptions);
-      use(mocky);
+      await use(mocky);
     },
   }) as unknown as TestType<
     ExtractTestArgs<TBaseTest> & MockyPlaywrightTest,

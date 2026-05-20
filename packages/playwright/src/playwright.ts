@@ -67,9 +67,12 @@ export const createClient = async (
 
   await client.connect(options);
 
-  context.on("close", () => {
+  const cleanup = () => {
+    context.off("close", cleanup); // Remove self
     client.disconnect();
-  });
+  };
+
+  context.on("close", cleanup);
 
   return client;
 };
