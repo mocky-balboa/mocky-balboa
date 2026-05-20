@@ -58,8 +58,8 @@ catalogs:
       specifier: ^3.2.4
       version: 3.2.4
     ws:
-      specifier: ^8.18.3
-      version: 8.18.3
+      specifier: ^8.20.1
+      version: 8.20.1
 
 importers:
 
@@ -603,7 +603,7 @@ importers:
         version: link:../websocket-messages
       isomorphic-ws:
         specifier: ^5.0.0
-        version: 5.0.0(ws@8.18.3)
+        version: 5.0.0(ws@8.20.1)
       minimatch:
         specifier: ^10.0.3
         version: 10.0.3
@@ -649,7 +649,7 @@ importers:
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.3.0)(jiti@2.6.1)(lightningcss@1.30.1)(msw@2.11.1(@types/node@24.3.0)(typescript@5.9.2))(terser@5.44.0)(yaml@2.8.1)
       ws:
         specifier: 'catalog:'
-        version: 8.18.3
+        version: 8.20.1
 
   packages/cypress:
     dependencies:
@@ -904,7 +904,7 @@ importers:
         version: 14.0.0
       ws:
         specifier: 'catalog:'
-        version: 8.18.3
+        version: 8.20.1
     devDependencies:
       '@fastify/express':
         specifier: 'catalog:'
@@ -8078,7 +8078,7 @@ packages:
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
-    deprecated: Glob versions prior to v9 are no longer supported
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   global-directory@4.0.1:
     resolution: {integrity: sha512-wHTUcDUoZ1H5/0iVqEudYW4/kAlN5cZ3j/bXn0Dpbizl9iaUVeWSHqiOjsgk6OW2bkLclbBjzewBz6weQ1zA2Q==}
@@ -13122,6 +13122,18 @@ packages:
 
   ws@8.18.3:
     resolution: {integrity: sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
+  ws@8.20.1:
+    resolution: {integrity: sha512-It4dO0K5v//JtTXuPkfEOaI3uUN87iYPnqo/ZzqCoG3g8uhA66QUMs/SrM0YK7/NAu+r4LMh/9dq2A7k+rHs+w==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -22570,9 +22582,9 @@ snapshots:
 
   isobject@3.0.1: {}
 
-  isomorphic-ws@5.0.0(ws@8.18.3):
+  isomorphic-ws@5.0.0(ws@8.20.1):
     dependencies:
-      ws: 8.18.3
+      ws: 8.20.1
 
   isstream@0.1.2: {}
 
@@ -28175,6 +28187,8 @@ snapshots:
   ws@8.18.0: {}
 
   ws@8.18.3: {}
+
+  ws@8.20.1: {}
 
   wsl-utils@0.1.0:
     dependencies:
