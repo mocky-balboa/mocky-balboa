@@ -19,8 +19,8 @@ catalogs:
       specifier: ^5.0.3
       version: 5.0.3
     '@types/koa':
-      specifier: ^3.0.0
-      version: 3.0.0
+      specifier: ^3.0.3
+      version: 3.0.3
     '@types/node':
       specifier: 24.3.0
       version: 24.3.0
@@ -43,8 +43,8 @@ catalogs:
       specifier: ^7.1.0
       version: 7.1.0
     koa:
-      specifier: ^3.0.3
-      version: 3.0.3
+      specifier: ^3.2.0
+      version: 3.2.0
     rimraf:
       specifier: ^6.0.1
       version: 6.0.1
@@ -920,7 +920,7 @@ importers:
         version: 5.0.3
       '@types/koa':
         specifier: 'catalog:'
-        version: 3.0.0
+        version: 3.0.3
       '@types/mime-types':
         specifier: ^3.0.1
         version: 3.0.1
@@ -947,7 +947,7 @@ importers:
         version: 7.1.0
       koa:
         specifier: 'catalog:'
-        version: 3.0.3
+        version: 3.2.0
       rimraf:
         specifier: 'catalog:'
         version: 6.0.1
@@ -5517,8 +5517,8 @@ packages:
   '@types/koa-compose@3.2.8':
     resolution: {integrity: sha512-4Olc63RY+MKvxMwVknCUDhRQX1pFQoBZ/lXcRLP69PQkEpze/0cr8LNqJQe5NFb/b19DWi2a5bTi2VAlQzhJuA==}
 
-  '@types/koa@3.0.0':
-    resolution: {integrity: sha512-MOcVYdVYmkSutVHZZPh8j3+dAjLyR5Tl59CN0eKgpkE1h/LBSmPAsQQuWs+bKu7WtGNn+hKfJH9Gzml+PulmDg==}
+  '@types/koa@3.0.3':
+    resolution: {integrity: sha512-TdtNEJ7sYSrFQcVuS2ySsVqnq5EyE3oJbnfFJvkC9UtGP4Kpem5KE7r+ivHIbIAQAofSqnlB5D3vkfYO69TQpg==}
 
   '@types/lunr@2.3.7':
     resolution: {integrity: sha512-Tb/kUm38e8gmjahQzdCKhbdsvQ9/ppzHFfsJ0dMs3ckqQsRj+P5IkSAwFTBrBxdyr3E/LoMUUrZngjDYAjiE3A==}
@@ -6827,6 +6827,10 @@ packages:
   content-disposition@1.0.0:
     resolution: {integrity: sha512-Au9nRL8VNUut/XSzbQA38+M78dzP4D+eqg3gfJHMIHHYa3bg067xj1KxMUWj+VULbiZMowKngFFbKczUrNJ1mg==}
     engines: {node: '>= 0.6'}
+
+  content-disposition@1.0.1:
+    resolution: {integrity: sha512-oIXISMynqSqm241k6kcQ5UwttDILMK4BiurCfGEREw6+X9jkkpEe5T9FZaApyLGGOnFuyMWZpdolTXMtvEJ08Q==}
+    engines: {node: '>=18'}
 
   content-type@1.0.5:
     resolution: {integrity: sha512-nTjqfcBFEipKdXCv4YDQWCfmcLZKm81ldF0pAopTvyrFGVbcR6P/VAAd5G7N+0tTr8QqiU0tFadD6FK4NtJwOA==}
@@ -8872,8 +8876,8 @@ packages:
   koa-compose@4.1.0:
     resolution: {integrity: sha512-8ODW8TrDuMYvXRwra/Kh7/rJo9BtOfPc6qO8eAfC80CnCvSjSl0bkRM24X6/XBBEyj0v1nRUQ1LyOy3dbqOWXw==}
 
-  koa@3.0.3:
-    resolution: {integrity: sha512-MeuwbCoN1daWS32/Ni5qkzmrOtQO2qrnfdxDHjrm6s4b59yG4nexAJ0pTEFyzjLp0pBVO80CZp0vW8Ze30Ebow==}
+  koa@3.2.0:
+    resolution: {integrity: sha512-TrM4/tnNY7uJ1aW55sIIa+dqBvc4V14WRIAlGcWat9wV5pRS9Wr5Zk2ZTjQP1jtfIHDoHiSbPuV08P0fUZo2pg==}
     engines: {node: '>= 18'}
 
   latest-version@7.0.0:
@@ -18621,9 +18625,9 @@ snapshots:
 
   '@types/koa-compose@3.2.8':
     dependencies:
-      '@types/koa': 3.0.0
+      '@types/koa': 3.0.3
 
-  '@types/koa@3.0.0':
+  '@types/koa@3.0.3':
     dependencies:
       '@types/accepts': 1.3.7
       '@types/content-disposition': 0.5.9
@@ -19853,7 +19857,7 @@ snapshots:
       bytes: 3.1.2
       content-type: 1.0.5
       debug: 4.4.3
-      http-errors: 2.0.0
+      http-errors: 2.0.1
       iconv-lite: 0.7.2
       on-finished: 2.4.1
       qs: 6.15.2
@@ -20390,6 +20394,8 @@ snapshots:
   content-disposition@1.0.0:
     dependencies:
       safe-buffer: 5.2.1
+
+  content-disposition@1.0.1: {}
 
   content-type@1.0.5: {}
 
@@ -22793,10 +22799,10 @@ snapshots:
 
   koa-compose@4.1.0: {}
 
-  koa@3.0.3:
+  koa@3.2.0:
     dependencies:
       accepts: 1.3.8
-      content-disposition: 0.5.4
+      content-disposition: 1.0.1
       content-type: 1.0.5
       cookies: 0.9.1
       delegates: 1.0.0
@@ -22805,7 +22811,7 @@ snapshots:
       escape-html: 1.0.3
       fresh: 0.5.2
       http-assert: 1.5.0
-      http-errors: 2.0.0
+      http-errors: 2.0.1
       koa-compose: 4.1.0
       mime-types: 3.0.1
       on-finished: 2.4.1
@@ -23785,7 +23791,7 @@ snapshots:
       micro-api-client: 3.3.0
       node-fetch: 3.3.2
       p-wait-for: 5.0.2
-      qs: 6.14.0
+      qs: 6.15.2
     optional: true
 
   next@14.2.32(@playwright/test@1.60.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
