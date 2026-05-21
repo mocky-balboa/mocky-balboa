@@ -66,6 +66,96 @@ Registering a route handler allows you to intercept requests and modify the resp
   </TabItem>
 </Tabs>
 
+## URL matching
+
+URL matchers are evaluated against the **full request URL**, including the protocol, host, path, trailing slash, and query string. There is no automatic normalization, so `**/api/path` will not match `http://localhost/api/path/` or `http://localhost/api/path?foo=bar`.
+
+:::warning
+
+Glob patterns must explicitly account for trailing slashes and query strings if you want to ignore them, otherwise requests will fall through to the next handler (or passthrough).
+
+:::
+
+When a string is passed, matching is performed by [minimatch](https://www.npmjs.com/package/minimatch). Otherwise the matcher can be a regular expression or a callback that receives a [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) instance.
+
+### Ignoring trailing slashes and query strings
+
+To match the same route regardless of a trailing slash or query string, use a regular expression or a callback:
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+    ```TypeScript
+    // Regular expression
+    client.route(/\/api\/path\/?(\?.*)?$/, (route) => {
+        return route.fulfill(...);
+    });
+
+    // Callback - compare only the pathname, ignore search and trailing slash
+    client.route((url: URL) => {
+        return url.pathname.replace(/\/$/, "") === "/api/path";
+    }, (route) => {
+        return route.fulfill(...);
+    });
+    ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    // Regular expression
+    client.route(/\/api\/path\/?(\?.*)?$/, (route) => {
+        return route.fulfill(...);
+    });
+
+    // Callback - compare only the pathname, ignore search and trailing slash
+    client.route((url) => {
+        return url.pathname.replace(/\/$/, "") === "/api/path";
+    }, (route) => {
+        return route.fulfill(...);
+    });
+    ```
+  </TabItem>
+</Tabs>
+
+### Path parameters
+
+Mocky Balboa does not support named path parameters (e.g. MSW-style `/users/:id`). Use a glob wildcard, a regular expression, or a callback if you need to match dynamic segments and extract their values from the request URL inside the handler.
+
+<Tabs groupId="javascript-language">
+  <TabItem value="typescript" label="TypeScript" default>
+    ```TypeScript
+    // Glob wildcard - matches any single path segment
+    client.route("**/api/users/*", (route) => {
+        const userId = new URL(route.request.url).pathname.split("/").pop();
+        return route.fulfill(...);
+    });
+
+    // Callback - match and extract the parameter
+    client.route((url: URL) => {
+        return /^\/api\/users\/[^/]+$/.test(url.pathname);
+    }, (route) => {
+        const userId = new URL(route.request.url).pathname.split("/").pop();
+        return route.fulfill(...);
+    });
+    ```
+  </TabItem>
+  <TabItem value="javascript" label="JavaScript">
+    ```JavaScript
+    // Glob wildcard - matches any single path segment
+    client.route("**/api/users/*", (route) => {
+        const userId = new URL(route.request.url).pathname.split("/").pop();
+        return route.fulfill(...);
+    });
+
+    // Callback - match and extract the parameter
+    client.route((url) => {
+        return /^\/api\/users\/[^/]+$/.test(url.pathname);
+    }, (route) => {
+        const userId = new URL(route.request.url).pathname.split("/").pop();
+        return route.fulfill(...);
+    });
+    ```
+  </TabItem>
+</Tabs>
+
 ## Configure handler priority
 
 Mocky Balboa defaults to calling route handlers in the order they were registered in.
