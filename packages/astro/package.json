@@ -73,7 +73,7 @@
     "@swc/core": "catalog:",
     "chokidar-cli": "catalog:",
     "@types/node": "catalog:",
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.6",
     "concurrently": "catalog:",
     "astro": "^5.13.3",
     "rimraf": "catalog:",
