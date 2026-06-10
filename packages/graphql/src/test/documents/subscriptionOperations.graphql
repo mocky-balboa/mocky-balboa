@@ -1,0 +1,14 @@
+subscription PostPublished($authorId: ID) {
+	postPublished(authorId: $authorId) {
+		id
+		title
+		publishedAt
+	}
+}
+
+subscription CommentAdded($postId: ID!) {
+	commentAdded(postId: $postId) {
+		id
+		content
+	}
+}

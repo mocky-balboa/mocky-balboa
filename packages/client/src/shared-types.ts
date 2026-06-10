@@ -1,6 +1,11 @@
 import type { GraphQLSSEAdapter } from "./graphql/graphql-sse-adapter.js";
 import type { GraphQLWebSocketAdapter } from "./graphql/graphql-websocket-adapter.js";
 
+/**
+ * Transport over which GraphQL operations are mocked
+ */
+export type GraphQLTransport = "http" | "sse" | "websocket";
+
 /** Possible values for route type */
 export type RouteType = "server-only" | "client-only" | "both";
 export const RouteType = {
@@ -42,30 +47,38 @@ export interface RouteOptions {
 	type?: RouteType | undefined;
 }
 
-export type GraphQLRouteTransport = "http" | "sse" | "websocket";
-
-export type GraphQLHttpRouteOptions = RouteOptions & {
-	transport: "http";
+/**
+ * Options for `mocky.graphql(url, options)` when using HTTP transport.
+ */
+export type GraphQLHttpTransportOptions = RouteOptions & {
+	transport?: "http";
 };
 
-export type GraphQLSSERouteOptions = SSERouteOptions & {
+/**
+ * Options for `mocky.graphql(url, options)` when using SSE transport.
+ */
+export type GraphQLSSETransportOptions = SSERouteOptions & {
 	transport: "sse";
+	/** Wire protocol adapter — defaults to the graphql-sse adapter */
 	adapter?: GraphQLSSEAdapter;
 };
 
-export type GraphQLWebSocketRouteOptions = WebSocketRouteOptions & {
+/**
+ * Options for `mocky.graphql(url, options)` when using WebSocket transport.
+ */
+export type GraphQLWebSocketTransportOptions = WebSocketRouteOptions & {
 	transport: "websocket";
+	/** Wire protocol adapter — defaults to the graphql-ws adapter */
 	adapter?: GraphQLWebSocketAdapter;
 };
 
-export type GraphQLRouteOptions<TTransport extends GraphQLRouteTransport> =
-	TTransport extends "http"
-		? GraphQLHttpRouteOptions
-		: TTransport extends "sse"
-			? GraphQLSSERouteOptions
-			: TTransport extends "websocket"
-				? GraphQLWebSocketRouteOptions
-				: never;
+/**
+ * Options for `mocky.graphql(url, options)`.
+ */
+export type GraphQLTransportOptions =
+	| GraphQLHttpTransportOptions
+	| GraphQLSSETransportOptions
+	| GraphQLWebSocketTransportOptions;
 
 /**
  * Server-sent events route options
@@ -89,9 +102,6 @@ export type RouteMeta = RouteOptions & {
 	calls: number;
 	transport: "http" | "sse";
 };
-
-/** Metadata for a GraphQL route */
-export type GraphQLRouteMeta = Omit<RouteMeta, "transport">;
 
 /** Response type for fallback behaviour on a route */
 export type FallbackRouteResponse = {

@@ -17,7 +17,7 @@ import type { RawData, WebSocketServer } from "ws";
 import {
 	Client,
 	type ExternalRouteHandlerRouteResponse,
-	GraphQL,
+	GraphQLHttp,
 } from "./client.js";
 import { logger } from "./logger.js";
 import {
@@ -1560,7 +1560,7 @@ describe("Client ", () => {
 			test("should create a GraphQL instance", () => {
 				const graphql = client.graphql("**/graphql");
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 				expect(typeof graphql.handlerId).toBe("string");
 			});
@@ -1587,14 +1587,14 @@ describe("Client ", () => {
 			test("should work with string glob patterns", () => {
 				const graphql = client.graphql("**/graphql");
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 			});
 
 			test("should work with RegExp patterns", () => {
 				const graphql = client.graphql(/\/graphql$/);
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 			});
 
@@ -1603,7 +1603,7 @@ describe("Client ", () => {
 					url.pathname.includes("graphql"),
 				);
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 			});
 		});
@@ -1612,42 +1612,42 @@ describe("Client ", () => {
 			test("should work with default options", () => {
 				const graphql = client.graphql("**/graphql");
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 			});
 
 			test("should work with empty options object", () => {
 				const graphql = client.graphql("**/graphql", {});
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 			});
 
 			test("should work with times option", () => {
 				const graphql = client.graphql("**/graphql", { times: 1 });
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 			});
 
 			test("should work with type option - server-only", () => {
 				const graphql = client.graphql("**/graphql", { type: "server-only" });
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 			});
 
 			test("should work with type option - client-only", () => {
 				const graphql = client.graphql("**/graphql", { type: "client-only" });
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 			});
 
 			test("should work with type option - both", () => {
 				const graphql = client.graphql("**/graphql", { type: "both" });
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 			});
 
@@ -1657,7 +1657,7 @@ describe("Client ", () => {
 					type: "server-only",
 				});
 
-				expect(graphql).toBeInstanceOf(GraphQL);
+				expect(graphql).toBeInstanceOf(GraphQLHttp);
 				expect(graphql.handlerId).toBeDefined();
 			});
 		});

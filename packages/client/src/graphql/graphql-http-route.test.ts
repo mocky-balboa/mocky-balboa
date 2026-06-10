@@ -440,66 +440,6 @@ describe("GraphQLRoute", () => {
 		});
 	});
 
-	describe("createGraphQLError helper method", () => {
-		test("should create GraphQLError with message only", () => {
-			const error = graphqlRoute.createGraphQLError("Test error message");
-
-			expect(error).toBeInstanceOf(GraphQLError);
-			expect(error.message).toBe("Test error message");
-		});
-
-		test("should create GraphQLError with message and options", () => {
-			const options = {
-				path: ["user", "name"],
-				extensions: { code: "VALIDATION_ERROR" },
-			};
-
-			const error = graphqlRoute.createGraphQLError(
-				"Validation failed",
-				options,
-			);
-
-			expect(error).toBeInstanceOf(GraphQLError);
-			expect(error.message).toBe("Validation failed");
-			expect(error.path).toEqual(["user", "name"]);
-			expect(error.extensions?.code).toBe("VALIDATION_ERROR");
-		});
-
-		test("should create GraphQLError with complex extensions", () => {
-			const options = {
-				extensions: {
-					code: "CUSTOM_ERROR",
-					timestamp: "2023-01-01T00:00:00Z",
-					details: {
-						field: "email",
-						reason: "invalid format",
-					},
-				},
-			};
-
-			const error = graphqlRoute.createGraphQLError("Custom error", options);
-
-			expect(error.extensions?.code).toBe("CUSTOM_ERROR");
-			expect(error.extensions?.timestamp).toBe("2023-01-01T00:00:00Z");
-			expect(error.extensions?.details).toEqual({
-				field: "email",
-				reason: "invalid format",
-			});
-		});
-
-		test("should create multiple different GraphQLErrors", () => {
-			const error1 = graphqlRoute.createGraphQLError("First error");
-			const error2 = graphqlRoute.createGraphQLError("Second error", {
-				path: ["field1"],
-			});
-
-			expect(error1.message).toBe("First error");
-			expect(error2.message).toBe("Second error");
-			expect(error2.path).toEqual(["field1"]);
-			expect(error1).not.toBe(error2);
-		});
-	});
-
 	describe("inherited BaseRoute methods", () => {
 		test("should inherit passthrough method", () => {
 			const result = graphqlRoute.passthrough();
@@ -639,10 +579,10 @@ describe("GraphQLRoute", () => {
 
 	describe("edge cases and error scenarios", () => {
 		test("should handle empty strings in constructor", () => {
-			const emptyRoute = new GraphQLHttpRoute(request, {}, "", "", "");
+			const emptyRoute = new GraphQLHttpRoute(request, {}, "", "query", "");
 
 			expect(emptyRoute.operationName).toBe("");
-			expect(emptyRoute.operationType).toBe("");
+			expect(emptyRoute.operationType).toBe("query");
 			expect(emptyRoute.query).toBe("");
 		});
 

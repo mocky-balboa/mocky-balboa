@@ -43,6 +43,11 @@ type Mutation {
 	unlikeComment(commentId: ID!): Boolean!
 }
 
+type Subscription {
+	postPublished(authorId: ID): Post!
+	commentAdded(postId: ID!): Comment!
+}
+
 type User {
 	id: ID!
 	username: String!

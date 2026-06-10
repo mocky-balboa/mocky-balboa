@@ -1,28 +1,19 @@
 import { ClientSideBaseVisitor } from "@graphql-codegen/visitor-plugin-common";
-import { titleCase } from "change-case-all";
 import type { OperationDefinitionNode } from "graphql";
 
 export class MockyBalboaVisitor extends ClientSideBaseVisitor {
-	private mockFunctions: string[] = [];
+	private operations: string[] = [];
 
 	public getImports(): string[] {
-		const hasOperations = this._collectedOperations.length > 0;
-
-		if (!hasOperations) {
+		if (this._collectedOperations.length === 0) {
 			return [];
 		}
 
-		return [
-			`import { mockOperation, type HandlerOrFulfill, type MockOperationHandlerArg } from "@mocky-balboa/graphql"`,
-		];
-	}
-
-	private isSupportedOperation(node: OperationDefinitionNode) {
-		return node.operation === "query" || node.operation === "mutation";
+		return [`import { operation } from "@mocky-balboa/graphql"`];
 	}
 
 	getContent() {
-		return this.mockFunctions.join("\n\n");
+		return this.operations.join("\n\n");
 	}
 
 	protected buildOperation(
@@ -33,50 +24,30 @@ export class MockyBalboaVisitor extends ClientSideBaseVisitor {
 		operationVariablesTypes: string,
 		_hasRequiredVariables: boolean,
 	): string {
-		if (!this.isSupportedOperation(node)) return "";
-		const functionName = `mock${titleCase(node.name?.value ?? "")}${titleCase(operationType)}`;
-		const mockFunction = `/**
- * Mock ${node.name?.value} ${operationType}
+		const name = node.name?.value;
+		if (!name) return "";
+
+		const declaration = `/**
+ * Typed descriptor for the \`${name}\` ${operationType} operation.
  *
  * @example
- * Mocking fulfilled responses with objects
+ * Mocking a fulfilled response
  * \`\`\`TypeScript
- * graphql.route(
- *   ${functionName}({
- *     data: { ... }
- *   }),
- * );
+ * graphql.route(${name}, { data: { ... } });
  * \`\`\`
- * 
+ *
  * @example
- * Mocking responses with a handler function and access to GraphQL route helper
+ * Using a handler function
  * \`\`\`TypeScript
- * graphql.route(
- *   ${functionName}((route) => {
- *     return route.fulfill({ ... });
- *   }),
- * );
+ * graphql.route(${name}, (route) => route.fulfill({ data: { ... } }));
  * \`\`\`
  */
-export const ${functionName} = (
-  handler: HandlerOrFulfill<
-    ${operationVariablesTypes},
-    ${operationResultType}
-  >,
-) => {
-  return mockOperation<${operationVariablesTypes}, ${operationResultType}>(
-    handler as MockOperationHandlerArg<
-      ${operationVariablesTypes},
-      ${operationResultType}
-    >,
-    {
-      name: "${node.name?.value}",
-      type: "${node.operation}",
-    },
-  );
-};`;
+export const ${name} = operation<
+  ${operationVariablesTypes},
+  ${operationResultType}
+>()("${name}", "${node.operation}");`;
 
-		this.mockFunctions.push(mockFunction);
-		return mockFunction;
+		this.operations.push(declaration);
+		return declaration;
 	}
 }

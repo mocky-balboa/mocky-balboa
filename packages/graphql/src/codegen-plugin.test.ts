@@ -20,14 +20,11 @@ describe.each(["lower", "pascal", "snake", "sponge", "upper"] as const)(
 		let generatedModule: Record<string, any>;
 
 		beforeAll(async () => {
-			// Clean and regenerate the GraphQL types
 			await rimraf(path.resolve(packageRoot, "src/test/generated"));
 			await new Promise<void>((resolve, reject) => {
 				exec(
 					`pnpm graphql-codegen --config src/test/codegen-configs/${namingConvention}-case.ts`,
-					{
-						cwd: packageRoot,
-					},
+					{ cwd: packageRoot },
 					(error, stdout, stderr) => {
 						if (error) {
 							console.error("Codegen error:", error);
@@ -41,7 +38,6 @@ describe.each(["lower", "pascal", "snake", "sponge", "upper"] as const)(
 				);
 			});
 
-			// Load the generated module
 			generatedModule = await import(
 				path.resolve(
 					packageRoot,
@@ -50,182 +46,88 @@ describe.each(["lower", "pascal", "snake", "sponge", "upper"] as const)(
 			);
 		});
 
-		const expectedMockFunctions = [
-			// Single operations
-			"mockGetUserQuery",
-			"mockGet_postsQuery",
-			"mockSearchPostsWithDirectivesQuery",
-			"mockCreateUserMutation",
-			"mockCreate_postMutation",
-			"mockLikePostMutation",
+		const expectedOperations: Array<
+			[string, "query" | "mutation" | "subscription"]
+		> = [
+			["GetUser", "query"],
+			["get_posts", "query"],
+			["SearchPostsWithDirectives", "query"],
+			["CreateUser", "mutation"],
+			["create_post", "mutation"],
+			["LikePost", "mutation"],
 
-			// Multiple operations from multipleOperations.graphql
-			"mockGetUserProfileQuery",
-			"mockGetUserPostsQuery",
-			"mockUpdateUserProfileMutation",
-			"mockCreatePostAndLikeMutation",
+			["GetUserProfile", "query"],
+			["GetUserPosts", "query"],
+			["UpdateUserProfile", "mutation"],
+			["CreatePostAndLike", "mutation"],
 
-			// User management operations
-			"mockGetCurrentUserQuery",
-			"mockGetUsersWithFilterQuery",
-			"mockDeleteUserMutation",
-			"mockUpdateUserPreferencesMutation",
+			["GetCurrentUser", "query"],
+			["GetUsersWithFilter", "query"],
+			["DeleteUser", "mutation"],
+			["UpdateUserPreferences", "mutation"],
 
-			// Post operations
-			"mockGetPostWithCommentsQuery",
-			"mockGetPostAnalyticsQuery",
-			"mockPublishPostMutation",
-			"mockUnpublishPostMutation",
-			"mockDeletePostMutation",
+			["GetPostWithComments", "query"],
+			["GetPostAnalytics", "query"],
+			["PublishPost", "mutation"],
+			["UnpublishPost", "mutation"],
+			["DeletePost", "mutation"],
 
-			// Comment operations
-			"mockGetCommentsQuery",
-			"mockGetCommentQuery",
-			"mockCreateCommentMutation",
-			"mockUpdateCommentMutation",
-			"mockDeleteCommentMutation",
-			"mockLikeCommentMutation",
-			"mockUnlikeCommentMutation",
+			["GetComments", "query"],
+			["GetComment", "query"],
+			["CreateComment", "mutation"],
+			["UpdateComment", "mutation"],
+			["DeleteComment", "mutation"],
+			["LikeComment", "mutation"],
+			["UnlikeComment", "mutation"],
 
-			// Complex directives
-			"mockComplexDirectivesQueryQuery",
-			"mockComplexDirectivesMutationMutation",
+			["ComplexDirectivesQuery", "query"],
+			["ComplexDirectivesMutation", "mutation"],
+
+			["PostPublished", "subscription"],
+			["CommentAdded", "subscription"],
 		];
 
-		it.each(expectedMockFunctions)("should export %s", (mockFunctionName) => {
-			expect(generatedModule).toHaveProperty(mockFunctionName);
-			expect(typeof generatedModule[mockFunctionName]).toBe("function");
-		});
+		it.each(expectedOperations)(
+			"should export the %s operation as %s",
+			(name, type) => {
+				expect(generatedModule).toHaveProperty(name);
+				const op = generatedModule[name];
+				expect(op).toEqual({ name, type });
+			},
+		);
 
-		it("should not have any extra mock functions beyond the expected ones", () => {
-			const actualMockFunctions = Object.keys(generatedModule)
-				.filter((key) => key.startsWith("mock"))
+		it("should not export any unexpected operations", () => {
+			const generatedNames = Object.keys(generatedModule)
+				.filter((key) => {
+					const value = generatedModule[key];
+					return (
+						value &&
+						typeof value === "object" &&
+						"name" in value &&
+						"type" in value
+					);
+				})
 				.sort();
 
-			// Check that we have exactly the expected number of mock functions
-			expect(actualMockFunctions).toHaveLength(expectedMockFunctions.length);
+			expect(generatedNames).toHaveLength(expectedOperations.length);
 
-			// Check that all actual mock functions are in the expected list
-			actualMockFunctions.forEach((mockFunctionName) => {
-				expect(expectedMockFunctions).toContain(mockFunctionName);
-			});
-
-			// Check that all expected mock functions are present
-			expectedMockFunctions.forEach((expectedMockFunction) => {
-				expect(actualMockFunctions).toContain(expectedMockFunction);
+			expectedOperations.forEach(([expectedName]) => {
+				expect(generatedNames).toContain(expectedName);
 			});
 		});
 
-		it("should create mock functions that return proper operation metadata", () => {
-			const mockGetUser = generatedModule.mockGetUserQuery;
-			const mockCreateUser = generatedModule.mockCreateUserMutation;
-			const mockGetPosts = generatedModule.mockGet_postsQuery;
-			const mockCreatePost = generatedModule.mockCreate_postMutation;
+		it("emits the expected operation descriptors for subscriptions", () => {
+			const postPublished = generatedModule.PostPublished;
+			const commentAdded = generatedModule.CommentAdded;
 
-			// Test with a simple handler function
-			const handler = () => ({
-				type: "fulfill" as const,
-				response: new Response(),
+			expect(postPublished).toEqual({
+				name: "PostPublished",
+				type: "subscription",
 			});
-
-			const getUserResult = mockGetUser(handler);
-			const createUserResult = mockCreateUser(handler);
-			const getPostsResult = mockGetPosts(handler);
-			const createPostResult = mockCreatePost(handler);
-
-			// Verify the mock functions return objects with expected structure
-			expect(getUserResult).toBeDefined();
-			expect(createUserResult).toBeDefined();
-			expect(getPostsResult).toBeDefined();
-			expect(createPostResult).toBeDefined();
-
-			// Check operation names
-			expect(getUserResult.operationName).toBe("GetUser");
-			expect(createUserResult.operationName).toBe("CreateUser");
-			expect(getPostsResult.operationName).toBe("get_posts");
-			expect(createPostResult.operationName).toBe("create_post");
-
-			// Check operation types
-			expect(getUserResult.operationType).toBe("query");
-			expect(createUserResult.operationType).toBe("mutation");
-			expect(getPostsResult.operationType).toBe("query");
-			expect(createPostResult.operationType).toBe("mutation");
-
-			// Check handlers are functions
-			expect(typeof getUserResult.handler).toBe("function");
-			expect(typeof createUserResult.handler).toBe("function");
-			expect(typeof getPostsResult.handler).toBe("function");
-			expect(typeof createPostResult.handler).toBe("function");
-		});
-
-		it("should handle both camelCase and snake_case operation names correctly", () => {
-			const mockGetUser = generatedModule.mockGetUserQuery;
-			const mockGetPosts = generatedModule.mockGet_postsQuery;
-			const mockCreateUser = generatedModule.mockCreateUserMutation;
-			const mockCreatePost = generatedModule.mockCreate_postMutation;
-
-			const handler = () => ({
-				type: "fulfill" as const,
-				response: new Response(),
+			expect(commentAdded).toEqual({
+				name: "CommentAdded",
+				type: "subscription",
 			});
-
-			// These should not throw and should return valid objects
-			expect(() => mockGetUser(handler)).not.toThrow();
-			expect(() => mockGetPosts(handler)).not.toThrow();
-			expect(() => mockCreateUser(handler)).not.toThrow();
-			expect(() => mockCreatePost(handler)).not.toThrow();
-		});
-
-		it("should handle operations with directives correctly", () => {
-			const mockComplexQuery = generatedModule.mockComplexDirectivesQueryQuery;
-			const mockComplexMutation =
-				generatedModule.mockComplexDirectivesMutationMutation;
-
-			const handler = () => ({
-				type: "fulfill" as const,
-				response: new Response(),
-			});
-
-			expect(() => mockComplexQuery(handler)).not.toThrow();
-			expect(() => mockComplexMutation(handler)).not.toThrow();
-		});
-
-		it("should handle operations with complex variable types", () => {
-			const mockComplexQuery = generatedModule.mockComplexDirectivesQueryQuery;
-			const mockComplexMutation =
-				generatedModule.mockComplexDirectivesMutationMutation;
-
-			const handler = () => ({
-				type: "fulfill" as const,
-				response: new Response(),
-			});
-
-			// Test with complex variable types
-			expect(() => mockComplexQuery(handler)).not.toThrow();
-			expect(() => mockComplexMutation(handler)).not.toThrow();
-		});
-
-		it("should handle operations with optional variables", () => {
-			const mockGetPosts = generatedModule.mockGet_postsQuery;
-			const handler = () => ({
-				type: "fulfill" as const,
-				response: new Response(),
-			});
-
-			// Should handle optional variables
-			expect(() => mockGetPosts(handler)).not.toThrow();
-		});
-
-		it("should handle operations with default values", () => {
-			const mockSearchPosts =
-				generatedModule.mockSearchPostsWithDirectivesQuery;
-			const handler = () => ({
-				type: "fulfill" as const,
-				response: new Response(),
-			});
-
-			// Should handle default values in variables
-			expect(() => mockSearchPosts(handler)).not.toThrow();
 		});
 	},
 );

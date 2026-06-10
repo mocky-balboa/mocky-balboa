@@ -1,11 +1,12 @@
-import { GraphQLError, type GraphQLErrorOptions } from "graphql";
+import type { GraphQLError } from "graphql";
 import { BaseHttpRoute } from "../base-http-route.js";
 import type { FulfillRouteResponse } from "../shared-types.js";
+import type { GraphQLOperationType } from "./operation.js";
 
 export type GraphQLHttpFulfillOptions<TResponse> =
 	| {
 			data?: TResponse | null;
-			errors?: GraphQLError[];
+			errors?: readonly GraphQLError[];
 			headers?: Record<string, string>;
 			status?: number;
 			path?: never;
@@ -18,82 +19,34 @@ export type GraphQLHttpFulfillOptions<TResponse> =
 			path: string;
 	  };
 
+/**
+ * Route helper passed to HTTP GraphQL handlers. Combines the {@link BaseHttpRoute}
+ * surface (passthrough, error, continue, etc.) with GraphQL-aware metadata and a
+ * typed `fulfill` shortcut.
+ */
 export class GraphQLHttpRoute<TVariables, TResponse> extends BaseHttpRoute {
-	private readonly _variables: TVariables;
-	private readonly _operationName: string;
-	private readonly _operationType: string;
-	private readonly _query: string;
-
-	/**
-	 * @param request - the original request
-	 * @param variables - the variables for the GraphQL request
-	 * @param operationName - the operation name for the GraphQL request
-	 * @param query - the query string (document) for the GraphQL request
-	 */
 	constructor(
 		request: Request,
-		variables: TVariables,
-		operationName: string,
-		operationType: string,
-		query: string,
+		public readonly variables: TVariables,
+		public readonly operationName: string,
+		public readonly operationType: Extract<
+			GraphQLOperationType,
+			"query" | "mutation"
+		>,
+		public readonly query: string,
 	) {
 		super(request);
-		this._variables = variables;
-		this._operationName = operationName;
-		this._operationType = operationType;
-		this._query = query;
-	}
-
-	get variables(): TVariables {
-		return this._variables;
-	}
-
-	get operationName(): string {
-		return this._operationName;
-	}
-
-	get operationType(): string {
-		return this._operationType;
-	}
-
-	get query(): string {
-		return this._query;
 	}
 
 	/**
-	 * When fulfilling a route on an operation
+	 * Respond with a GraphQL response body
 	 *
 	 * @example
-	 * Explicitly calling .fulfill()
 	 * ```ts
-	 * graphql.route(mockGetUserQuery((route) => {
-	 *   return route.fulfill({
-	 *     data: {
-	 *       user: {
-	 *         id: "user-id",
-	 *         name: "John Doe",
-	 *         email: "john.doe@example.com",
-	 *       },
-	 *     },
-	 *   });
-	 * }))
+	 * graphql.route(GetUser, (route) =>
+	 *   route.fulfill({ data: { user: { id: "1", name: "John" } } }),
+	 * );
 	 * ```
-	 *
-	 * @example
-	 * Implicitly calling .fulfill()
-	 * ```ts
-	 * graphql.route(mockGetUserQuery({
-	 *   data: {
-	 *     user: {
-	 *       id: "user-id",
-	 *       name: "John Doe",
-	 *       email: "john.doe@example.com",
-	 *     },
-	 *   },
-	 * }))
-	 * ```
-	 *
-	 * @param options - Options for the fulfillment.
 	 */
 	fulfill({
 		data,
@@ -119,16 +72,5 @@ export class GraphQLHttpRoute<TVariables, TResponse> extends BaseHttpRoute {
 		);
 
 		return { type: "fulfill", response, path };
-	}
-
-	/**
-	 * Helper method to create a GraphQLError instance
-	 *
-	 * @param message - the message for the error
-	 * @param options - optional options for the error
-	 * @returns a GraphQLError instance
-	 */
-	createGraphQLError(message: string, options?: GraphQLErrorOptions) {
-		return new GraphQLError(message, options);
 	}
 }

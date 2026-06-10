@@ -1,64 +1,51 @@
-import { GraphQLError, type GraphQLErrorOptions } from "graphql";
+import type { GraphQLError } from "graphql";
+import type { GraphQLOperationType } from "./operation.js";
 
-export type GraphQLWebSocketFulfillOptions<TResponse> = {
-	data?: TResponse | null;
-	errors?: GraphQLError[];
-};
+/**
+ * Callbacks used by {@link GraphQLWebSocketRoute} to dispatch protocol-framed
+ * messages back over the WebSocket connection. Provided by the owning
+ * {@link GraphQLWebSocket} instance.
+ */
+export interface GraphQLWebSocketRouteEmitter {
+	next: (data: unknown, errors?: readonly GraphQLError[]) => void;
+	error: (errors: readonly GraphQLError[]) => void;
+	complete: () => void;
+}
 
-export class GraphWebSocketRoute<TVariables, TResponse> {
-	private readonly _variables: TVariables;
-	private readonly _operationName: string;
-	private readonly _operationType: string;
-	private readonly _query: string;
-
-	/**
-	 * @param variables - the variables for the GraphQL request
-	 * @param operationName - the operation name for the GraphQL request
-	 * @param query - the query string (document) for the GraphQL request
-	 */
+/**
+ * Route helper passed to WebSocket GraphQL handlers. Supports streaming for
+ * subscriptions and a single `next` + `complete` flow for queries and mutations.
+ */
+export class GraphQLWebSocketRoute<TVariables, TResponse> {
 	constructor(
-		variables: TVariables,
-		operationName: string,
-		operationType: string,
-		query: string,
-	) {
-		this._variables = variables;
-		this._operationName = operationName;
-		this._operationType = operationType;
-		this._query = query;
-	}
+		/** The graphql-ws / subscriptions-transport-ws subscription/operation ID */
+		public readonly id: string,
+		public readonly variables: TVariables,
+		public readonly operationName: string,
+		public readonly operationType: GraphQLOperationType,
+		public readonly query: string,
+		private readonly emitter: GraphQLWebSocketRouteEmitter,
+	) {}
 
-	get variables(): TVariables {
-		return this._variables;
-	}
-
-	get operationName(): string {
-		return this._operationName;
-	}
-
-	get operationType(): string {
-		return this._operationType;
-	}
-
-	get query(): string {
-		return this._query;
+	/**
+	 * Push a `next` payload to the subscriber.
+	 */
+	next(data: TResponse, errors?: readonly GraphQLError[]): void {
+		this.emitter.next(data, errors);
 	}
 
 	/**
-	 * When fulfilling a route on an operation
+	 * Signal a GraphQL execution error to the subscriber.
 	 */
-	fulfill({ data, errors }: GraphQLWebSocketFulfillOptions<TResponse>) {
-		return { data, errors };
+	error(errors: readonly GraphQLError[]): void {
+		this.emitter.error(errors);
 	}
 
 	/**
-	 * Helper method to create a GraphQLError instance
-	 *
-	 * @param message - the message for the error
-	 * @param options - optional options for the error
-	 * @returns a GraphQLError instance
+	 * Complete the operation. For queries and mutations this terminates the
+	 * single-shot operation. For subscriptions this ends the stream.
 	 */
-	createGraphQLError(message: string, options?: GraphQLErrorOptions) {
-		return new GraphQLError(message, options);
+	complete(): void {
+		this.emitter.complete();
 	}
 }
