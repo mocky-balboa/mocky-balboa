@@ -986,4 +986,9 @@ describe("Client", () => {
       });
     });
   });
+
+  test('client can be construct clientIdentifier', () => {
+    const client = new Client({ clientIdentifier: () => "custom-id" });
+    expect(client.clientIdentifier).toBe("custom-id");
+  });
 });
