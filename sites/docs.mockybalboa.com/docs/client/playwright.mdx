@@ -216,6 +216,8 @@ Extending globally with `extendTest`:
           port: 1234,
           // Custom timeout for waiting on requests from the server
           timeout: 10000,
+          // Custom function to generate the client identifier
+          clientIdentifier: (testInfo) => `${testInfo.titlePath.join("-")}-${testInfo.testId}`,
         });
         ```
   </TabItem>

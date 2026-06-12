@@ -101,6 +101,12 @@ export interface ConnectOptions {
    * @default {@link DefaultWebSocketServerTimeout}
    */
   timeout?: number;
+  /**
+   * Custom function to generate the client identifier. By default, a random UUID is generated for each client instance. The client identifier is used by the server to identify messages from different clients and enable parallel mocking.
+   *
+   * @returns A string to be used as the client identifier
+   */
+  clientIdentifier?: (() => string) | undefined;
 }
 
 /**
@@ -167,8 +173,8 @@ export class Client {
     ]
   > = new Map();
 
-  constructor() {
-    this.clientIdentifier = uuid();
+  constructor({ clientIdentifier }: ConnectOptions = {}) {
+    this.clientIdentifier = clientIdentifier ? clientIdentifier() : uuid();
     this.onMessage = this.onMessage.bind(this);
     this.onRequest = this.onRequest.bind(this);
 

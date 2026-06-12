@@ -1,5 +1,5 @@
 import type { Client, ConnectOptions } from "@mocky-balboa/client";
-import { test as base, type TestType } from "@playwright/test";
+import { test as base, type TestInfo, type TestType } from "@playwright/test";
 import { createClient } from "./playwright.js";
 
 /**
@@ -13,7 +13,15 @@ export interface MockyPlaywrightTest {
   /**
    * Optional connection options for connecting to the Mocky Balboa server
    */
-  mockyConnectOptions: ConnectOptions;
+  mockyConnectOptions: Omit<ConnectOptions, "clientIdentifier"> & {
+    /**
+     * Custom function to generate the client identifier. By default, a random UUID is generated for each client instance. The client identifier is used by the server to identify messages from different clients and enable parallel mocking.
+     *
+     * @returns A string to be used as the client identifier
+     */
+    clientIdentifier?: (testInfo: TestInfo) => string;
+  };
+  
 }
 
 // Type helpers for extracting generics from the TestType
@@ -30,12 +38,18 @@ type ExtractWorkerArgs<Type> =
  */
 export const extendTest = <TBaseTest extends typeof base>(
   baseTest: TBaseTest,
-  mockyConnectOptions?: ConnectOptions,
+  mockyConnectOptions?: MockyPlaywrightTest["mockyConnectOptions"],
 ) =>
   baseTest.extend<MockyPlaywrightTest>({
     mockyConnectOptions: { ...mockyConnectOptions },
-    mocky: async ({ context, mockyConnectOptions }, use) => {
+    mocky: async ({ context, mockyConnectOptions: {clientIdentifier, ..._mockyConnectOptions} }, use, testInfo) => {
+      const mockyConnectOptions: ConnectOptions = typeof clientIdentifier === "function" && clientIdentifier ? {
+        ..._mockyConnectOptions,
+        clientIdentifier: () => clientIdentifier?.(testInfo),
+      } : _mockyConnectOptions;
+
       const mocky = await createClient(context, mockyConnectOptions);
+      
       await use(mocky);
     },
   }) as unknown as TestType<

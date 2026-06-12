@@ -41,7 +41,7 @@ export const createClient = async (
   context: BrowserContext,
   options: ConnectOptions = {},
 ): Promise<Client> => {
-  const client = new Client();
+  const client = new Client(options);
   await context.setExtraHTTPHeaders({
     [ClientIdentityStorageHeader]: client.clientIdentifier,
   });
