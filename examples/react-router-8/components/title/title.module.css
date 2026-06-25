@@ -1,0 +1,10 @@
+.title {
+    display: block;
+    font-weight: normal;
+    text-align: center;
+}
+
+.highlighted {
+    opacity: 0.78;
+    font-weight: bold;
+}

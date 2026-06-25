@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import path from "node:path";
+import { createJiti } from "jiti";
 import {
   createCommand,
   createExpressServer,
@@ -9,11 +10,16 @@ import {
   startServers,
   express,
 } from "@mocky-balboa/cli-utils";
-import { createRequestHandler } from "@react-router/express";
 
 interface CLIOptions {
   distDir: string;
 }
+
+type CreateRequestHandler = (options: { build: unknown }) => (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
+) => Promise<void>;
 
 const DefaultDistDir = "build";
 
@@ -28,6 +34,8 @@ cli.argument(
   DefaultDistDir,
 );
 
+const jiti = createJiti(import.meta.url);
+
 const main = async () => {
   const cliOptions = parseCLIOptions<CLIOptions>(cli);
   const { distDir = DefaultDistDir } = cliOptions;
@@ -35,6 +43,12 @@ const main = async () => {
     path.resolve(process.cwd(), distDir),
     ["server/index"],
   );
+
+  const { createRequestHandler } = await jiti.import<{
+    createRequestHandler: CreateRequestHandler;
+  }>("@react-router/express", {
+    parentURL: `file://${path.resolve(process.cwd(), "package.json")}`,
+  });
 
   const app = createExpressServer();
   app.use("/assets", express.static(`${distDir}/client/assets`));

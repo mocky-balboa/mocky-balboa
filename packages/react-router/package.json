@@ -57,7 +57,10 @@
     "@mocky-balboa/cli-utils": "workspace:*",
     "@mocky-balboa/logger": "workspace:*",
     "@mocky-balboa/vite": "workspace:*",
-    "@react-router/express": "^7.8.2"
+    "jiti": "^2.5.1"
+  },
+  "peerDependencies": {
+    "@react-router/express": ">=7.0.0"
   },
   "devDependencies": {
     "@swc/cli": "catalog:",

@@ -1,5 +1,5 @@
 {
-  "name": "@mocky-balboa/example-react-router-7",
+  "name": "@mocky-balboa/example-react-router-8",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,28 +15,28 @@
   },
   "dependencies": {
     "@mocky-balboa/react-router": "workspace:*",
-    "@react-router/express": "^7.8.2",
-    "@react-router/node": "^7.7.1",
-    "@react-router/serve": "^7.7.1",
+    "@react-router/express": "^8.0.1",
+    "@react-router/node": "^8.0.1",
+    "@react-router/serve": "^8.0.1",
     "isbot": "^5.1.27",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router": "^7.7.1"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router": "^8.0.1"
   },
   "devDependencies": {
     "@mocky-balboa/cypress": "workspace:*",
     "@mocky-balboa/playwright": "workspace:*",
     "@playwright/test": "^1.56.1",
-    "@react-router/dev": "^7.7.1",
+    "@react-router/dev": "^8.0.1",
     "@tailwindcss/vite": "^4.1.4",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "cypress": "^15.0.0",
     "playwright": "^1.56.1",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
-    "vite": "^6.3.3",
+    "vite": "^7.1.5",
     "vite-tsconfig-paths": "^5.1.4"
   }
 }
