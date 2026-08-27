@@ -27,11 +27,12 @@ export interface ServerOptions {
  */
 export const startServer = async ({
   webSocketServerOptions = {},
+  mockServerOptions = {},
 }: ServerOptions = {}): Promise<CloseWebSocketServer> => {
   logger.info("Starting Mocky Balboa server");
   const [closeWebSocketServer] = await Promise.all([
     startWebSocketServer(webSocketServerOptions),
-    bindMockServiceWorker(),
+    bindMockServiceWorker(mockServerOptions),
   ]);
   logger.info("Mocky Balboa server started");
 
