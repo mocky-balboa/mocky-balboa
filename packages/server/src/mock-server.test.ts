@@ -25,6 +25,7 @@ import {
 } from "./test/utils.js";
 import { clientIdentityStorage } from "./trace.js";
 import { bindMockServiceWorker } from "./mock-server.js";
+import { connections } from "./connection-state.js";
 import { UnsetClientIdentity } from "@mocky-balboa/shared-config";
 
 describe("mock server outbound http requests", () => {
@@ -319,6 +320,73 @@ describe("mock server outbound http requests", () => {
             }),
           );
         });
+      });
+    });
+
+    describe("when many requests are in flight at once", () => {
+      const requestCount = 20;
+
+      const getUrls = () =>
+        Array.from(
+          { length: requestCount },
+          (_, index) =>
+            `http://localhost:${HttpServerPort}/endpoint?request=${index}`,
+        );
+
+      const respondInReverseOnceAllRequestsArrive = (
+        onAllRequestsArrived?: () => void,
+      ) => {
+        const requests: { id: string; url: string }[] = [];
+        ws.on("message", (message) => {
+          const parsedMessage = parseMessage(message.toString());
+          if (parsedMessage.type !== MessageType.REQUEST) return;
+
+          requests.push({
+            id: parsedMessage.payload.id,
+            url: parsedMessage.payload.request.url,
+          });
+          if (requests.length < requestCount) return;
+
+          onAllRequestsArrived?.();
+          for (const { id, url } of requests.reverse()) {
+            const responseMessage = new Message(MessageType.RESPONSE, {
+              id,
+              response: {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url }),
+              },
+            });
+
+            ws.send(responseMessage.toString());
+          }
+        });
+      };
+
+      test("each request resolves with its own response, whatever order the client responds in", async () => {
+        respondInReverseOnceAllRequestsArrive();
+
+        await clientIdentityStorage.run(ClientIdentity, async () => {
+          const urls = getUrls();
+          const bodies = await Promise.all(
+            urls.map(async (url) => (await fetch(url)).json()),
+          );
+          expect(bodies).toEqual(urls.map((url) => ({ url })));
+        });
+      });
+
+      test("the server waits for responses with a single message listener on the connection", async () => {
+        let messageListenerCount: number | undefined;
+        respondInReverseOnceAllRequestsArrive(() => {
+          messageListenerCount = connections
+            .get(ClientIdentity)
+            ?.ws.listenerCount("message");
+        });
+
+        await clientIdentityStorage.run(ClientIdentity, async () => {
+          await Promise.all(getUrls().map((url) => fetch(url)));
+        });
+        expect(messageListenerCount).toBe(1);
       });
     });
   });

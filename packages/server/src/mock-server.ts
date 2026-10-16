@@ -8,7 +8,7 @@ import {
   type StrictRequest,
 } from "msw";
 import { setupServer } from "msw/node";
-import { type RawData } from "ws";
+import { type RawData, type WebSocket } from "ws";
 import mime from "mime-types";
 import { clientIdentityStorage } from "./trace.js";
 import { logger } from "./logger.js";
@@ -84,6 +84,84 @@ const convertResponseFromClientToHttpResponse = async ({
   });
 };
 
+interface PendingResponse {
+  resolve: (response: HttpResponse<string>) => void;
+  reject: (error: unknown) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}
+
+/**
+ * Requests awaiting a response from the client, keyed by request id, for each WebSocket connection
+ */
+const pendingResponsesByConnection = new WeakMap<
+  WebSocket,
+  Map<string, PendingResponse>
+>();
+
+/**
+ * Gets the requests awaiting a response on the connection. On first use, registers a single message
+ * listener on the connection that routes each response from the client to its request by id.
+ *
+ * @param connectionState - the WebSocket connection state containing the WebSocket connection
+ * @returns The requests awaiting a response on the connection, keyed by request id
+ */
+const getPendingResponses = (connectionState: WebSocketConnectionState) => {
+  const existingPendingResponses = pendingResponsesByConnection.get(
+    connectionState.ws,
+  );
+  if (existingPendingResponses) {
+    return existingPendingResponses;
+  }
+
+  const pendingResponses = new Map<string, PendingResponse>();
+  pendingResponsesByConnection.set(connectionState.ws, pendingResponses);
+
+  connectionState.ws.on("message", async (data: RawData) => {
+    try {
+      const message = parseMessage(data.toString());
+      if (message.type !== MessageType.RESPONSE) {
+        return;
+      }
+
+      const requestId = message.payload.id;
+      const pendingResponse = pendingResponses.get(requestId);
+      if (!pendingResponse) {
+        return;
+      }
+
+      try {
+        const httpResponse = await convertResponseFromClientToHttpResponse({
+          requestId,
+          message,
+        });
+
+        if (!httpResponse) {
+          return;
+        }
+
+        clearTimeout(pendingResponse.timeout);
+        pendingResponses.delete(requestId);
+
+        connectionState.ws.send(
+          new Message(MessageType.ACK, {}, message.messageId).toString(),
+        );
+
+        pendingResponse.resolve(httpResponse);
+      } catch (error) {
+        clearTimeout(pendingResponse.timeout);
+        pendingResponses.delete(requestId);
+        pendingResponse.reject(error);
+      }
+    } catch (error) {
+      logger.error("Error occurred while processing message", error, {
+        clientIdentity: connectionState.clientIdentity,
+      });
+    }
+  });
+
+  return pendingResponses;
+};
+
 /**
  * Processes the request to retrieve a response from the client falling back to passing the request through to the target URL.
  *
@@ -100,51 +178,14 @@ const getResponseFromClient = async (
   timeoutDuration: number,
 ): Promise<HttpResponse<string>> => {
   const requestBody = await new Response(request.body).text();
+  const pendingResponses = getPendingResponses(connectionState);
   return new Promise<HttpResponse<string>>((resolve, reject) => {
     const timeout = setTimeout(() => {
-      connectionState.ws.off("message", onMessage);
+      pendingResponses.delete(requestId);
       reject(new Error("Request timed out"));
     }, timeoutDuration);
 
-    async function onMessage(data: RawData) {
-      try {
-        const message = parseMessage(data.toString());
-
-        switch (message.type) {
-          case MessageType.RESPONSE:
-            try {
-              const httpResponse =
-                await convertResponseFromClientToHttpResponse({
-                  requestId,
-                  message,
-                });
-
-              if (!httpResponse) {
-                return;
-              }
-
-              clearTimeout(timeout);
-              connectionState.ws.off("message", onMessage);
-
-              connectionState.ws.send(
-                new Message(MessageType.ACK, {}, message.messageId).toString(),
-              );
-
-              resolve(httpResponse);
-            } catch (error) {
-              reject(error);
-            }
-            break;
-        }
-      } catch (error) {
-        logger.error("Error occurred while processing message", error, {
-          clientIdentity: connectionState.clientIdentity,
-          requestId,
-        });
-      }
-    }
-
-    connectionState.ws.on("message", onMessage);
+    pendingResponses.set(requestId, { resolve, reject, timeout });
 
     const message = new Message(MessageType.REQUEST, {
       id: requestId,
